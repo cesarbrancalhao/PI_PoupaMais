@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: poupa_mais_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: poupa_mais
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - poupa_mais_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poupa_mais_app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: poupa_mais
+      JWT_SECRET: your-super-secret-jwt-key-change-this
+      JWT_EXPIRATION: 7d
+    depends_on:
+      - postgres
+    networks:
+      - poupa_mais_network
+
+volumes:
+  postgres_data:
+
+networks:
+  poupa_mais_network:
+    driver: bridge
