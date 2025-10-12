@@ -12,15 +12,15 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get('profile')
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
+  @ApiOperation({ summary: 'Obter perfil do usuário atual' })
+  @ApiResponse({ status: 200, description: 'Perfil recuperado com sucesso' })
   async getProfile(@Request() req) {
     return this.usersService.findById(req.user.userId);
   }
 
   @Put('profile')
-  @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiOperation({ summary: 'Atualizar perfil do usuário' })
+  @ApiResponse({ status: 200, description: 'Perfil atualizado com sucesso' })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
     return this.usersService.updateProfile(
       req.user.userId,
@@ -30,8 +30,8 @@ export class UsersController {
   }
 
   @Delete('account')
-  @ApiOperation({ summary: 'Delete user account' })
-  @ApiResponse({ status: 200, description: 'Account deleted successfully' })
+  @ApiOperation({ summary: 'Excluir conta do usuário' })
+  @ApiResponse({ status: 200, description: 'Conta excluída com sucesso' })
   async deleteAccount(@Request() req) {
     return this.usersService.deleteAccount(req.user.userId);
   }
