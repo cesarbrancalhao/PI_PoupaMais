@@ -72,7 +72,7 @@ server/
 │   │   ├── guards/
 │   │   ├── strategies/
 │   │   └── auth.service.ts
-│   ├── database/               # Conexão com banco (DAO)
+│   ├── database/               # Conexão com banco
 │   │   ├── database.service.ts
 │   │   └── database.module.ts
 │   ├── users/
@@ -102,7 +102,7 @@ cp .env.example .env
 
 Atualize o `.env` com sua configuração:
 
-```env
+```js
 NODE_ENV=development
 PORT=3000
 
@@ -112,7 +112,7 @@ DB_USERNAME=postgres
 DB_PASSWORD=postgres
 DB_DATABASE=poupa_mais
 
-JWT_SECRET=sua-chave-secreta-jwt-super-segura
+JWT_SECRET=sua-chave-secreta-jwt
 JWT_EXPIRATION=7d
 
 CORS_ORIGIN=http://localhost:3001

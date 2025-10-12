@@ -18,7 +18,12 @@
 */*.env.development
 */*.env.test
 */*.env.production
+*/*.env.local
 
 # temp directory
 */*.temp
 */*.tmp
+
+#server tests
+/server/tests/
+/server/coverage/
