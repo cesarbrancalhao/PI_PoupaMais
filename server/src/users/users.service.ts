@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
@@ -19,6 +19,15 @@ export class UsersService {
   }
 
   async updateProfile(userId: number, nome: string, email: string) {
+    const existingMail = await this.databaseService.query(
+      'SELECT id FROM usuario WHERE email = $1',
+      [email],
+    );
+
+    if (existingMail.rows.length > 0) {
+      throw new UnauthorizedException('Email já existe');
+    }
+
     const result = await this.databaseService.query(
       'UPDATE usuario SET nome = $1, email = $2 WHERE id = $3 RETURNING id, nome, email, created_at',
       [nome, email, userId],
