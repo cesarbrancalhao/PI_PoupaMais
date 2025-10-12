@@ -22,13 +22,13 @@ export class AuthService {
     }
 
     const user = result.rows[0] as Usuario;
-    const isPasswordValid = await bcrypt.compare(password + user.salt, user.senha);
+    const isPasswordValid = await bcrypt.compare(password, user.senha);
 
     if (!isPasswordValid) {
       return null;
     }
 
-    const { senha, salt, ...userWithoutPassword } = user;
+    const { senha, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -45,7 +45,6 @@ export class AuthService {
   }
 
   async register(nome: string, email: string, password: string) {
-    // Verificar se o usuário já existe
     const existingUser = await this.databaseService.query(
       'SELECT id FROM usuario WHERE email = $1',
       [email],
@@ -55,14 +54,12 @@ export class AuthService {
       throw new UnauthorizedException('Email já cadastrado');
     }
 
-    // Gerar salt e hash da senha
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password + salt, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Inserir usuário
     const result = await this.databaseService.query(
-      'INSERT INTO usuario (nome, email, senha, salt) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, created_at',
-      [nome, email, hashedPassword, salt],
+      'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
+      [nome, email, hashedPassword],
     );
 
     const newUser = result.rows[0];
