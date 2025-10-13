@@ -7,6 +7,13 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  try {
+    await app.listen(process.env.PORT || 3000);
+  } catch (error) {
+    console.error('Erro ao iniciar a aplicação:', error);
+    process.exit(1);
+  }
+
   // CORS
   app.enableCors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
