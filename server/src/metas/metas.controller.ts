@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MetasService } from './metas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateMetaDto } from './dto/create-meta.dto';
+import { UpdateMetaDto } from './dto/update-meta.dto';
 
 @ApiTags('metas')
 @ApiBearerAuth()
@@ -11,7 +13,7 @@ export class MetasController {
   constructor(private service: MetasService) {}
 
   @Post()
-  create(@Request() req, @Body() body: any) {
+  create(@Request() req, @Body() body: CreateMetaDto) {
     return this.service.create(req.user.userId, body);
   }
 
@@ -26,7 +28,7 @@ export class MetasController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Request() req, @Body() body: any) {
+  update(@Param('id') id: string, @Request() req, @Body() body: UpdateMetaDto) {
     return this.service.update(+id, req.user.userId, body);
   }
 

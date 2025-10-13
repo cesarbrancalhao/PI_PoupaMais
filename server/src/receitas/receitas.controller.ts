@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReceitasService } from './receitas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateReceitaDto } from './dto/create-receita.dto';
+import { UpdateReceitaDto } from './dto/update-receita.dto';
 
 @ApiTags('receitas')
 @ApiBearerAuth()
@@ -11,7 +13,7 @@ export class ReceitasController {
   constructor(private service: ReceitasService) {}
 
   @Post()
-  create(@Request() req, @Body() body: any) {
+  create(@Request() req, @Body() body: CreateReceitaDto) {
     return this.service.create(req.user.userId, body);
   }
 
@@ -26,7 +28,7 @@ export class ReceitasController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Request() req, @Body() body: any) {
+  update(@Param('id') id: string, @Request() req, @Body() body: UpdateReceitaDto) {
     return this.service.update(+id, req.user.userId, body);
   }
 
