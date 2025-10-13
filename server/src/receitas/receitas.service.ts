@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateReceitaDto } from './dto/create-receita.dto';
 import { UpdateReceitaDto } from './dto/update-receita.dto';
+import { PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class ReceitasService {
@@ -32,12 +33,32 @@ export class ReceitasService {
     return result.rows[0];
   }
 
-  async findAll(userId: number) {
-    const result = await this.databaseService.query(
-      'SELECT * FROM receita WHERE usuario_id = $1 ORDER BY data DESC',
-      [userId],
-    );
-    return result.rows;
+  async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {
+    const maxLimit = Math.min(limit, 100);
+    const offset = (page - 1) * maxLimit;
+
+    const [dataResult, countResult] = await Promise.all([
+      this.databaseService.query(
+        'SELECT * FROM receita WHERE usuario_id = $1 ORDER BY data DESC LIMIT $2 OFFSET $3',
+        [userId, maxLimit, offset],
+      ),
+      this.databaseService.query(
+        'SELECT COUNT(*) FROM receita WHERE usuario_id = $1',
+        [userId],
+      ),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count);
+
+    return {
+      data: dataResult.rows,
+      pagination: {
+        page,
+        limit: maxLimit,
+        total,
+        totalPages: Math.ceil(total / maxLimit),
+      },
+    };
   }
 
   async findOne(id: number, userId: number) {

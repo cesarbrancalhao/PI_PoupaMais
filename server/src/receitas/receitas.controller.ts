@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReceitasService } from './receitas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateReceitaDto } from './dto/create-receita.dto';
 import { UpdateReceitaDto } from './dto/update-receita.dto';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('receitas')
 @ApiBearerAuth()
@@ -18,8 +19,8 @@ export class ReceitasController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.service.findAll(req.user.userId);
+  findAll(@Request() req, @Query() paginationQuery: PaginationQueryDto) {
+    return this.service.findAll(req.user.userId, paginationQuery.page, paginationQuery.limit);
   }
 
   @Get(':id')

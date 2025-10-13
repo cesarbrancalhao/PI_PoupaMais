@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { MetasService } from './metas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateMetaDto } from './dto/create-meta.dto';
 import { UpdateMetaDto } from './dto/update-meta.dto';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('metas')
 @ApiBearerAuth()
@@ -18,8 +19,8 @@ export class MetasController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.service.findAll(req.user.userId);
+  findAll(@Request() req, @Query() paginationQuery: PaginationQueryDto) {
+    return this.service.findAll(req.user.userId, paginationQuery.page, paginationQuery.limit);
   }
 
   @Get(':id')
