@@ -8,6 +8,14 @@ export class ReceitasService {
   constructor(private databaseService: DatabaseService) {}
 
   async create(userId: number, data: CreateReceitaDto) {
+    const fonteExists = await this.databaseService.query(
+      'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
+      [data.fonte_receita_id, userId],
+    );
+    if (fonteExists.rows.length === 0) {
+      throw new NotFoundException('Fonte de receita não encontrada');
+    }
+
     const result = await this.databaseService.query(
       `INSERT INTO receita (nome, valor, recorrente, data, data_vencimento, fonte_receita_id, usuario_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,

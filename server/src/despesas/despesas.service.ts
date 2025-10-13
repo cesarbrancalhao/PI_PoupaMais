@@ -8,6 +8,14 @@ export class DespesasService {
   constructor(private databaseService: DatabaseService) {}
 
   async create(userId: number, createDespesaDto: CreateDespesaDto) {
+    const categoryExists = await this.databaseService.query(
+      'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
+      [createDespesaDto.categoria_despesa_id, userId],
+    );
+    if (categoryExists.rows.length === 0) {
+      throw new NotFoundException('Categoria não encontrada');
+    }
+
     const result = await this.databaseService.query(
       `INSERT INTO despesa (nome, valor, recorrente, data, data_vencimento, categoria_despesa_id, usuario_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
