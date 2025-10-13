@@ -56,20 +56,30 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Inserir usuário
-    const result = await this.databaseService.query(
-      'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
-      [nome, email, hashedPassword],
-    );
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const newUser = result.rows[0];
+      // Criar usuário
+      const result = await client.query(
+        'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
+        [nome, email, hashedPassword],
+      );
 
-    // Criar configuração padrão para o usuário
-    await this.databaseService.query(
-      'INSERT INTO config (usuario_id) VALUES ($1)',
-      [newUser.id],
-    );
+      const newUser = result.rows[0];
+      
+      // Criar configuração para o usuário
+      await client.query('INSERT INTO config (usuario_id) VALUES ($1)', [newUser.id]);
 
-    return this.login(newUser);
+      await client.query('COMMIT');
+
+      return this.login(newUser);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new UnauthorizedException('Houve um erro ao registrar o usuário');
+    }
+    finally {
+      await client.release();
+    }
   }
 }
