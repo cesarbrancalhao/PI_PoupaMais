@@ -26,7 +26,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.log('Conexão com banco de dados estabelecida com sucesso');
     } catch (error) {
       console.error('Falha na conexão com banco de dados:', error);
-      throw error;
+      throw new Error('Falha na conexão com o banco de dados');
     }
   }
 
@@ -43,7 +43,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       return result;
     } catch (error) {
       console.error('Erro na consulta:', { text, error });
-      throw error;
+      throw new Error('Erro na consulta');
     }
   }
 

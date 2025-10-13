@@ -2,7 +2,7 @@
 
 API Backend para PoupaMais.
 
-## Stack Tecnológica
+## Stacks
 
 - **NestJS** - Framework Node.js
 - **PostgreSQL** - Banco de dados
@@ -35,7 +35,7 @@ API Backend para PoupaMais.
 
 ### Recursos de Segurança
 
-- Hash de senhas com bcrypt + salt
+- Hash de senhas com bcrypt
 - Autenticação JWT
 - Consultas SQL parametrizadas (proteção contra injeção SQL)
 - Validação de entrada com class-validator
@@ -147,6 +147,73 @@ Inclua o token JWT na header Authorization:
 
 ```js
 Authorization: Bearer <seu_token>
+```
+## Request flow da API
+
+1. Entry point: Controller
+
+```js
+@Controller('auth')
+export class AuthController {
+  @Post('register')
+  @Post('login')
+}
+```
+
+2. Validação DTO
+
+```js
+export class LoginDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+```
+
+3. Guards de autenticação (em rotas protegidas)
+
+```js
+@UseGuards(LocalAuthGuard)
+@Post('login')
+async login(@Body() loginDto: LoginDto, @Request() req) {
+  return this.authService.login(req.user);
+}
+```
+
+4. Execução de Strategies
+
+```js
+export class LocalStrategy extends PassportStrategy(Strategy) {
+  async validate(email: string, password: string): Promise<any> {
+    const user = await this.authService.validateUser(email, password);
+    if (!user) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+    return user;
+  }
+}
+```
+
+5. BLL (regras de negócio)
+
+```js
+export class AuthService {
+  async validateUser(email: string, password: string): Promise<any> {
+    const result = await this.databaseService.query(
+      'SELECT * FROM usuario WHERE email = $1',
+      [email],
+    );
+    if (!await bcrypt.compare(password, user.senha)) {
+      return null;
+    }
+    const { senha, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+}
 ```
 
 ## Testando a API

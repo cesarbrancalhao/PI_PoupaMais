@@ -11,7 +11,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<Omit<Usuario, 'senha'> | null> {
     const result = await this.databaseService.query(
       'SELECT * FROM usuario WHERE email = $1',
       [email],
@@ -22,17 +22,17 @@ export class AuthService {
     }
 
     const user = result.rows[0] as Usuario;
-    const isPasswordValid = await bcrypt.compare(password + user.salt, user.senha);
+    const isPasswordValid = await bcrypt.compare(password, user.senha);
 
     if (!isPasswordValid) {
       return null;
     }
 
-    const { senha, salt, ...userWithoutPassword } = user;
+    const { senha, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
-  async login(user: any) {
+  async login(user: Omit<Usuario, 'senha'>) {
     const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
@@ -45,7 +45,6 @@ export class AuthService {
   }
 
   async register(nome: string, email: string, password: string) {
-    // Verificar se o usuário já existe
     const existingUser = await this.databaseService.query(
       'SELECT id FROM usuario WHERE email = $1',
       [email],
@@ -55,24 +54,32 @@ export class AuthService {
       throw new UnauthorizedException('Email já cadastrado');
     }
 
-    // Gerar salt e hash da senha
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password + salt, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Inserir usuário
-    const result = await this.databaseService.query(
-      'INSERT INTO usuario (nome, email, senha, salt) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, created_at',
-      [nome, email, hashedPassword, salt],
-    );
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const newUser = result.rows[0];
+      // Criar usuário
+      const result = await client.query(
+        'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
+        [nome, email, hashedPassword],
+      );
 
-    // Criar configuração padrão para o usuário
-    await this.databaseService.query(
-      'INSERT INTO config (usuario_id) VALUES ($1)',
-      [newUser.id],
-    );
+      const newUser = result.rows[0];
+      
+      // Criar configuração para o usuário
+      await client.query('INSERT INTO config (usuario_id) VALUES ($1)', [newUser.id]);
 
-    return this.login(newUser);
+      await client.query('COMMIT');
+
+      return this.login(newUser);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new UnauthorizedException('Houve um erro ao registrar o usuário');
+    }
+    finally {
+      await client.release();
+    }
   }
 }

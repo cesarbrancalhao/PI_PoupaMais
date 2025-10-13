@@ -3,7 +3,6 @@ export interface Usuario {
   nome: string;
   email: string;
   senha: string;
-  salt: string;
   created_at: Date;
 }
 

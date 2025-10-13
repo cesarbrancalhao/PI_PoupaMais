@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ReceitasService } from './receitas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateReceitaDto } from './dto/create-receita.dto';
+import { UpdateReceitaDto } from './dto/update-receita.dto';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('receitas')
 @ApiBearerAuth()
@@ -11,13 +14,13 @@ export class ReceitasController {
   constructor(private service: ReceitasService) {}
 
   @Post()
-  create(@Request() req, @Body() body: any) {
+  create(@Request() req, @Body() body: CreateReceitaDto) {
     return this.service.create(req.user.userId, body);
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.service.findAll(req.user.userId);
+  findAll(@Request() req, @Query() paginationQuery: PaginationQueryDto) {
+    return this.service.findAll(req.user.userId, paginationQuery.page, paginationQuery.limit);
   }
 
   @Get(':id')
@@ -26,7 +29,7 @@ export class ReceitasController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Request() req, @Body() body: any) {
+  update(@Param('id') id: string, @Request() req, @Body() body: UpdateReceitaDto) {
     return this.service.update(+id, req.user.userId, body);
   }
 

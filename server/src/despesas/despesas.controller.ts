@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DespesasService } from './despesas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateDespesaDto } from './dto/create-despesa.dto';
 import { UpdateDespesaDto } from './dto/update-despesa.dto';
+import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('despesas')
 @ApiBearerAuth()
@@ -18,8 +19,8 @@ export class DespesasController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.despesasService.findAll(req.user.userId);
+  findAll(@Request() req, @Query() paginationQuery: PaginationQueryDto) {
+    return this.despesasService.findAll(req.user.userId, paginationQuery.page, paginationQuery.limit);
   }
 
   @Get(':id')
