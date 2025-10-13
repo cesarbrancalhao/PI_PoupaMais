@@ -11,7 +11,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<Omit<Usuario, 'senha'> | null> {
     const result = await this.databaseService.query(
       'SELECT * FROM usuario WHERE email = $1',
       [email],
@@ -32,7 +32,7 @@ export class AuthService {
     return userWithoutPassword;
   }
 
-  async login(user: any) {
+  async login(user: Omit<Usuario, 'senha'>) {
     const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),

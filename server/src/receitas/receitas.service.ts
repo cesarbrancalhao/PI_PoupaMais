@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { CreateReceitaDto } from './dto/create-receita.dto';
+import { UpdateReceitaDto } from './dto/update-receita.dto';
 
 @Injectable()
 export class ReceitasService {
   constructor(private databaseService: DatabaseService) {}
 
-  async create(userId: number, data: any) {
+  async create(userId: number, data: CreateReceitaDto) {
     const result = await this.databaseService.query(
       `INSERT INTO receita (nome, valor, recorrente, data, data_vencimento, fonte_receita_id, usuario_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
@@ -39,7 +41,7 @@ export class ReceitasService {
     return result.rows[0];
   }
 
-  async update(id: number, userId: number, data: any) {
+  async update(id: number, userId: number, data: UpdateReceitaDto) {
     const result = await this.databaseService.query(
       `UPDATE receita
        SET nome = COALESCE($1, nome),

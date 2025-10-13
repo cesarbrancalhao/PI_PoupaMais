@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { CreateMetaDto } from './dto/create-meta.dto';
+import { UpdateMetaDto } from './dto/update-meta.dto';
 
 @Injectable()
 export class MetasService {
   constructor(private databaseService: DatabaseService) {}
 
-  async create(userId: number, data: any) {
+  async create(userId: number, data: CreateMetaDto) {
     const result = await this.databaseService.query(
       `INSERT INTO meta (nome, valor, economia_mensal, data_inicio, usuario_id)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -31,7 +33,7 @@ export class MetasService {
     return result.rows[0];
   }
 
-  async update(id: number, userId: number, data: any) {
+  async update(id: number, userId: number, data: UpdateMetaDto) {
     const result = await this.databaseService.query(
       `UPDATE meta
        SET nome = COALESCE($1, nome),
