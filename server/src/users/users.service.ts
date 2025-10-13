@@ -41,7 +41,11 @@ export class UsersService {
   }
 
   async deleteAccount(userId: number) {
-    await this.databaseService.query('DELETE FROM usuario WHERE id = $1', [userId]);
+    const result = await this.databaseService.query(
+      'DELETE FROM usuario WHERE id = $1',
+      [userId],
+    );
+    if (result.rowCount === 0) throw new NotFoundException('Usuário não encontrado');
     return { message: 'Conta excluída com sucesso' };
   }
 }

@@ -72,12 +72,10 @@ export class DespesasService {
 
   async remove(id: number, userId: number) {
     const result = await this.databaseService.query(
-      'DELETE FROM despesa WHERE id = $1 AND usuario_id = $2 RETURNING id',
+      'DELETE FROM despesa WHERE id = $1 AND usuario_id = $2',
       [id, userId],
     );
-    if (result.rows.length === 0) {
-      throw new NotFoundException('Despesa não encontrada');
-    }
+    if (result.rowCount === 0) throw new NotFoundException('Despesa não encontrada');
     return { message: 'Despesa excluída com sucesso' };
   }
 }

@@ -9,7 +9,15 @@ export class ReceitasService {
     const result = await this.databaseService.query(
       `INSERT INTO receita (nome, valor, recorrente, data, data_vencimento, fonte_receita_id, usuario_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [data.nome, data.valor, data.recorrente, data.data, data.data_vencimento, data.fonte_receita_id, userId],
+      [
+        data.nome,
+        data.valor,
+        data.recorrente,
+        data.data,
+        data.data_vencimento,
+        data.fonte_receita_id,
+        userId,
+      ],
     );
     return result.rows[0];
   }
@@ -41,7 +49,16 @@ export class ReceitasService {
            data_vencimento = COALESCE($5, data_vencimento),
            fonte_receita_id = COALESCE($6, fonte_receita_id)
        WHERE id = $7 AND usuario_id = $8 RETURNING *`,
-      [data.nome, data.valor, data.recorrente, data.data, data.data_vencimento, data.fonte_receita_id, id, userId],
+      [
+        data.nome,
+        data.valor,
+        data.recorrente,
+        data.data,
+        data.data_vencimento,
+        data.fonte_receita_id,
+        id,
+        userId,
+      ],
     );
     if (result.rows.length === 0) throw new NotFoundException('Receita não encontrada');
     return result.rows[0];
