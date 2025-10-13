@@ -38,6 +38,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
+  const requiredEnvs = ['JWT_SECRET', 'DB_HOST', 'DB_PASSWORD'];
+  requiredEnvs.forEach(variable => {
+    if (!process.env[variable]) {
+      throw new Error(`Variável de ambiente ${variable} não definida`);
+    }
+  });
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Aplicação rodando em: http://localhost:${port}`);
