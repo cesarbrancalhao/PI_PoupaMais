@@ -31,14 +31,20 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="w-64 h-screen bg-white border-r flex flex-col justify-between">
+    <aside className="w-64 h-screen bg-white flex flex-col justify-between">
       <div>
-        <div className="flex items-center gap-3 p-4 border-b">
-          <div className="w-10 h-10 rounded-full bg-gray-200" />
-          <div>
-            <p className="text-sm font-medium text-gray-800">João Silva</p>
-            <p className="text-xs text-gray-500">Ver perfil</p>
+        <div className="flex items-center gap-3 p-4">
+          <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
+            <span className="text-white text-sm font-medium">JS</span>
           </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-800">João Silva</p>
+          </div>
+          <button className="p-1 hover:bg-gray-100 rounded">
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         <nav className="mt-4">
@@ -48,7 +54,7 @@ export default function Sidebar() {
               href={link.href}
               className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
                 pathname === link.href
-                  ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-500'
+                  ? 'text-gray-800 bg-gradient-to-r from-blue-100 to-white'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
@@ -59,7 +65,6 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="p-4 text-sm text-gray-500 border-t">Sair</div>
     </aside>
   )
 }
