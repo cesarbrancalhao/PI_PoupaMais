@@ -82,59 +82,99 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Últimas despesas</h2>
-              <a href="#" className="text-indigo-600 text-sm">Ver mais</a>
+            <div className="col-span-2 bg-white p-6 rounded-xl shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">Últimas despesas</h2>
+                <a href="#" className="text-indigo-600 text-sm">Ver mais</a>
+                </div>
+
+                <table className="w-full text-sm">
+                <thead className="text-left text-gray-500">
+                    <tr>
+                    {['Data', 'Nome', 'Valor', 'Categoria', 'Saldo'].map((header) => (
+                        <th key={header} className="py-2 font-medium">
+                        <div className="flex items-center gap-1">
+                            <span>{header}</span>
+                            {/* placeholder icon for filter/sort */}
+                            <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-3 h-3 text-gray-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            >
+                            <path
+                                fillRule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.293l3.71-4.06a.75.75 0 111.08 1.04l-4.24 4.63a.75.75 0 01-1.08 0l-4.24-4.63a.75.75 0 01.02-1.06z"
+                                clipRule="evenodd"
+                            />
+                            </svg>
+                        </div>
+                        </th>
+                    ))}
+                    </tr>
+                </thead>
+
+                <tbody className="text-gray-700">
+                    <tr className="odd:bg-gray-50 hover:bg-gray-100">
+                    <td className="py-3">15/03</td>
+                    <td className="py-3">
+                        <div className="flex items-center gap-2">
+                            <span>🧴</span>
+                            <span>Detergente</span>
+                        </div>
+                    </td>
+                    <td>R$ 16,90</td>
+                    <td>Mercado</td>
+                    <td className="text-green-600">R$2837,50</td>
+                    </tr>
+
+                    <tr className="odd:bg-gray-50 hover:bg-gray-100">
+                    <td className="py-3">15/03</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <span>⚡</span>
+                        <span>Carregador iPad</span>
+                      </div>
+                    </td>
+                    <td>R$ 36,90</td>
+                    <td>Eletrônicos</td>
+                    <td className="text-green-600">R$2854,40</td>
+                    </tr>
+
+                    <tr className="odd:bg-gray-50 hover:bg-gray-100">
+                    <td className="py-3">15/03</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <span>🎧</span>
+                        <span>Fone Bluetooth</span>
+                      </div>
+                    </td>
+                    <td>R$ 80,90</td>
+                    <td>Eletrônicos</td>
+                    <td className="text-green-600">R$2891,30</td>
+                    </tr>
+
+                    <tr className="odd:bg-gray-50 hover:bg-gray-100">
+                    <td className="py-3">14/03</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <span>🧦</span>
+                        <span>Meia curta</span>
+                      </div>
+                    </td>
+                    <td>R$ 10,90</td>
+                    <td>Roupas</td>
+                    <td className="text-green-600">R$2989,10</td>
+                    </tr>
+                </tbody>
+                </table>
             </div>
 
-            <table className="w-full text-sm">
-              <thead className="text-left text-gray-500 border-b">
-                <tr>
-                  <th className="py-2">Data</th>
-                  <th>Nome</th>
-                  <th>Valor</th>
-                  <th>Categoria</th>
-                  <th>Saldo</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-2">15/03</td>
-                  <td>Detergente</td>
-                  <td>R$ 16,90</td>
-                  <td>Mercado</td>
-                  <td className="text-green-600">R$2837,50</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2">15/03</td>
-                  <td>Carregador iPad</td>
-                  <td>R$ 36,90</td>
-                  <td>Eletrônicos</td>
-                  <td className="text-green-600">R$2854,40</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2">15/03</td>
-                  <td>Fone Bluetooth</td>
-                  <td>R$ 80,90</td>
-                  <td>Eletrônicos</td>
-                  <td className="text-green-600">R$2891,30</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2">14/03</td>
-                  <td>Meia curta</td>
-                  <td>R$ 10,90</td>
-                  <td>Roupas</td>
-                  <td className="text-green-600">R$2989,10</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm flex justify-center items-center text-gray-400">
-            Gráfico: Despesas
-          </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm flex justify-center items-center text-gray-400">
+                Gráfico: Despesas
+            </div>
         </section>
+
       </main>
     </div>
   )
