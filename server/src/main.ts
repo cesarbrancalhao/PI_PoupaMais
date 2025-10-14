@@ -5,14 +5,14 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const requiredEnvs = ['JWT_SECRET', 'DB_HOST', 'DB_PASSWORD'];
+  requiredEnvs.forEach(variable => {
+    if (!process.env[variable]) {
+      throw new Error(`Variável de ambiente ${variable} não definida`);
+    }
+  });
 
-  try {
-    await app.listen(process.env.PORT || 3000);
-  } catch (error) {
-    console.error('Erro ao iniciar a aplicação:', error);
-    process.exit(1);
-  }
+  const app = await NestFactory.create(AppModule);
 
   // CORS
   app.enableCors({
@@ -45,16 +45,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const requiredEnvs = ['JWT_SECRET', 'DB_HOST', 'DB_PASSWORD'];
-  requiredEnvs.forEach(variable => {
-    if (!process.env[variable]) {
-      throw new Error(`Variável de ambiente ${variable} não definida`);
-    }
-  });
-
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`Aplicação rodando em: http://localhost:${port}`);
-  console.log(`Documentação Swagger disponível em: http://localhost:${port}/api/docs`);
+  
+  try {
+    await app.listen(port);
+    console.log(`Aplicação rodando em: http://localhost:${port}`);
+    console.log(`Documentação Swagger disponível em: http://localhost:${port}/api/docs`);
+  } catch (error) {
+    console.error('Erro ao iniciar a aplicação:', error);
+    process.exit(1);
+  }
 }
 bootstrap();
