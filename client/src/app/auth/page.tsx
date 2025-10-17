@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function AuthPage() {
   return (
     <div className="flex min-h-screen">
       <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white">
