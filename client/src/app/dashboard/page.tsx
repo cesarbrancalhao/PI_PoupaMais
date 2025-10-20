@@ -2,32 +2,57 @@
 
 import { useState } from 'react'
 import Sidebar from '@/components/sidebar'
+import AddModal from '@/components/addModal'
+import EditModal from '@/components/editModal'
 import { Home, Plug, Shirt } from 'lucide-react'
 
+interface TableRow {
+  id: string
+  date: string
+  name: string
+  category: string
+  value: string
+  saldo: string
+  recurring: boolean
+  icon: React.ReactNode
+}
+
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState('despesas');
+  const [activeTab, setActiveTab] = useState<'despesas' | 'receitas'>('despesas')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<TableRow | null>(null)
+
+  const openModal = () => setIsModalOpen(true)
+  const closeModal = () => setIsModalOpen(false)
+  
+  const openEditModal = (item: TableRow) => {
+    setSelectedItem(item)
+    setIsEditModalOpen(true)
+  }
+  const closeEditModal = () => setIsEditModalOpen(false)
+
+  const handleDelete = (id: string) => {
+    console.log('Deleting item with id:', id)}
+
+  const convertDateForEditModal = (dateStr: string) => {
+    const [day, month] = dateStr.split('/')
+    const currentYear = new Date().getFullYear()
+    return `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  }
 
   const despesasRows = [
-    {
-      date: '15/03', name: 'Detergente', category: 'Mercado', value: 'R$ 16,90', saldo: 'R$2837,50', icon: <Home className="w-5 h-5 text-blue-600" />
-    },
-    {
-      date: '15/03', name: 'Carregador iPad', category: 'Eletrônicos', value: 'R$ 36,90', saldo: 'R$2854,40', icon: <Plug className="w-5 h-5 text-blue-600" />
-    },
-    {
-      date: '15/03', name: 'Fone Bluetooth', category: 'Eletrônicos', value: 'R$ 80,90', saldo: 'R$2891,30', icon: <Plug className="w-5 h-5 text-blue-600" />
-    },
-    {
-      date: '14/03', name: 'Meia curta', category: 'Roupas', value: 'R$ 10,90', saldo: 'R$2989,10', icon: <Shirt className="w-5 h-5 text-blue-600" />
-    }
-  ];
+    { id: '1', date: '15/03', name: 'Detergente', category: 'Mercado', value: 'R$ 16,90', saldo: 'R$2837,50', recurring: false, icon: <Home className="w-5 h-5 text-blue-600" /> },
+    { id: '2', date: '15/03', name: 'Carregador iPad', category: 'Eletrônicos', value: 'R$ 36,90', saldo: 'R$2854,40', recurring: false, icon: <Plug className="w-5 h-5 text-blue-600" /> },
+    { id: '3', date: '15/03', name: 'Fone Bluetooth', category: 'Eletrônicos', value: 'R$ 80,90', saldo: 'R$2891,30', recurring: true, icon: <Plug className="w-5 h-5 text-blue-600" /> },
+    { id: '4', date: '14/03', name: 'Meia curta', category: 'Roupas', value: 'R$ 10,90', saldo: 'R$2989,10', recurring: false, icon: <Shirt className="w-5 h-5 text-blue-600" /> }
+  ]
 
   const receitasRows = [
-    { date: '15/03', name: 'Salário', category: 'Renda Fixa', value: 'R$ 3000,00', saldo: 'R$5000,00', icon: <Home className="w-5 h-5 text-green-600" /> },
-    { date: '14/03', name: 'Venda Online', category: 'Extra', value: 'R$ 200,00', saldo: 'R$2000,00', icon: <Plug className="w-5 h-5 text-green-600" /> },
-    { date: '14/03', name: 'Pix Família', category: 'Família', value: 'R$ 100,00', saldo: 'R$1600,00', icon: <Home className="w-5 h-5 text-green-600" /> }
-  ];
-
+    { id: '5', date: '15/03', name: 'Salário', category: 'Renda Fixa', value: 'R$ 3000,00', saldo: 'R$5000,00', recurring: true, icon: <Home className="w-5 h-5 text-green-600" /> },
+    { id: '6', date: '14/03', name: 'Venda Online', category: 'Extra', value: 'R$ 200,00', saldo: 'R$2000,00', recurring: false, icon: <Plug className="w-5 h-5 text-green-600" /> },
+    { id: '7', date: '14/03', name: 'Pix Família', category: 'Família', value: 'R$ 100,00', saldo: 'R$1600,00', recurring: false, icon: <Home className="w-5 h-5 text-green-600" /> }
+  ]
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -35,18 +60,20 @@ export default function DashboardPage() {
       <main className="flex-1 p-8">
         <header className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">Painel</h1>
-          <button className="bg-blue-600 text-white px-4 py-2 font-medium rounded-md text-sm">+ Adicionar</button>
+          <button 
+            onClick={openModal}
+            className="bg-blue-600 text-white px-4 py-2 font-medium rounded-md text-sm hover:bg-blue-700 transition"
+          >
+            + Adicionar
+          </button>
         </header>
 
         <div className="flex gap-6">
           <div className="flex-1 min-w-0 flex flex-col gap-8">
-
             <div>
               <div className="relative flex bg-white rounded-lg mb-8 w-fit">
                 <div className={`absolute top-0 h-full bg-blue-600 rounded-lg transition-all duration-200 ease-in-out ${
-                  activeTab === 'despesas' 
-                    ? 'left-0 w-1/2' 
-                    : 'left-1/2 w-1/2'
+                  activeTab === 'despesas' ? 'left-0 w-1/2' : 'left-1/2 w-1/2'
                 }`}></div>
                 <button 
                   onClick={() => setActiveTab('despesas')}
@@ -65,6 +92,7 @@ export default function DashboardPage() {
                   Receitas
                 </button>
               </div>
+
               <section className="grid grid-cols-2 gap-6 mb-0">
                 <div className="bg-white p-6 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3 mb-3">
@@ -79,6 +107,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+
                 <div className="bg-white p-6 rounded-xl shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -120,7 +149,11 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="text-gray-700">
                   {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row, idx) => (
-                    <tr key={idx} className="odd:bg-gray-50 hover:bg-gray-100">
+                    <tr 
+                      key={idx} 
+                      className="odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => openEditModal(row)}
+                    >
                       <td className="py-3">{row.date}</td>
                       <td className="py-3">
                         <div className="flex items-center gap-2">
@@ -136,8 +169,8 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </section>
-
           </div>
+
           <div className="flex-shrink-0 w-full max-w-xs flex flex-col gap-6">
             <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col justify-center items-center text-gray-400">
               Gráfico: Balanço Mensal
@@ -148,6 +181,25 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      <AddModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
+      
+      {selectedItem && (
+        <EditModal 
+          isOpen={isEditModalOpen} 
+          onClose={closeEditModal} 
+          type={activeTab}
+          editItem={{
+            id: selectedItem.id,
+            name: selectedItem.name,
+            category: selectedItem.category,
+            value: selectedItem.value,
+            recurring: selectedItem.recurring,
+            date: convertDateForEditModal(selectedItem.date)
+          }}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   )
 }
