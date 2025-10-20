@@ -24,7 +24,6 @@ interface CalendarProps {
 function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   
-  // Sync calendar month when selected date changes
   useEffect(() => {
     if (selectedDate) {
       const selectedDateParts = selectedDate.split('-')
@@ -46,12 +45,10 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
     
     const days = []
     
-    // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null)
     }
     
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day)
     }
@@ -95,7 +92,6 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-lg font-medium text-gray-800">
           {formatSelectedDate(selectedDate)}
@@ -118,7 +114,6 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
         </div>
       </div>
       
-      {/* Day headers */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {dayNames.map((day, index) => (
           <div key={index} className="text-center text-sm font-medium text-gray-600 py-2">
@@ -127,14 +122,12 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
         ))}
       </div>
       
-      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, index) => {
           if (!day) {
             return <div key={index} className="h-8"></div>
           }
           
-          // Check if this day is selected by comparing date strings
           const currentDateString = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const isSelected = selectedDate === currentDateString
           
@@ -166,7 +159,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
   const [date, setDate] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setName('')
@@ -177,9 +169,8 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
     }
   }, [isOpen])
 
-  // Format currency as user types
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '') // remove non-numbers
+    const rawValue = e.target.value.replace(/\D/g, '')
     const number = parseInt(rawValue || '0', 10)
     setValue(number ? currencyFormatter.format(number / 100) : '')
   }
@@ -200,7 +191,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay */}
           <motion.div
             className="fixed inset-0 bg-black/30 z-40"
             initial={{ opacity: 0 }}
@@ -209,7 +199,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
             onClick={onClose}
           />
 
-          {/* Modal content */}
           <motion.div
             className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col p-6 overflow-y-auto"
             initial={{ x: '100%' }}
@@ -217,7 +206,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-800">
                 {type === 'despesas' ? 'Adicionar Despesa' : 'Adicionar Receita'}
@@ -227,9 +215,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
               </button>
             </div>
 
-            {/* Form */}
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
                 <input
@@ -242,7 +228,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-1">Categoria</label>
                 <select
@@ -259,7 +244,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 </select>
               </div>
 
-              {/* Value & Recurring */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-1">Valor</label>
                 <div className="flex items-center gap-4">
@@ -283,7 +267,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 </div>
               </div>
 
-              {/* Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-800 mb-1">Data</label>
                 <Calendar
@@ -292,7 +275,6 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 />
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 className="mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
