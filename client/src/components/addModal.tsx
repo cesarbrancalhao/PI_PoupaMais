@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-})
+import { CategoriaDespesa, FonteReceita } from '@/types'
+import { categoriasDespesaService } from '@/services/categorias.service'
+import { fontesReceitaService } from '@/services/fontes.service'
+import { despesasService } from '@/services/despesas.service'
+import { receitasService } from '@/services/receitas.service'
 
 interface AddModalProps {
   isOpen: boolean
@@ -27,9 +26,13 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   useEffect(() => {
     if (selectedDate) {
       const selectedDateParts = selectedDate.split('-')
-      const selectedYear = parseInt(selectedDateParts[0])
-      const selectedMonth = parseInt(selectedDateParts[1]) - 1
-      setCurrentMonth(new Date(selectedYear, selectedMonth, 1))
+      if (selectedDateParts.length === 3) {
+        const selectedYear = parseInt(selectedDateParts[0], 10)
+        const selectedMonth = parseInt(selectedDateParts[1], 10) - 1
+        if (!isNaN(selectedYear) && !isNaN(selectedMonth)) {
+          setCurrentMonth(new Date(selectedYear, selectedMonth, 1))
+        }
+      }
     }
   }, [selectedDate])
   
@@ -84,7 +87,9 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 
   const formatSelectedDate = (dateString: string) => {
     if (!dateString) return formatDisplayDate(currentMonth)
-    const [year, month, day] = dateString.split('-')
+    const parts = dateString.split('-')
+    if (parts.length !== 3) return formatDisplayDate(currentMonth)
+    const [year, month, day] = parts
     return `${day}/${month}/${year}`
   }
   
@@ -157,7 +162,12 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
   const [value, setValue] = useState('')
   const [recurring, setRecurring] = useState(false)
   const [date, setDate] = useState('')
+  const [date_vencimento, setDateVencimento] = useState('')
+  const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
+  const [fontes, setFontes] = useState<FonteReceita[]>([])
   const formRef = useRef<HTMLFormElement>(null)
+  const [dateError, setDateError] = useState(false)
+  const [showError, setShowError] = useState(false)
 
   useEffect(() => {
     if (!isOpen) {
@@ -166,25 +176,104 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
       setValue('')
       setRecurring(false)
       setDate('')
+      setDateVencimento('')
+      setDateError(false)
+      setShowError(false)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        if (type === 'despesas') {
+          const data = await categoriasDespesaService.getAll()
+          setCategorias(data)
+        } else {
+          const data = await fontesReceitaService.getAll()
+          setFontes(data)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar opções:', error)
+      }
+    }
+
+    if (isOpen) {
+      fetchOptions()
+    }
+  }, [isOpen, type])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '')
     const number = parseInt(rawValue || '0', 10)
-    setValue(number ? currencyFormatter.format(number / 100) : '')
+    setValue(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     console.log({
       name,
       category,
       value,
       recurring,
       date,
+      date_vencimento
     })
-    onClose()
+
+    if (date === '') {
+      setDateError(true);
+      return
+    }
+
+    try {
+      const numericValue = parseFloat(value.replace('R$', '').replace(/\./g, '').replace(',', '.'))
+
+      if (isNaN(numericValue) || numericValue <= 0) {
+        setShowError(true)
+        setTimeout(() => setShowError(false), 3000)
+        return
+      }
+
+      if (type === 'despesas') {
+        const categoryId = categorias.find((cat) => cat.nome === category)?.id
+        if (!categoryId) {
+          setShowError(true)
+          setTimeout(() => setShowError(false), 3000)
+          return
+        }
+
+        await despesasService.create({
+          nome: name,
+          valor: numericValue,
+          recorrente: recurring,
+          data: date,
+          data_vencimento: date_vencimento || undefined,
+          categoria_despesa_id: categoryId
+        })
+      } else {
+        const fonteId = fontes.find((fonte) => fonte.nome === category)?.id
+        if (!fonteId) {
+          setShowError(true)
+          setTimeout(() => setShowError(false), 3000)
+          return
+        }
+
+        await receitasService.create({
+          nome: name,
+          valor: numericValue,
+          recorrente: recurring,
+          data: date,
+          data_vencimento: date_vencimento || undefined,
+          fonte_receita_id: fonteId
+        })
+      }
+
+      onClose()
+    } catch (error) {
+      console.error('Erro ao criar:', error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+    }
   }
 
   return (
@@ -206,6 +295,23 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           >
+            <AnimatePresence>
+              {showError && (
+                <motion.div
+                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                >
+                  <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
+                    <X className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-800">
                 {type === 'despesas' ? 'Adicionar Despesa' : 'Adicionar Receita'}
@@ -229,18 +335,27 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Categoria</label>
+                <label className="block text-sm font-medium text-gray-800 mb-1">
+                  {type === 'despesas' ? 'Categoria' : 'Fonte'}
+                </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
                   required
                 >
-                  <option value="">Selecione uma categoria</option>
-                  <option>Mercado</option>
-                  <option>Eletrônicos</option>
-                  <option>Roupas</option>
-                  <option>Reforma</option>
+                  <option value="">Selecione uma {type === 'despesas' ? 'categoria' : 'fonte'}</option>
+                  {type === 'despesas'
+                    ? categorias.map((cat) => (
+                        <option key={cat.id} value={cat.nome}>
+                          {cat.nome}
+                        </option>
+                      ))
+                    : fontes.map((fonte) => (
+                        <option key={fonte.id} value={fonte.nome}>
+                          {fonte.nome}
+                        </option>
+                      ))}
                 </select>
               </div>
 
@@ -249,7 +364,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
-                    placeholder="$0.00"
+                    placeholder="R$ 0,00"
                     value={value}
                     onChange={handleValueChange}
                     className="currency-input w-1/2 bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
@@ -273,13 +388,24 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                   selectedDate={date}
                   onDateSelect={setDate}
                 />
+                {dateError && <p className="text-xs text-red-500 mt-1">A data é obrigatória</p>}
               </div>
+
+              {recurring && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Data de Vencimento</label>
+                  <Calendar
+                    selectedDate={date_vencimento}
+                    onDateSelect={setDateVencimento}
+                  />
+                </div>
+              )}
 
               <button
                 type="submit"
                 className="mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
               >
-                Salvar {type === 'despesas' ? 'Despesa' : 'Receita'}
+                Salvar {type === 'despesas' ? 'despesa' : 'receita'}
               </button>
             </form>
           </motion.div>

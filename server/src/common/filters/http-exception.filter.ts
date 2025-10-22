@@ -25,7 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : (exceptionResponse as any).message || message;
     }
 
-    console.error('Exceção:', exception);
+    console.error('Exceção: ', exception);
 
     response.status(status).json({
       statusCode: status,

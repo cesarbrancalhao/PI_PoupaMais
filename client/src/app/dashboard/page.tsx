@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
-import { Home, Plug, Shirt } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart } from 'lucide-react'
+import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
+import { despesasService, receitasService } from '@/services'
+import { categoriasDespesaService } from '@/services/categorias.service'
+import { fontesReceitaService } from '@/services/fontes.service'
 
 interface TableRow {
   id: string
@@ -22,18 +26,75 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<TableRow | null>(null)
+  const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [receitas, setReceitas] = useState<Receita[]>([])
+  const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
+  const [fontes, setFontes] = useState<FonteReceita[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [despesasResponse, receitasResponse, categoriasResponse, fontesResponse] = await Promise.all([
+        despesasService.getAll(1, 100),
+        receitasService.getAll(1, 100),
+        categoriasDespesaService.getAll(),
+        fontesReceitaService.getAll()
+      ])
+      // Handle both array response and object with data property
+      const despesasData = Array.isArray(despesasResponse)
+        ? despesasResponse
+        : (despesasResponse?.data || [])
+      const receitasData = Array.isArray(receitasResponse)
+        ? receitasResponse
+        : (receitasResponse?.data || [])
+
+      setDespesas(despesasData)
+      setReceitas(receitasData)
+      setCategorias(categoriasResponse)
+      setFontes(fontesResponse)
+    } catch (err) {
+      console.error('Erro ao buscar dados:', err)
+      setError('Erro ao carregar dados. Verifique sua conexão.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-  
+  const closeModal = () => {
+    setIsModalOpen(false)
+    fetchData()
+  }
+
   const openEditModal = (item: TableRow) => {
     setSelectedItem(item)
     setIsEditModalOpen(true)
   }
-  const closeEditModal = () => setIsEditModalOpen(false)
+  const closeEditModal = () => {
+    setIsEditModalOpen(false)
+    fetchData()
+  }
 
-  const handleDelete = (id: string) => {
-    console.log('Deleting item with id:', id)}
+  const handleDelete = async (id: string) => {
+    try {
+      if (activeTab === 'despesas') {
+        await despesasService.delete(Number(id))
+      } else {
+        await receitasService.delete(Number(id))
+      }
+      fetchData()
+    } catch (err) {
+      console.error('Erro ao excluir item:', err)
+      alert('Erro ao excluir item')
+    }
+  }
 
   const convertDateForEditModal = (dateStr: string) => {
     const [day, month] = dateStr.split('/')
@@ -41,18 +102,95 @@ export default function DashboardPage() {
     return `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
 
-  const despesasRows = [
-    { id: '1', date: '15/03', name: 'Detergente', category: 'Mercado', value: 'R$ 16,90', saldo: 'R$2837,50', recurring: false, icon: <Home className="w-5 h-5 text-blue-600" /> },
-    { id: '2', date: '15/03', name: 'Carregador iPad', category: 'Eletrônicos', value: 'R$ 36,90', saldo: 'R$2854,40', recurring: false, icon: <Plug className="w-5 h-5 text-blue-600" /> },
-    { id: '3', date: '15/03', name: 'Fone Bluetooth', category: 'Eletrônicos', value: 'R$ 80,90', saldo: 'R$2891,30', recurring: true, icon: <Plug className="w-5 h-5 text-blue-600" /> },
-    { id: '4', date: '14/03', name: 'Meia curta', category: 'Roupas', value: 'R$ 10,90', saldo: 'R$2989,10', recurring: false, icon: <Shirt className="w-5 h-5 text-blue-600" /> }
-  ]
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    return `${day}/${month}`
+  }
 
-  const receitasRows = [
-    { id: '5', date: '15/03', name: 'Salário', category: 'Renda Fixa', value: 'R$ 3000,00', saldo: 'R$5000,00', recurring: true, icon: <Home className="w-5 h-5 text-green-600" /> },
-    { id: '6', date: '14/03', name: 'Venda Online', category: 'Extra', value: 'R$ 200,00', saldo: 'R$2000,00', recurring: false, icon: <Plug className="w-5 h-5 text-green-600" /> },
-    { id: '7', date: '14/03', name: 'Pix Família', category: 'Família', value: 'R$ 100,00', saldo: 'R$1600,00', recurring: false, icon: <Home className="w-5 h-5 text-green-600" /> }
-  ]
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const getIcon = (index: number, isReceita: boolean) => {
+    const icons = [
+      <Home className={`w-5 h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="home" />,
+      <Plug className={`w-5 h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="plug" />,
+      <Shirt className={`w-5 h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="shirt" />,
+      <ShoppingCart className={`w-5 h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="cart" />,
+      <DollarSign className={`w-5 h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="dollar" />
+    ]
+    return icons[index % icons.length]
+  }
+
+  const calculateSaldo = (items: (Despesa | Receita)[], currentIndex: number, isReceita: boolean) => {
+    let saldo = 0
+    for (let i = items.length - 1; i >= currentIndex; i--) {
+      if (isReceita) {
+        saldo += items[i].valor
+      } else {
+        saldo -= items[i].valor
+      }
+    }
+    return saldo
+  }
+
+  const despesasRows: TableRow[] = (despesas ?? []).map((despesa, index) => {
+    const categoria = categorias.find(c => c.id === despesa.categoria_despesa_id)
+    return {
+      id: despesa?.id?.toString?.() ?? '',
+      date: despesa?.data ? formatDate(despesa.data) : '--/--',
+      name: despesa?.nome ?? '',
+      category: categoria?.nome ?? 'Sem categoria',
+      value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
+      saldo: formatCurrency(Math.abs(calculateSaldo(despesas ?? [], index, false))),
+      recurring: despesa?.recorrente ?? false,
+      icon: getIcon?.(index, false) ?? null
+    }
+  })
+
+  const receitasRows: TableRow[] = (receitas ?? []).map((receita, index) => {
+    const fonte = fontes.find(f => f.id === receita.fonte_receita_id)
+    return {
+      id: receita?.id?.toString?.() ?? '',
+      date: receita?.data ? formatDate(receita.data) : '--/--',
+      name: receita?.nome ?? '',
+      category: fonte?.nome ?? 'Sem fonte',
+      value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
+      saldo: formatCurrency(calculateSaldo(receitas ?? [], index, true)),
+      recurring: receita?.recorrente ?? false,
+      icon: getIcon?.(index, true) ?? null
+    }
+  })
+
+  const totalReceitas = (receitas ?? []).reduce((sum, r) => sum + (parseFloat(r.valor as unknown as string) || 0), 0)
+  const totalDespesas = (despesas ?? []).reduce((sum, d) => sum + (parseFloat(d.valor as unknown as string) || 0), 0)
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 p-8 flex items-center justify-center">
+          <div className="text-gray-500">Carregando...</div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 p-8 flex items-center justify-center">
+          <div className="text-red-500">{error}</div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -60,7 +198,7 @@ export default function DashboardPage() {
       <main className="flex-1 p-8">
         <header className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">Painel</h1>
-          <button 
+          <button
             onClick={openModal}
             className="bg-blue-600 text-white px-4 py-2 font-medium rounded-md text-sm hover:bg-blue-700 transition"
           >
@@ -103,7 +241,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-gray-500 text-sm">Receitas</p>
-                      <p className="text-2xl font-semibold">3300,00</p>
+                      <p className="text-2xl font-semibold">{formatCurrency(totalReceitas)}</p>
                     </div>
                   </div>
                 </div>
@@ -118,14 +256,8 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-gray-500 text-sm">Despesas</p>
-                        <p className="text-2xl font-semibold">2348,88</p>
+                        <p className="text-2xl font-semibold">{formatCurrency(totalDespesas)}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd"/>
-                      </svg>
-                      <span className="text-xs text-red-500">+100 da média</span>
                     </div>
                   </div>
                 </div>
@@ -143,7 +275,7 @@ export default function DashboardPage() {
                     <th className="py-2 font-medium">Data</th>
                     <th className="py-2 font-medium">Nome</th>
                     <th className="py-2 font-medium">Valor</th>
-                    <th className="py-2 font-medium">Categoria</th>
+                    <th className="py-2 font-medium">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
                     <th className="py-2 font-medium">Saldo</th>
                   </tr>
                 </thead>
