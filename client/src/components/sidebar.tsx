@@ -1,13 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Goal, LineChart, Settings, SquareStack, LogOut, Menu } from 'lucide-react'
+import { usersService } from '@/services/users.service'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState<{ nome: string } | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await usersService.getProfile()
+        setUser(data)
+      } catch (error) {
+        console.error('Erro ao buscar usuário:', error)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  const initials = user?.nome
+    ? user.nome
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+    : 'JS'
 
   const links = [
     { name: 'Painel', href: '/dashboard', icon: <SquareStack className="w-5 h-5" /> },
@@ -33,10 +55,10 @@ export default function Sidebar() {
         <div>
           <div className="flex items-center gap-3 p-4">
             <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-white text-sm font-medium">{initials}</span>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-800">João Silva</p>
+              <p className="text-sm font-medium text-gray-800">{user?.nome || 'Carregando...'}</p>
             </div>
             <button className="p-1 hover:bg-gray-100 rounded">
               <LogOut className="w-4 h-4 text-gray-500" />
