@@ -1,27 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Goal, LineChart, Settings, SquareStack, LogOut, Menu } from 'lucide-react'
-import { usersService } from '@/services/users.service'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState<{ nome: string } | null>(null)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const { user, logout } = useAuth()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await usersService.getProfile()
-        setUser(data)
-      } catch (error) {
-        console.error('Erro ao buscar usuário:', error)
-      }
-    }
-    fetchUser()
-  }, [])
+  const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false)
+    logout()
+  }
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false)
+  }
 
   const initials = user?.nome
     ? user.nome
@@ -60,7 +62,11 @@ export default function Sidebar() {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-800">{user?.nome || 'Carregando...'}</p>
             </div>
-            <button className="p-1 hover:bg-gray-100 rounded">
+            <button
+              onClick={handleLogout}
+              className="p-1 hover:bg-gray-100 rounded"
+              title="Sair"
+            >
               <LogOut className="w-4 h-4 text-gray-500" />
             </button>
           </div>
@@ -84,6 +90,29 @@ export default function Sidebar() {
           </nav>
         </div>
       </aside>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirmar saída</h3>
+            <p className="text-sm text-gray-600 mb-6">Tem certeza que deseja sair?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelLogout}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

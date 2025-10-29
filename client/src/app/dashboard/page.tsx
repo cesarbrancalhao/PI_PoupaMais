@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
+import ProtectedRoute from '@/components/ProtectedRoute'
 import { Home, Plug, Shirt, DollarSign, ShoppingCart } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
@@ -173,28 +174,33 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
-          <div className="text-gray-500">Carregando...</div>
-        </main>
-      </div>
+      <ProtectedRoute>
+        <div className="flex min-h-screen bg-gray-50">
+          <Sidebar />
+          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+            <div className="text-gray-500">Carregando...</div>
+          </main>
+        </div>
+      </ProtectedRoute>
     )
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
-          <div className="text-red-500">{error}</div>
-        </main>
-      </div>
+      <ProtectedRoute>
+        <div className="flex min-h-screen bg-gray-50">
+          <Sidebar />
+          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+            <div className="text-red-500">{error}</div>
+          </main>
+        </div>
+      </ProtectedRoute>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
@@ -374,6 +380,7 @@ export default function DashboardPage() {
           onDelete={handleDelete}
         />
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 }
