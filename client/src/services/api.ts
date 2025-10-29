@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+import Cookies from 'js-cookie';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 class ApiService {
   private baseURL: string;
@@ -8,11 +10,30 @@ class ApiService {
   }
 
   private getAuthHeaders(): HeadersInit {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = Cookies.get('token');
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
     };
+  }
+
+  private async handleError(response: Response): Promise<never> {
+    let errorMessage = 'Erro ao processar a requisição';
+
+    try {
+      const errorData = await response.json();
+      if (errorData.message) {
+        if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join(', ');
+        } else {
+          errorMessage = errorData.message;
+        }
+      }
+    } catch {
+      errorMessage = `Erro ${response.status}: ${response.statusText}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   async get<T>(endpoint: string): Promise<T> {
@@ -22,7 +43,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      await this.handleError(response);
     }
 
     return response.json();
@@ -36,7 +57,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      await this.handleError(response);
     }
 
     return response.json();
@@ -50,7 +71,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      await this.handleError(response);
     }
 
     return response.json();
@@ -63,7 +84,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      await this.handleError(response);
     }
 
     return response.json();
