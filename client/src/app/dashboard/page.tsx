@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
@@ -33,10 +33,27 @@ export default function DashboardPage() {
   const [fontes, setFontes] = useState<FonteReceita[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedFilter, setSelectedFilter] = useState<string>('')
+  const [selectedMonth, setSelectedMonth] = useState<string>('')
 
   useEffect(() => {
     fetchData()
+    const now = new Date()
+    const currentMonth = `${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
+    setSelectedMonth(currentMonth)
+  }, [])
+
+  const monthOptions = useMemo(() => {
+    const months = []
+    const now = new Date()
+
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      months.push(`${month}-${year}`)
+    }
+
+    return months
   }, [])
 
   const fetchData = async () => {
@@ -94,14 +111,14 @@ export default function DashboardPage() {
       fetchData()
     } catch (err) {
       console.error('Erro ao excluir item:', err)
-      alert('Erro ao excluir item')
+      setError('Erro ao excluir item. Tente novamente.')
     }
   }
 
   const convertDateForEditModal = (dateStr: string) => {
     const [day, month] = dateStr.split('/')
-    const currentYear = new Date().getFullYear()
-    return `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    const year = selectedMonth ? selectedMonth.split('-')[1] : new Date().getFullYear().toString()
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
 
   const formatDate = (dateString: string) => {
@@ -141,7 +158,22 @@ export default function DashboardPage() {
     return saldo
   }
 
-  const despesasRows: TableRow[] = (despesas ?? []).map((despesa, index) => {
+  const filterItemsByMonth = <T extends { data: string }>(items: T[]): T[] => {
+    if (!selectedMonth) return items
+
+    const [month, year] = selectedMonth.split('-')
+    return items.filter(item => {
+      const itemDate = new Date(item.data)
+      const itemMonth = String(itemDate.getMonth() + 1).padStart(2, '0')
+      const itemYear = itemDate.getFullYear().toString()
+      return itemMonth === month && itemYear === year
+    })
+  }
+
+  const filteredDespesas = filterItemsByMonth(despesas)
+  const filteredReceitas = filterItemsByMonth(receitas)
+
+  const despesasRows: TableRow[] = (filteredDespesas ?? []).map((despesa, index) => {
     const categoria = categorias.find(c => c.id === despesa.categoria_despesa_id)
     return {
       id: despesa?.id?.toString?.() ?? '',
@@ -149,13 +181,13 @@ export default function DashboardPage() {
       name: despesa?.nome ?? '',
       category: categoria?.nome ?? 'Sem categoria',
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
-      saldo: formatCurrency(Math.abs(calculateSaldo(despesas ?? [], index, false))),
+      saldo: formatCurrency(Math.abs(calculateSaldo(filteredDespesas ?? [], index, false))),
       recurring: despesa?.recorrente ?? false,
       icon: getIcon?.(index, false) ?? null
     }
   })
 
-  const receitasRows: TableRow[] = (receitas ?? []).map((receita, index) => {
+  const receitasRows: TableRow[] = (filteredReceitas ?? []).map((receita, index) => {
     const fonte = fontes.find(f => f.id === receita.fonte_receita_id)
     return {
       id: receita?.id?.toString?.() ?? '',
@@ -163,14 +195,14 @@ export default function DashboardPage() {
       name: receita?.nome ?? '',
       category: fonte?.nome ?? 'Sem fonte',
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
-      saldo: formatCurrency(calculateSaldo(receitas ?? [], index, true)),
+      saldo: formatCurrency(calculateSaldo(filteredReceitas ?? [], index, true)),
       recurring: receita?.recorrente ?? false,
       icon: getIcon?.(index, true) ?? null
     }
   })
 
-  const totalReceitas = (receitas ?? []).reduce((sum, r) => sum + (parseFloat(r.valor as unknown as string) || 0), 0)
-  const totalDespesas = (despesas ?? []).reduce((sum, d) => sum + (parseFloat(d.valor as unknown as string) || 0), 0)
+  const totalReceitas = (filteredReceitas ?? []).reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
+  const totalDespesas = (filteredDespesas ?? []).reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
 
   if (loading) {
     return (
@@ -206,12 +238,14 @@ export default function DashboardPage() {
         <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
           <h1 className="text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left">Painel</h1>
           <div className="flex flex-col gap-2 w-full md:w-auto">
-            <select 
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-48"
             >
-              <option value="">03-2025</option>
+              {monthOptions.map(month => (
+                <option key={month} value={month}>{month}</option>
+              ))}
             </select>
             <button
               onClick={openModal}
@@ -281,7 +315,12 @@ export default function DashboardPage() {
             <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h2 className="text-base md:text-lg font-semibold text-gray-800">{activeTab === 'despesas' ? 'Últimas despesas' : 'Últimas receitas'}</h2>
-                <a href="#" className="text-indigo-600 text-xs md:text-sm">Ver mais</a>
+                <button
+                  onClick={() => {/* TODO: Implement "Ver mais" functionality */}}
+                  className="text-indigo-600 text-xs md:text-sm hover:text-indigo-800 transition-colors"
+                >
+                  Ver mais
+                </button>
               </div>
               
               <div className="md:hidden">
@@ -292,9 +331,9 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row, idx) => (
-                    <div 
-                      key={idx}
+                  {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row) => (
+                    <div
+                      key={row.id}
                       className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer grid grid-cols-4 gap-2 items-center"
                       onClick={() => openEditModal(row)}
                     >
@@ -327,9 +366,9 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
-                    {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row, idx) => (
-                      <tr 
-                        key={idx} 
+                    {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row) => (
+                      <tr
+                        key={row.id}
                         className="odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
                         onClick={() => openEditModal(row)}
                       >
