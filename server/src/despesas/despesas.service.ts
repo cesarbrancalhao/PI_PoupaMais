@@ -85,30 +85,49 @@ export class DespesasService {
   }
 
   async update(id: number, userId: number, updateDespesaDto: UpdateDespesaDto) {
-    const result = await this.databaseService.query(
-      `UPDATE despesa
-       SET nome = COALESCE($1, nome),
-           valor = COALESCE($2, valor),
-           recorrente = COALESCE($3, recorrente),
-           data = COALESCE($4, data),
-           data_vencimento = COALESCE($5, data_vencimento),
-           categoria_despesa_id = COALESCE($6, categoria_despesa_id)
-       WHERE id = $7 AND usuario_id = $8 RETURNING *`,
-      [
-        updateDespesaDto.nome,
-        updateDespesaDto.valor,
-        updateDespesaDto.recorrente,
-        updateDespesaDto.data,
-        updateDespesaDto.data_vencimento,
-        updateDespesaDto.categoria_despesa_id,
-        id,
-        userId,
-      ],
-    );
-    if (result.rows.length === 0) {
-      throw new NotFoundException('Despesa não encontrada');
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      if (updateDespesaDto.categoria_despesa_id !== undefined) {
+        const categoryExists = await client.query(
+          'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
+          [updateDespesaDto.categoria_despesa_id, userId],
+        );
+        if (categoryExists.rows.length === 0) throw new NotFoundException('Categoria não encontrada');
+      }
+
+      const result = await client.query(
+        `UPDATE despesa
+         SET nome = COALESCE($1, nome),
+             valor = COALESCE($2, valor),
+             recorrente = COALESCE($3, recorrente),
+             data = COALESCE($4, data),
+             data_vencimento = COALESCE($5, data_vencimento),
+             categoria_despesa_id = COALESCE($6, categoria_despesa_id)
+         WHERE id = $7 AND usuario_id = $8 RETURNING *`,
+        [
+          updateDespesaDto.nome,
+          updateDespesaDto.valor,
+          updateDespesaDto.recorrente,
+          updateDespesaDto.data,
+          updateDespesaDto.data_vencimento,
+          updateDespesaDto.categoria_despesa_id,
+          id,
+          userId,
+        ],
+      );
+
+      if (result.rows.length === 0) throw new NotFoundException('Despesa não encontrada');
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-    return result.rows[0];
   }
 
   async remove(id: number, userId: number) {

@@ -83,28 +83,48 @@ export class ReceitasService {
   }
 
   async update(id: number, userId: number, data: UpdateReceitaDto) {
-    const result = await this.databaseService.query(
-      `UPDATE receita
-       SET nome = COALESCE($1, nome),
-           valor = COALESCE($2, valor),
-           recorrente = COALESCE($3, recorrente),
-           data = COALESCE($4, data),
-           data_vencimento = COALESCE($5, data_vencimento),
-           fonte_receita_id = COALESCE($6, fonte_receita_id)
-       WHERE id = $7 AND usuario_id = $8 RETURNING *`,
-      [
-        data.nome,
-        data.valor,
-        data.recorrente,
-        data.data,
-        data.data_vencimento,
-        data.fonte_receita_id,
-        id,
-        userId,
-      ],
-    );
-    if (result.rows.length === 0) throw new NotFoundException('Receita não encontrada');
-    return result.rows[0];
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      if (data.fonte_receita_id !== undefined) {
+        const fonteExists = await client.query(
+          'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
+          [data.fonte_receita_id, userId],
+        );
+        if (fonteExists.rows.length === 0) throw new NotFoundException('Fonte de receita não encontrada');
+      }
+
+      const result = await client.query(
+        `UPDATE receita
+         SET nome = COALESCE($1, nome),
+             valor = COALESCE($2, valor),
+             recorrente = COALESCE($3, recorrente),
+             data = COALESCE($4, data),
+             data_vencimento = COALESCE($5, data_vencimento),
+             fonte_receita_id = COALESCE($6, fonte_receita_id)
+         WHERE id = $7 AND usuario_id = $8 RETURNING *`,
+        [
+          data.nome,
+          data.valor,
+          data.recorrente,
+          data.data,
+          data.data_vencimento,
+          data.fonte_receita_id,
+          id,
+          userId,
+        ],
+      );
+      if (result.rows.length === 0) throw new NotFoundException('Receita não encontrada');
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async remove(id: number, userId: number) {
