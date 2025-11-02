@@ -5,7 +5,7 @@ import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -282,31 +282,27 @@ export default function DashboardPage() {
           <div className="w-full xl:w-4/6 flex flex-col gap-4 md:gap-6">
             <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs md:text-sm">Receitas</p>
-                    <p className="text-lg md:text-2xl font-semibold">{formatCurrency(totalReceitas)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                      </svg>
+                      <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs md:text-sm">Despesas</p>
                       <p className="text-lg md:text-2xl font-semibold">{formatCurrency(totalDespesas)}</p>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs md:text-sm">Receitas</p>
+                    <p className="text-lg md:text-2xl font-semibold">{formatCurrency(totalReceitas)}</p>
                   </div>
                 </div>
               </div>
