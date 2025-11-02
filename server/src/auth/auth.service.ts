@@ -60,7 +60,6 @@ export class AuthService {
     try {
       await client.query('BEGIN');
 
-      // Criar usuário
       const result = await client.query(
         'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
         [nome, email, hashedPassword],

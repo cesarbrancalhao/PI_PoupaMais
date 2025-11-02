@@ -50,8 +50,8 @@ async function bootstrap() {
   
   try {
     await app.listen(port);
-    console.log(`Aplicação rodando em: http://localhost:${port}`);
-    console.log(`Documentação Swagger disponível em: http://localhost:${port}/api/docs`);
+    logger.log(`Aplicação rodando em: http://localhost:${port}`);
+    logger.log(`Documentação Swagger disponível em: http://localhost:${port}/api/docs`);
   } catch (error) {
     logger.error('Erro ao iniciar a aplicação:', error);
     process.exit(1);
