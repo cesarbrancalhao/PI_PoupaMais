@@ -20,8 +20,8 @@ export class UsersService {
 
   async updateProfile(userId: number, nome: string, email: string) {
     const existingMail = await this.databaseService.query(
-      'SELECT id FROM usuario WHERE email = $1',
-      [email],
+      'SELECT id FROM usuario WHERE email = $1 AND id != $2',
+      [email, userId],
     );
 
     if (existingMail.rows.length > 0) {
