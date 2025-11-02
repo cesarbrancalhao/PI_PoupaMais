@@ -248,12 +248,7 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
       }
 
       if (type === 'despesas') {
-        const categoryId = categorias.find((cat) => cat.nome === category)?.id
-        if (!categoryId) {
-          setShowError(true)
-          setTimeout(() => setShowError(false), 3000)
-          return
-        }
+        const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
 
         await despesasService.update(Number(editItem.id), {
           nome: name,
@@ -264,12 +259,7 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
           categoria_despesa_id: categoryId
         })
       } else {
-        const fonteId = fontes.find((fonte) => fonte.nome === category)?.id
-        if (!fonteId) {
-          setShowError(true)
-          setTimeout(() => setShowError(false), 3000)
-          return
-        }
+        const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
 
         await receitasService.update(Number(editItem.id), {
           nome: name,
