@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const requiredEnvs = ['JWT_SECRET', 'DB_HOST', 'DB_PASSWORD'];
   requiredEnvs.forEach(variable => {
     if (!process.env[variable]) {
@@ -52,7 +53,7 @@ async function bootstrap() {
     console.log(`Aplicação rodando em: http://localhost:${port}`);
     console.log(`Documentação Swagger disponível em: http://localhost:${port}/api/docs`);
   } catch (error) {
-    console.error('Erro ao iniciar a aplicação:', error);
+    logger.error('Erro ao iniciar a aplicação:', error);
     process.exit(1);
   }
 }
