@@ -41,11 +41,23 @@ export class UsersService {
   }
 
   async deleteAccount(userId: number) {
-    const result = await this.databaseService.query(
-      'DELETE FROM usuario WHERE id = $1',
-      [userId],
-    );
-    if (result.rowCount === 0) throw new NotFoundException('Usuário não encontrado');
-    return { message: 'Conta excluída com sucesso' };
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      const result = await client.query(
+        'DELETE FROM usuario WHERE id = $1',
+        [userId],
+      );
+      if (result.rowCount === 0) throw new NotFoundException('Usuário não encontrado');
+
+      await client.query('COMMIT');
+      return { message: 'Conta excluída com sucesso' };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }

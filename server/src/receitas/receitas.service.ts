@@ -9,28 +9,40 @@ export class ReceitasService {
   constructor(private databaseService: DatabaseService) {}
 
   async create(userId: number, data: CreateReceitaDto) {
-    const fonteExists = await this.databaseService.query(
-      'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
-      [data.fonte_receita_id, userId],
-    );
-    if (fonteExists.rows.length === 0) {
-      throw new NotFoundException('Fonte de receita não encontrada');
-    }
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const result = await this.databaseService.query(
-      `INSERT INTO receita (nome, valor, recorrente, data, data_vencimento, fonte_receita_id, usuario_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [
-        data.nome,
-        data.valor,
-        data.recorrente,
-        data.data,
-        data.data_vencimento,
-        data.fonte_receita_id,
-        userId,
-      ],
-    );
-    return result.rows[0];
+      const fonteExists = await client.query(
+        'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
+        [data.fonte_receita_id, userId],
+      );
+      if (fonteExists.rows.length === 0) {
+        throw new NotFoundException('Fonte de receita não encontrada');
+      }
+
+      const result = await client.query(
+        `INSERT INTO receita (nome, valor, recorrente, data, data_vencimento, fonte_receita_id, usuario_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [
+          data.nome,
+          data.valor,
+          data.recorrente,
+          data.data,
+          data.data_vencimento,
+          data.fonte_receita_id,
+          userId,
+        ],
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {

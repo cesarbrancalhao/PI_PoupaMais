@@ -9,28 +9,40 @@ export class DespesasService {
   constructor(private databaseService: DatabaseService) {}
 
   async create(userId: number, createDespesaDto: CreateDespesaDto) {
-    const categoryExists = await this.databaseService.query(
-      'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
-      [createDespesaDto.categoria_despesa_id, userId],
-    );
-    if (categoryExists.rows.length === 0) {
-      throw new NotFoundException('Categoria não encontrada');
-    }
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const result = await this.databaseService.query(
-      `INSERT INTO despesa (nome, valor, recorrente, data, data_vencimento, categoria_despesa_id, usuario_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [
-        createDespesaDto.nome,
-        createDespesaDto.valor,
-        createDespesaDto.recorrente,
-        createDespesaDto.data,
-        createDespesaDto.data_vencimento,
-        createDespesaDto.categoria_despesa_id,
-        userId,
-      ],
-    );
-    return result.rows[0];
+      const categoryExists = await client.query(
+        'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
+        [createDespesaDto.categoria_despesa_id, userId],
+      );
+      if (categoryExists.rows.length === 0) {
+        throw new NotFoundException('Categoria não encontrada');
+      }
+
+      const result = await client.query(
+        `INSERT INTO despesa (nome, valor, recorrente, data, data_vencimento, categoria_despesa_id, usuario_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [
+          createDespesaDto.nome,
+          createDespesaDto.valor,
+          createDespesaDto.recorrente,
+          createDespesaDto.data,
+          createDespesaDto.data_vencimento,
+          createDespesaDto.categoria_despesa_id,
+          userId,
+        ],
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {

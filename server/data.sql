@@ -70,7 +70,6 @@ CREATE TABLE meta (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
--- Criar índices para melhor desempenho
 CREATE INDEX idx_config_usuario_id ON config(usuario_id);
 CREATE INDEX idx_categoria_despesa_usuario_id ON categoria_despesa(usuario_id);
 CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);
