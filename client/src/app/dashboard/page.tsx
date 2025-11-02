@@ -249,9 +249,9 @@ export default function DashboardPage() {
             </select>
             <button
               onClick={openModal}
-              className="bg-blue-600 text-white px-4 py-2 font-medium rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap"
+              className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap"
             >
-              + Adicionar
+              Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}
             </button>
           </div>
         </header>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                       <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
                       <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
                       <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-24">Saldo</th>
+                      <th className="py-1 md:py-2 font-medium text-left w-24">Total</th> {/* Saldo */}
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
