@@ -4,11 +4,13 @@ import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
+import AddCategoriaModal from '@/components/addCategoriaModal'
+import EditCategoriaModal from '@/components/editCategoriaModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import BalanceChart from '@/components/BalanceChart'
 import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2 } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -37,6 +39,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string>('')
+  const [showConfigView, setShowConfigView] = useState(false)
+  const [configTab, setConfigTab] = useState<'categorias' | 'fontes'>('categorias')
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
+  const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -118,6 +124,31 @@ export default function DashboardPage() {
     }
   }
 
+  const handleConfigDelete = async (id: number) => {
+    try {
+      if (configTab === 'categorias') {
+        await categoriasDespesaService.delete(id)
+      } else {
+        await fontesReceitaService.delete(id)
+      }
+      fetchData()
+    } catch (err) {
+      console.error('Erro ao excluir item:', err)
+      setError('Erro ao excluir item. Tente novamente.')
+    }
+  }
+
+  const openConfigModal = (item?: CategoriaDespesa | FonteReceita) => {
+    setSelectedConfigItem(item || null)
+    setIsConfigModalOpen(true)
+  }
+
+  const closeConfigModal = () => {
+    setIsConfigModalOpen(false)
+    setSelectedConfigItem(null)
+    fetchData()
+  }
+
   const convertDateForEditModal = (dateStr: string) => {
     const [day, month] = dateStr.split('/')
     const year = selectedMonth ? selectedMonth.split('-')[1] : new Date().getFullYear().toString()
@@ -138,15 +169,25 @@ export default function DashboardPage() {
     }).format(value)
   }
 
-  const getIcon = (index: number, isReceita: boolean) => {
-    const icons = [
-      <Home className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="home" />,
-      <Plug className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="plug" />,
-      <Shirt className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="shirt" />,
-      <ShoppingCart className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="cart" />,
-      <DollarSign className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="dollar" />
-    ]
-    return icons[index % icons.length]
+  const getIconComponent = (iconName: string) => {
+    const iconMap: Record<string, React.ElementType> = {
+      'Home': Home,
+      'Plug': Plug,
+      'Shirt': Shirt,
+      'ShoppingCart': ShoppingCart,
+      'DollarSign': DollarSign,
+      'CreditCard': CreditCard,
+      'Utensils': Utensils,
+      'Car': Car,
+      'Heart': Heart,
+      'BookOpen': BookOpen,
+      'Briefcase': Briefcase,
+      'Gift': Gift,
+      'Apple': Apple,
+      'Gamepad-2': Gamepad2,
+    }
+    const IconComponent = iconMap[iconName] || Home
+    return IconComponent
   }
 
   const calculateSaldo = (items: (Despesa | Receita)[], currentIndex: number, isReceita: boolean) => {
@@ -178,6 +219,7 @@ export default function DashboardPage() {
 
   const despesasRows: TableRow[] = (filteredDespesas ?? []).map((despesa, index) => {
     const categoria = categorias.find(c => c.id === despesa.categoria_despesa_id)
+    const IconComponent = getIconComponent(categoria?.icone || 'DollarSign')
     return {
       id: despesa?.id?.toString?.() ?? '',
       date: despesa?.data ? formatDate(despesa.data) : '--/--',
@@ -186,12 +228,13 @@ export default function DashboardPage() {
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
       saldo: formatCurrency(Math.abs(calculateSaldo(filteredDespesas ?? [], index, false))),
       recurring: despesa?.recorrente ?? false,
-      icon: getIcon?.(index, false) ?? null
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
     }
   })
 
   const receitasRows: TableRow[] = (filteredReceitas ?? []).map((receita, index) => {
     const fonte = fontes.find(f => f.id === receita.fonte_receita_id)
+    const IconComponent = getIconComponent(fonte?.icone || 'DollarSign')
     return {
       id: receita?.id?.toString?.() ?? '',
       date: receita?.data ? formatDate(receita.data) : '--/--',
@@ -200,7 +243,7 @@ export default function DashboardPage() {
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
       saldo: formatCurrency(calculateSaldo(filteredReceitas ?? [], index, true)),
       recurring: receita?.recorrente ?? false,
-      icon: getIcon?.(index, true) ?? null
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
     }
   })
 
@@ -322,8 +365,125 @@ export default function DashboardPage() {
       <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
-          <h1 className="text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left">Painel</h1>
+        {showConfigView ? (
+          <>
+            <header className="flex items-center gap-4 mb-6 md:mb-8">
+              <button
+                onClick={() => setShowConfigView(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800">
+                Configurar {configTab === 'categorias' ? 'categorias' : 'fontes'}
+              </h1>
+            </header>
+
+            <div className="relative flex bg-white rounded-lg w-fit mb-6 md:mb-8">
+              <div className={`absolute top-0 h-full bg-blue-600 rounded-lg transition-all duration-200 ease-in-out ${
+                configTab === 'categorias' ? 'left-0 w-4/7' : 'left-3/5 w-2/5'
+              }`}></div>
+              <button
+                onClick={() => setConfigTab('categorias')}
+                className={`relative z-10 pl-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  configTab === 'categorias' ? 'text-white' : 'text-gray-600'
+                }`}
+              >
+                Categorias
+              </button>
+              <button
+                onClick={() => setConfigTab('fontes')}
+                className={`relative z-10 pl-5 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  configTab === 'fontes' ? 'text-white' : 'text-gray-600'
+                }`}
+              >
+                Fontes
+              </button>
+            </div>
+
+            <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
+              <div className="w-full xl:w-4/6">
+                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
+                    {configTab === 'categorias' ? 'Categorias' : 'Fontes'}
+                  </h2>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-gray-500 border-b border-gray-200">
+                        <tr>
+                          <th className="py-3 font-medium text-left w-20">Ícone</th>
+                          <th className="py-3 font-medium text-left">Nome</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-gray-700">
+                        {(configTab === 'categorias' ? categorias : fontes).map((item) => {
+                          const IconComponent = getIconComponent(item.icone || 'Home')
+
+                          return (
+                            <tr
+                              key={item.id}
+                              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => openConfigModal(item)}
+                            >
+                              <td className="py-4">
+                                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                                  <IconComponent className="w-6 h-6 text-blue-600" />
+                                </div>
+                              </td>
+                              <td className="py-4">
+                                <span className="text-blue-600 hover:underline">{item.nome}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <button
+                    onClick={() => openConfigModal()}
+                    className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2"
+                  >
+                    Adicionar {configTab === 'categorias' ? 'categoria' : 'fonte'}
+                  </button>
+                </section>
+              </div>
+
+              <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs md:text-sm">{configTab === 'categorias' ? 'Despesas' : 'Receitas'}</p>
+                      <p className="text-lg md:text-2xl font-semibold">{formatCurrency(configTab === 'categorias' ? totalDespesas : totalReceitas)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
+                  <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
+                    <BalanceChart data={monthlyBalanceData} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
+                  {configTab === 'categorias' ? (
+                    <DespesasChart data={despesasChartData} />
+                  ) : (
+                    <ReceitasChart data={receitasChartData} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left">Painel</h1>
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <select
               value={selectedMonth}
@@ -395,6 +555,20 @@ export default function DashboardPage() {
               </div>
             </section>
 
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfigTab(activeTab === 'despesas' ? 'categorias' : 'fontes')
+                  setShowConfigView(true)
+                }}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm">Configurar {activeTab === 'despesas' ? 'categorias' : 'fontes'}</span>
+              </button>
+            </div>
+
             <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h2 className="text-base md:text-lg font-semibold text-gray-800">{activeTab === 'despesas' ? 'Últimas despesas' : 'Últimas receitas'}</h2>
@@ -430,7 +604,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold">{row.value}</div>
-                        <div className={`text-xs text-${activeTab === 'despesas' ? 'red' : 'green'}-600`}>{row.saldo}</div>
+                        <div className={`text-xs ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'}`}>{row.saldo}</div>
                       </div>
                     </div>
                   ))}
@@ -464,7 +638,7 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-2 md:py-3 align-middle text-xs md:text-sm">{row.value}</td>
                         <td className="py-2 md:py-3 align-middle truncate text-xs md:text-sm">{row.category}</td>
-                        <td className={`py-2 md:py-3 align-middle text-${activeTab === 'despesas' ? 'red' : 'green'}-600 text-xs md:text-sm`}>{row.saldo}</td>
+                        <td className={`py-2 md:py-3 align-middle ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'} text-xs md:text-sm`}>{row.saldo}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -489,14 +663,16 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </main>
 
       <AddModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
       
       {selectedItem && (
-        <EditModal 
-          isOpen={isEditModalOpen} 
-          onClose={closeEditModal} 
+        <EditModal
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
           type={activeTab}
           editItem={{
             id: selectedItem.id,
@@ -507,6 +683,24 @@ export default function DashboardPage() {
             date: convertDateForEditModal(selectedItem.date)
           }}
           onDelete={handleDelete}
+        />
+      )}
+
+      {isConfigModalOpen && !selectedConfigItem && (
+        <AddCategoriaModal
+          isOpen={isConfigModalOpen}
+          onClose={closeConfigModal}
+          type={configTab}
+        />
+      )}
+
+      {isConfigModalOpen && selectedConfigItem && (
+        <EditCategoriaModal
+          isOpen={isConfigModalOpen}
+          onClose={closeConfigModal}
+          type={configTab}
+          item={selectedConfigItem}
+          onDelete={handleConfigDelete}
         />
       )}
       </div>
