@@ -5,6 +5,9 @@ import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import BalanceChart from '@/components/BalanceChart'
+import DespesasChart from '@/components/DespesasChart'
+import ReceitasChart from '@/components/ReceitasChart'
 import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
@@ -204,6 +207,92 @@ export default function DashboardPage() {
   const totalReceitas = (filteredReceitas ?? []).reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
   const totalDespesas = (filteredDespesas ?? []).reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
 
+  const monthlyBalanceData = useMemo(() => {
+    const balances = []
+    const now = new Date()
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const monthKey = `${month}-${year}`
+
+      const monthDespesas = despesas.filter(d => {
+        const dDate = new Date(d.data)
+        const dMonth = String(dDate.getMonth() + 1).padStart(2, '0')
+        const dYear = dDate.getFullYear()
+        return `${dMonth}-${dYear}` === monthKey
+      })
+
+      const monthReceitas = receitas.filter(r => {
+        const rDate = new Date(r.data)
+        const rMonth = String(rDate.getMonth() + 1).padStart(2, '0')
+        const rYear = rDate.getFullYear()
+        return `${rMonth}-${rYear}` === monthKey
+      })
+
+      const totalReceitasMonth = monthReceitas.reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
+      const totalDespesasMonth = monthDespesas.reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
+      const balance = totalReceitasMonth - totalDespesasMonth
+
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      const monthLabel = monthNames[date.getMonth()]
+
+      balances.push({
+        month: monthLabel,
+        balance: balance
+      })
+    }
+
+    return balances
+  }, [despesas, receitas])
+
+  // Calculate despesas by category for chart
+  const despesasChartData = useMemo(() => {
+    const categoryTotals = new Map<number, number>()
+
+    filteredDespesas.forEach(despesa => {
+      if (despesa.categoria_despesa_id) {
+        const currentTotal = categoryTotals.get(despesa.categoria_despesa_id) || 0
+        categoryTotals.set(despesa.categoria_despesa_id, currentTotal + (Number(despesa.valor) || 0))
+      }
+    })
+
+    const colors = ['#5B8FF9', '#F6BD60', '#F28B82']
+
+    return Array.from(categoryTotals.entries()).map(([categoryId, total], index) => {
+      const categoria = categorias.find(c => c.id === categoryId)
+      return {
+        category: categoria?.nome || 'Sem categoria',
+        value: total,
+        color: colors[index % colors.length]
+      }
+    })
+  }, [filteredDespesas, categorias])
+
+  // Calculate receitas by source for chart
+  const receitasChartData = useMemo(() => {
+    const sourceTotals = new Map<number, number>()
+
+    filteredReceitas.forEach(receita => {
+      if (receita.fonte_receita_id) {
+        const currentTotal = sourceTotals.get(receita.fonte_receita_id) || 0
+        sourceTotals.set(receita.fonte_receita_id, currentTotal + (Number(receita.valor) || 0))
+      }
+    })
+
+    const colors = ['#5B8FF9', '#F6BD60', '#C0C0C0']
+
+    return Array.from(sourceTotals.entries()).map(([sourceId, total], index) => {
+      const fonte = fontes.find(f => f.id === sourceId)
+      return {
+        source: fonte?.nome || 'Não Informado',
+        value: total,
+        color: colors[index % colors.length]
+      }
+    })
+  }, [filteredReceitas, fontes])
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -343,7 +432,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold">{row.value}</div>
-                        <div className="text-xs text-green-600">{row.saldo}</div>
+                        <div className={`text-xs text-${activeTab === 'despesas' ? 'red' : 'green'}-600`}>{row.saldo}</div>
                       </div>
                     </div>
                   ))}
@@ -358,7 +447,7 @@ export default function DashboardPage() {
                       <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
                       <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
                       <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-24">Total</th> {/* Saldo */}
+                      <th className="py-1 md:py-2 font-medium text-left w-24">Total</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
@@ -377,7 +466,7 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-2 md:py-3 align-middle text-xs md:text-sm">{row.value}</td>
                         <td className="py-2 md:py-3 align-middle truncate text-xs md:text-sm">{row.category}</td>
-                        <td className="py-2 md:py-3 align-middle text-green-600 text-xs md:text-sm">{row.saldo}</td>
+                        <td className={`py-2 md:py-3 align-middle text-${activeTab === 'despesas' ? 'red' : 'green'}-600 text-xs md:text-sm`}>{row.saldo}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -387,11 +476,18 @@ export default function DashboardPage() {
           </div>
           
           <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
-            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm flex flex-col justify-center items-center text-gray-400 min-h-[200px] md:min-h-[300px]">
-              Gráfico: Balanço Mensal
+            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
+              <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
+                <BalanceChart data={monthlyBalanceData} />
+              </div>
             </div>
-            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm flex justify-center items-center text-gray-400 min-h-[200px] md:min-h-[300px]">
-              {activeTab === 'despesas' ? 'Gráfico: Despesas' : 'Gráfico: Receitas'}
+            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
+              {activeTab === 'despesas' ? (
+                <DespesasChart data={despesasChartData} />
+              ) : (
+                <ReceitasChart data={receitasChartData} />
+              )}
             </div>
           </div>
         </div>
