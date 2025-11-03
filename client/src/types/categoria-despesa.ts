@@ -1,17 +1,17 @@
 export interface CategoriaDespesa {
   id: number;
   nome: string;
-  cor: string;
+  icone: string;
   created_at: string;
   usuario_id: number;
 }
 
 export interface CreateCategoriaDespesaDto {
   nome: string;
-  cor?: string;
+  icone?: string;
 }
 
 export interface UpdateCategoriaDespesaDto {
   nome?: string;
-  cor?: string;
+  icone?: string;
 }

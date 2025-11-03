@@ -287,19 +287,19 @@ npm run lint
 
 ```bash
 # Iniciar todos os serviços
-docker-compose up -d
+docker compose up -d
 
 # Iniciar só o banco de dados
-docker-compose up postgres -d
+docker compose up postgres -d
 
 # Ver logs
-docker-compose logs -f
+docker compose logs -f
 
 # Parar todos os serviços
-docker-compose down
+docker compose down
 
 # Parar e remover volumes (deleta dados do banco)
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Gerenciamento do Banco de Dados

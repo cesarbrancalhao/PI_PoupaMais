@@ -5,10 +5,10 @@ import { DatabaseService } from '../database/database.service';
 export class FonteReceitaService {
   constructor(private databaseService: DatabaseService) {}
 
-  async create(userId: number, nome: string, cor?: string) {
+  async create(userId: number, nome: string, icone?: string) {
     const result = await this.databaseService.query(
-      'INSERT INTO fonte_receita (nome, cor, usuario_id) VALUES ($1, $2, $3) RETURNING *',
-      [nome, cor || '#898989', userId],
+      'INSERT INTO fonte_receita (nome, icone, usuario_id) VALUES ($1, $2, $3) RETURNING *',
+      [nome, icone || 'DollarSign', userId],
     );
     return result.rows[0];
   }
@@ -30,10 +30,10 @@ export class FonteReceitaService {
     return result.rows[0];
   }
 
-  async update(id: number, userId: number, nome: string, cor?: string) {
+  async update(id: number, userId: number, nome: string, icone?: string) {
     const result = await this.databaseService.query(
-      'UPDATE fonte_receita SET nome = $1, cor = COALESCE($2, cor) WHERE id = $3 AND usuario_id = $4 RETURNING *',
-      [nome, cor, id, userId],
+      'UPDATE fonte_receita SET nome = $1, icone = COALESCE($2, icone) WHERE id = $3 AND usuario_id = $4 RETURNING *',
+      [nome, icone, id, userId],
     );
     if (result.rows.length === 0) throw new NotFoundException('Fonte não encontrada');
     return result.rows[0];

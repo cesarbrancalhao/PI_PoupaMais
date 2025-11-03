@@ -14,7 +14,7 @@ export class CategoriaDespesaController {
 
   @Post()
   create(@Request() req, @Body() body: CreateCategoriaDespesaDto) {
-    return this.service.create(req.user.userId, body.nome, body.cor);
+    return this.service.create(req.user.userId, body.nome, body.icone);
   }
 
   @Get()
@@ -29,7 +29,7 @@ export class CategoriaDespesaController {
 
   @Put(':id')
   update(@Param('id') id: string, @Request() req, @Body() body: UpdateCategoriaDespesaDto) {
-    return this.service.update(+id, req.user.userId, body.nome, body.cor);
+    return this.service.update(+id, req.user.userId, body.nome, body.icone);
   }
 
   @Delete(':id')

@@ -1,17 +1,17 @@
 export interface FonteReceita {
   id: number;
   nome: string;
-  cor: string;
+  icone: string;
   created_at: string;
   usuario_id: number;
 }
 
 export interface CreateFonteReceitaDto {
   nome: string;
-  cor?: string;
+  icone?: string;
 }
 
 export interface UpdateFonteReceitaDto {
   nome?: string;
-  cor?: string;
+  icone?: string;
 }

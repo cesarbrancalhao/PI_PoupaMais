@@ -6,8 +6,8 @@ export class CreateCategoriaDespesaDto {
   @IsString()
   nome: string;
 
-  @ApiProperty({ example: '#FF5733', required: false })
+  @ApiProperty({ example: 'ShoppingCart', required: false })
   @IsString()
   @IsOptional()
-  cor?: string;
+  icone?: string;
 }
