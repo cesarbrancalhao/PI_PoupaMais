@@ -247,7 +247,6 @@ export default function DashboardPage() {
     return balances
   }, [despesas, receitas])
 
-  // Calculate despesas by category for chart
   const despesasChartData = useMemo(() => {
     const categoryTotals = new Map<number, number>()
 
@@ -270,7 +269,6 @@ export default function DashboardPage() {
     })
   }, [filteredDespesas, categorias])
 
-  // Calculate receitas by source for chart
   const receitasChartData = useMemo(() => {
     const sourceTotals = new Map<number, number>()
 

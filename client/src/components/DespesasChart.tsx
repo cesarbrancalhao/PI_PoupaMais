@@ -71,7 +71,7 @@ export default function DespesasChart({ data }: DespesasChartProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Despesas</h2>
+      <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Despesas por Categoria</h2>
       <div key={containerKey} className="flex-1 flex items-center justify-center mb-4">
         <div className="w-full max-w-[200px] h-[200px]">
           <Doughnut data={chartData} options={options} />
