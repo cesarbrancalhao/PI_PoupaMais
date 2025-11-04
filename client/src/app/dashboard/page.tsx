@@ -1,11 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddModal from '@/components/addModal'
 import EditModal from '@/components/editModal'
+import AddCategoriaModal from '@/components/addCategoriaModal'
+import EditCategoriaModal from '@/components/editCategoriaModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart } from 'lucide-react'
+import BalanceChart from '@/components/BalanceChart'
+import DespesasChart from '@/components/DespesasChart'
+import ReceitasChart from '@/components/ReceitasChart'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2 } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -33,10 +38,31 @@ export default function DashboardPage() {
   const [fontes, setFontes] = useState<FonteReceita[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedFilter, setSelectedFilter] = useState<string>('')
+  const [selectedMonth, setSelectedMonth] = useState<string>('')
+  const [showConfigView, setShowConfigView] = useState(false)
+  const [configTab, setConfigTab] = useState<'categorias' | 'fontes'>('categorias')
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
+  const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
 
   useEffect(() => {
     fetchData()
+    const now = new Date()
+    const currentMonth = `${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
+    setSelectedMonth(currentMonth)
+  }, [])
+
+  const monthOptions = useMemo(() => {
+    const months = []
+    const now = new Date()
+
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      months.push(`${month}-${year}`)
+    }
+
+    return months
   }, [])
 
   const fetchData = async () => {
@@ -94,14 +120,39 @@ export default function DashboardPage() {
       fetchData()
     } catch (err) {
       console.error('Erro ao excluir item:', err)
-      alert('Erro ao excluir item')
+      setError('Erro ao excluir item. Tente novamente.')
     }
+  }
+
+  const handleConfigDelete = async (id: number) => {
+    try {
+      if (configTab === 'categorias') {
+        await categoriasDespesaService.delete(id)
+      } else {
+        await fontesReceitaService.delete(id)
+      }
+      fetchData()
+    } catch (err) {
+      console.error('Erro ao excluir item:', err)
+      setError('Erro ao excluir item. Tente novamente.')
+    }
+  }
+
+  const openConfigModal = (item?: CategoriaDespesa | FonteReceita) => {
+    setSelectedConfigItem(item || null)
+    setIsConfigModalOpen(true)
+  }
+
+  const closeConfigModal = () => {
+    setIsConfigModalOpen(false)
+    setSelectedConfigItem(null)
+    fetchData()
   }
 
   const convertDateForEditModal = (dateStr: string) => {
     const [day, month] = dateStr.split('/')
-    const currentYear = new Date().getFullYear()
-    return `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    const year = selectedMonth ? selectedMonth.split('-')[1] : new Date().getFullYear().toString()
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
 
   const formatDate = (dateString: string) => {
@@ -118,15 +169,25 @@ export default function DashboardPage() {
     }).format(value)
   }
 
-  const getIcon = (index: number, isReceita: boolean) => {
-    const icons = [
-      <Home className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="home" />,
-      <Plug className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="plug" />,
-      <Shirt className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="shirt" />,
-      <ShoppingCart className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="cart" />,
-      <DollarSign className={`w-4 h-4 md:w-5 md:h-5 ${isReceita ? 'text-green-600' : 'text-blue-600'}`} key="dollar" />
-    ]
-    return icons[index % icons.length]
+  const getIconComponent = (iconName: string) => {
+    const iconMap: Record<string, React.ElementType> = {
+      'Home': Home,
+      'Plug': Plug,
+      'Shirt': Shirt,
+      'ShoppingCart': ShoppingCart,
+      'DollarSign': DollarSign,
+      'CreditCard': CreditCard,
+      'Utensils': Utensils,
+      'Car': Car,
+      'Heart': Heart,
+      'BookOpen': BookOpen,
+      'Briefcase': Briefcase,
+      'Gift': Gift,
+      'Apple': Apple,
+      'Gamepad-2': Gamepad2,
+    }
+    const IconComponent = iconMap[iconName] || Home
+    return IconComponent
   }
 
   const calculateSaldo = (items: (Despesa | Receita)[], currentIndex: number, isReceita: boolean) => {
@@ -141,36 +202,137 @@ export default function DashboardPage() {
     return saldo
   }
 
-  const despesasRows: TableRow[] = (despesas ?? []).map((despesa, index) => {
+  const filterItemsByMonth = <T extends { data: string }>(items: T[]): T[] => {
+    if (!selectedMonth) return items
+
+    const [month, year] = selectedMonth.split('-')
+    return items.filter(item => {
+      const itemDate = new Date(item.data)
+      const itemMonth = String(itemDate.getMonth() + 1).padStart(2, '0')
+      const itemYear = itemDate.getFullYear().toString()
+      return itemMonth === month && itemYear === year
+    })
+  }
+
+  const filteredDespesas = filterItemsByMonth(despesas)
+  const filteredReceitas = filterItemsByMonth(receitas)
+
+  const despesasRows: TableRow[] = (filteredDespesas ?? []).map((despesa, index) => {
     const categoria = categorias.find(c => c.id === despesa.categoria_despesa_id)
+    const IconComponent = getIconComponent(categoria?.icone || 'DollarSign')
     return {
       id: despesa?.id?.toString?.() ?? '',
       date: despesa?.data ? formatDate(despesa.data) : '--/--',
       name: despesa?.nome ?? '',
       category: categoria?.nome ?? 'Sem categoria',
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
-      saldo: formatCurrency(Math.abs(calculateSaldo(despesas ?? [], index, false))),
+      saldo: formatCurrency(Math.abs(calculateSaldo(filteredDespesas ?? [], index, false))),
       recurring: despesa?.recorrente ?? false,
-      icon: getIcon?.(index, false) ?? null
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
     }
   })
 
-  const receitasRows: TableRow[] = (receitas ?? []).map((receita, index) => {
+  const receitasRows: TableRow[] = (filteredReceitas ?? []).map((receita, index) => {
     const fonte = fontes.find(f => f.id === receita.fonte_receita_id)
+    const IconComponent = getIconComponent(fonte?.icone || 'DollarSign')
     return {
       id: receita?.id?.toString?.() ?? '',
       date: receita?.data ? formatDate(receita.data) : '--/--',
       name: receita?.nome ?? '',
       category: fonte?.nome ?? 'Sem fonte',
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
-      saldo: formatCurrency(calculateSaldo(receitas ?? [], index, true)),
+      saldo: formatCurrency(calculateSaldo(filteredReceitas ?? [], index, true)),
       recurring: receita?.recorrente ?? false,
-      icon: getIcon?.(index, true) ?? null
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
     }
   })
 
-  const totalReceitas = (receitas ?? []).reduce((sum, r) => sum + (parseFloat(r.valor as unknown as string) || 0), 0)
-  const totalDespesas = (despesas ?? []).reduce((sum, d) => sum + (parseFloat(d.valor as unknown as string) || 0), 0)
+  const totalReceitas = (filteredReceitas ?? []).reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
+  const totalDespesas = (filteredDespesas ?? []).reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
+
+  const monthlyBalanceData = useMemo(() => {
+    const balances = []
+    const now = new Date()
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const monthKey = `${month}-${year}`
+
+      const monthDespesas = despesas.filter(d => {
+        const dDate = new Date(d.data)
+        const dMonth = String(dDate.getMonth() + 1).padStart(2, '0')
+        const dYear = dDate.getFullYear()
+        return `${dMonth}-${dYear}` === monthKey
+      })
+
+      const monthReceitas = receitas.filter(r => {
+        const rDate = new Date(r.data)
+        const rMonth = String(rDate.getMonth() + 1).padStart(2, '0')
+        const rYear = rDate.getFullYear()
+        return `${rMonth}-${rYear}` === monthKey
+      })
+
+      const totalReceitasMonth = monthReceitas.reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
+      const totalDespesasMonth = monthDespesas.reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
+      const balance = totalReceitasMonth - totalDespesasMonth
+
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      const monthLabel = monthNames[date.getMonth()]
+
+      balances.push({
+        month: monthLabel,
+        balance: balance
+      })
+    }
+
+    return balances
+  }, [despesas, receitas])
+
+  const despesasChartData = useMemo(() => {
+    const categoryTotals = new Map<number, number>()
+
+    filteredDespesas.forEach(despesa => {
+      if (despesa.categoria_despesa_id) {
+        const currentTotal = categoryTotals.get(despesa.categoria_despesa_id) || 0
+        categoryTotals.set(despesa.categoria_despesa_id, currentTotal + (Number(despesa.valor) || 0))
+      }
+    })
+
+    const colors = ['#5B8FF9', '#F6BD60', '#F28B82']
+
+    return Array.from(categoryTotals.entries()).map(([categoryId, total], index) => {
+      const categoria = categorias.find(c => c.id === categoryId)
+      return {
+        category: categoria?.nome || 'Sem categoria',
+        value: total,
+        color: colors[index % colors.length]
+      }
+    })
+  }, [filteredDespesas, categorias])
+
+  const receitasChartData = useMemo(() => {
+    const sourceTotals = new Map<number, number>()
+
+    filteredReceitas.forEach(receita => {
+      if (receita.fonte_receita_id) {
+        const currentTotal = sourceTotals.get(receita.fonte_receita_id) || 0
+        sourceTotals.set(receita.fonte_receita_id, currentTotal + (Number(receita.valor) || 0))
+      }
+    })
+
+    const colors = ['#5B8FF9', '#F6BD60', '#C0C0C0']
+
+    return Array.from(sourceTotals.entries()).map(([sourceId, total], index) => {
+      const fonte = fontes.find(f => f.id === sourceId)
+      return {
+        source: fonte?.nome || 'Não Informado',
+        value: total,
+        color: colors[index % colors.length]
+      }
+    })
+  }, [filteredReceitas, fontes])
 
   if (loading) {
     return (
@@ -203,21 +365,140 @@ export default function DashboardPage() {
       <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
-          <h1 className="text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left">Painel</h1>
+        {showConfigView ? (
+          <>
+            <header className="flex items-center gap-4 mb-6 md:mb-8">
+              <button
+                onClick={() => setShowConfigView(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800">
+                Configurar {configTab === 'categorias' ? 'categorias' : 'fontes'}
+              </h1>
+            </header>
+
+            <div className="relative flex bg-white rounded-lg w-fit mb-6 md:mb-8">
+              <div className={`absolute top-0 h-full bg-blue-600 rounded-lg transition-all duration-200 ease-in-out ${
+                configTab === 'categorias' ? 'left-0 w-4/7' : 'left-3/5 w-2/5'
+              }`}></div>
+              <button
+                onClick={() => setConfigTab('categorias')}
+                className={`relative z-10 pl-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  configTab === 'categorias' ? 'text-white' : 'text-gray-600'
+                }`}
+              >
+                Categorias
+              </button>
+              <button
+                onClick={() => setConfigTab('fontes')}
+                className={`relative z-10 pl-5 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  configTab === 'fontes' ? 'text-white' : 'text-gray-600'
+                }`}
+              >
+                Fontes
+              </button>
+            </div>
+
+            <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
+              <div className="w-full xl:w-4/6">
+                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">
+                    {configTab === 'categorias' ? 'Categorias' : 'Fontes'}
+                  </h2>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-gray-500 border-b border-gray-200">
+                        <tr>
+                          <th className="py-3 font-medium text-left w-20">Ícone</th>
+                          <th className="py-3 font-medium text-left">Nome</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-gray-700">
+                        {(configTab === 'categorias' ? categorias : fontes).map((item) => {
+                          const IconComponent = getIconComponent(item.icone || 'Home')
+
+                          return (
+                            <tr
+                              key={item.id}
+                              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => openConfigModal(item)}
+                            >
+                              <td className="py-4">
+                                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                                  <IconComponent className="w-6 h-6 text-blue-600" />
+                                </div>
+                              </td>
+                              <td className="py-4">
+                                <span className="text-blue-600 hover:underline">{item.nome}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <button
+                    onClick={() => openConfigModal()}
+                    className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2"
+                  >
+                    Adicionar {configTab === 'categorias' ? 'categoria' : 'fonte'}
+                  </button>
+                </section>
+              </div>
+
+              <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs md:text-sm">{configTab === 'categorias' ? 'Despesas' : 'Receitas'}</p>
+                      <p className="text-lg md:text-2xl font-semibold">{formatCurrency(configTab === 'categorias' ? totalDespesas : totalReceitas)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
+                  <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
+                    <BalanceChart data={monthlyBalanceData} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
+                  {configTab === 'categorias' ? (
+                    <DespesasChart data={despesasChartData} />
+                  ) : (
+                    <ReceitasChart data={receitasChartData} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left">Painel</h1>
           <div className="flex flex-col gap-2 w-full md:w-auto">
-            <select 
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-48"
             >
-              <option value="">03-2025</option>
+              {monthOptions.map(month => (
+                <option key={month} value={month}>{month}</option>
+              ))}
             </select>
             <button
               onClick={openModal}
-              className="bg-blue-600 text-white px-4 py-2 font-medium rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap"
+              className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap"
             >
-              + Adicionar
+              Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}
             </button>
           </div>
         </header>
@@ -248,26 +529,10 @@ export default function DashboardPage() {
           <div className="w-full xl:w-4/6 flex flex-col gap-4 md:gap-6">
             <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs md:text-sm">Receitas</p>
-                    <p className="text-lg md:text-2xl font-semibold">{formatCurrency(totalReceitas)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                      </svg>
+                      <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs md:text-sm">Despesas</p>
@@ -276,12 +541,43 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+
+              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs md:text-sm">Receitas</p>
+                    <p className="text-lg md:text-2xl font-semibold">{formatCurrency(totalReceitas)}</p>
+                  </div>
+                </div>
+              </div>
             </section>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfigTab(activeTab === 'despesas' ? 'categorias' : 'fontes')
+                  setShowConfigView(true)
+                }}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm">Configurar {activeTab === 'despesas' ? 'categorias' : 'fontes'}</span>
+              </button>
+            </div>
 
             <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h2 className="text-base md:text-lg font-semibold text-gray-800">{activeTab === 'despesas' ? 'Últimas despesas' : 'Últimas receitas'}</h2>
-                <a href="#" className="text-indigo-600 text-xs md:text-sm">Ver mais</a>
+                <button
+                  onClick={() => {/* TODO: Implement "Ver mais" functionality */}}
+                  className="text-indigo-600 text-xs md:text-sm hover:text-indigo-800 transition-colors"
+                >
+                  Ver mais
+                </button>
               </div>
               
               <div className="md:hidden">
@@ -292,9 +588,9 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row, idx) => (
-                    <div 
-                      key={idx}
+                  {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row) => (
+                    <div
+                      key={row.id}
                       className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer grid grid-cols-4 gap-2 items-center"
                       onClick={() => openEditModal(row)}
                     >
@@ -308,7 +604,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold">{row.value}</div>
-                        <div className="text-xs text-green-600">{row.saldo}</div>
+                        <div className={`text-xs ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'}`}>{row.saldo}</div>
                       </div>
                     </div>
                   ))}
@@ -323,13 +619,13 @@ export default function DashboardPage() {
                       <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
                       <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
                       <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-24">Saldo</th>
+                      <th className="py-1 md:py-2 font-medium text-left w-24">Total</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-700">
-                    {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row, idx) => (
-                      <tr 
-                        key={idx} 
+                    {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row) => (
+                      <tr
+                        key={row.id}
                         className="odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
                         onClick={() => openEditModal(row)}
                       >
@@ -342,7 +638,7 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-2 md:py-3 align-middle text-xs md:text-sm">{row.value}</td>
                         <td className="py-2 md:py-3 align-middle truncate text-xs md:text-sm">{row.category}</td>
-                        <td className="py-2 md:py-3 align-middle text-green-600 text-xs md:text-sm">{row.saldo}</td>
+                        <td className={`py-2 md:py-3 align-middle ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'} text-xs md:text-sm`}>{row.saldo}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -352,22 +648,31 @@ export default function DashboardPage() {
           </div>
           
           <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
-            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm flex flex-col justify-center items-center text-gray-400 min-h-[200px] md:min-h-[300px]">
-              Gráfico: Balanço Mensal
+            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
+              <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
+                <BalanceChart data={monthlyBalanceData} />
+              </div>
             </div>
-            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm flex justify-center items-center text-gray-400 min-h-[200px] md:min-h-[300px]">
-              {activeTab === 'despesas' ? 'Gráfico: Despesas' : 'Gráfico: Receitas'}
+            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
+              {activeTab === 'despesas' ? (
+                <DespesasChart data={despesasChartData} />
+              ) : (
+                <ReceitasChart data={receitasChartData} />
+              )}
             </div>
           </div>
         </div>
+          </>
+        )}
       </main>
 
       <AddModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
       
       {selectedItem && (
-        <EditModal 
-          isOpen={isEditModalOpen} 
-          onClose={closeEditModal} 
+        <EditModal
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
           type={activeTab}
           editItem={{
             id: selectedItem.id,
@@ -378,6 +683,24 @@ export default function DashboardPage() {
             date: convertDateForEditModal(selectedItem.date)
           }}
           onDelete={handleDelete}
+        />
+      )}
+
+      {isConfigModalOpen && !selectedConfigItem && (
+        <AddCategoriaModal
+          isOpen={isConfigModalOpen}
+          onClose={closeConfigModal}
+          type={configTab}
+        />
+      )}
+
+      {isConfigModalOpen && selectedConfigItem && (
+        <EditCategoriaModal
+          isOpen={isConfigModalOpen}
+          onClose={closeConfigModal}
+          type={configTab}
+          item={selectedConfigItem}
+          onDelete={handleConfigDelete}
         />
       )}
       </div>

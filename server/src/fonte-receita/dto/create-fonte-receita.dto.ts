@@ -6,8 +6,8 @@ export class CreateFonteReceitaDto {
   @IsString()
   nome: string;
 
-  @ApiProperty({ example: '#4CAF50', required: false })
+  @ApiProperty({ example: 'DollarSign', required: false })
   @IsString()
   @IsOptional()
-  cor?: string;
+  icone?: string;
 }
