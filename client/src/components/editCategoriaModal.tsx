@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, Home, Plug, Shirt, ShoppingCart, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2 } from 'lucide-react'
+import { X, Home, Plug, Shirt, ShoppingCart, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -145,8 +145,9 @@ export default function EditCategoriaModal({ isOpen, onClose, type, item, onDele
 
               <button
                 type="submit"
-                className="mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
               >
+                <Save className="w-4 h-4" />
                 Salvar {type === 'categorias' ? 'categoria' : 'fonte'}
               </button>
 
@@ -159,8 +160,9 @@ export default function EditCategoriaModal({ isOpen, onClose, type, item, onDele
                       onClose()
                     }
                   }}
-                  className="mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition"
+                  className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
                 >
+                  <Trash className="w-4 h-4" />
                   Excluir {type === 'categorias' ? 'categoria' : 'fonte'}
                 </button>
               )}
