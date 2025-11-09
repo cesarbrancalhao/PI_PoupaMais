@@ -10,7 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import BalanceChart from '@/components/BalanceChart'
 import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2 } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -496,8 +496,9 @@ export default function DashboardPage() {
             </select>
             <button
               onClick={openModal}
-              className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap"
+              className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap flex items-center justify-center gap-2"
             >
+              <Plus className="w-4 h-4" />
               Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}
             </button>
           </div>
