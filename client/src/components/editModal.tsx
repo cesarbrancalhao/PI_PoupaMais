@@ -45,7 +45,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
     }
   }, [selectedDate])
   
-  const dayNames = ['S', 'S', 'M', 'T', 'W', 'T', 'F']
+  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
   
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -226,22 +226,14 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log({
-      name,
-      category,
-      value,
-      recurring,
-      date,
-      date_vencimento
-    })
-
     if (date === '') {
       setDateError(true);
       return
     }
 
     try {
-      const numericValue = parseFloat(value.replace('R$', '').replace(/\./g, '').replace(',', '.'))
+      const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+      const numericValue = parseFloat(cleanValue)
 
       if (isNaN(numericValue) || numericValue <= 0) {
         setShowError(true)
@@ -416,23 +408,40 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
               )}
 
               {onDelete && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!confirmDeleteMode) {
-                      setConfirmDeleteMode(true)
-                    } else {
-                      onDelete(editItem.id)
-                      onClose()
-                    }
-                  }}
-                  className={`w-full mt-2 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2
-                    ${confirmDeleteMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-red-600 hover:bg-red-700'}
-                  `}
-                >
-                  <Trash className="w-4 h-4" />
-                  {confirmDeleteMode ? 'Confirmar Exclusão' : `Excluir ${type === 'despesas' ? 'despesa' : 'receita'}`}
-                </button>
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(editItem.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir {type === 'despesas' ? 'despesa' : 'receita'}
+                    </button>
+                  )}
+                </>
               )}
             </form>
           </motion.div>

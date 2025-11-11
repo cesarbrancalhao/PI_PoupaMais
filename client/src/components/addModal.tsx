@@ -36,7 +36,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
     }
   }, [selectedDate])
   
-  const dayNames = ['S', 'S', 'M', 'T', 'W', 'T', 'F']
+  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
   
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -211,22 +211,14 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log({
-      name,
-      category,
-      value,
-      recurring,
-      date,
-      date_vencimento
-    })
-
     if (date === '') {
       setDateError(true);
       return
     }
 
     try {
-      const numericValue = parseFloat(value.replace('R$', '').replace(/\./g, '').replace(',', '.'))
+      const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+      const numericValue = parseFloat(cleanValue)
 
       if (isNaN(numericValue) || numericValue <= 0) {
         setShowError(true)
