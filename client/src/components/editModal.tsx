@@ -188,6 +188,7 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
     setDateVencimento('')
     setDateError(false)
     setShowError(false)
+    setConfirmDeleteMode(false)
   }, [editItem])
 
   useEffect(() => {
