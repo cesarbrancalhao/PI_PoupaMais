@@ -1,9 +1,11 @@
-.PHONY: help dev install install-client install-server clean
+.PHONY: help init dev prod install install-client install-server clean
 
 # Default
 help:
 	@echo "Comandos disponíveis:"
-	@echo "  make start           - Executa client e server em modo dev"
+	@echo "  make init            - Instala todas as dependências e inicia todos os serviços"
+	@echo "  make dev             - Executa client e server em modo dev"
+	@echo "  make prod            - Executa client e server em modo prod"
 	@echo "  make install         - Instala dependências de client e server"
 	@echo "  make install-client  - Instala apenas as dependências do client"
 	@echo "  make install-server  - Instala apenas as dependências do server"
