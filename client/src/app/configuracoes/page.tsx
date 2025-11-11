@@ -1,15 +1,17 @@
 "use client";
 
 import Sidebar from "@/components/sidebar";
+import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ConfiguracoesPage() {
   const [moeda, setMoeda] = useState("real");
   const [tema, setTema] = useState("claro");
   const [idioma, setIdioma] = useState("portugues");
-  const {user} = useAuth()
+  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const { user } = useAuth();
 
   const btnClass = (isActive: boolean, position?: "left" | "right") => {
     const base =
@@ -118,7 +120,7 @@ export default function ConfiguracoesPage() {
               <label className="block font-medium mb-2">Nome</label>
               <input
                 type="text"
-                value={user?.nome || 'Carregando...'}
+                value={user?.nome || "Carregando..."}
                 readOnly
                 className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
               />
@@ -140,7 +142,10 @@ export default function ConfiguracoesPage() {
               {/* Senha */}
               <div className="flex flex-col justify-end">
                 <label className="block font-medium mb-2">Senha</label>
-                <button className="px-4 py-3 rounded-lg bg-blue-600 *:hover:bg-blue-700 text-white text-sm font-medium flex items-center gap-2 w-fit">
+                <button
+                  onClick={() => setPasswordModalOpen(true)}
+                  className="px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium flex items-center gap-2 w-fit"
+                >
                   <Settings size={16} />
                   Alterar senha
                 </button>
@@ -149,6 +154,12 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal de alteração de senha */}
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+      />
     </div>
   );
 }
