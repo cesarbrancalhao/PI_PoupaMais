@@ -408,23 +408,40 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
               )}
 
               {onDelete && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!confirmDeleteMode) {
-                      setConfirmDeleteMode(true)
-                    } else {
-                      onDelete(editItem.id)
-                      onClose()
-                    }
-                  }}
-                  className={`w-full mt-2 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2
-                    ${confirmDeleteMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-red-600 hover:bg-red-700'}
-                  `}
-                >
-                  <Trash className="w-4 h-4" />
-                  {confirmDeleteMode ? 'Confirmar Exclusão' : `Excluir ${type === 'despesas' ? 'despesa' : 'receita'}`}
-                </button>
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(editItem.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir {type === 'despesas' ? 'despesa' : 'receita'}
+                    </button>
+                  )}
+                </>
               )}
             </form>
           </motion.div>
