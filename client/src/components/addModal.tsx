@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -392,8 +392,9 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 
               <button
                 type="submit"
-                className="mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
               >
+                <Save className="w-4 h-4" />
                 Salvar {type === 'despesas' ? 'despesa' : 'receita'}
               </button>
             </form>

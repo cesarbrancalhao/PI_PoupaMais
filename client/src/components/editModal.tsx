@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -177,6 +177,7 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
   const formRef = useRef<HTMLFormElement>(null)
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
 
   useEffect(() => {
     setName(editItem.name)
@@ -187,6 +188,7 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
     setDateVencimento('')
     setDateError(false)
     setShowError(false)
+    setConfirmDeleteMode(false)
   }, [editItem])
 
   useEffect(() => {
@@ -403,23 +405,33 @@ export default function EditModal({ isOpen, onClose, type, editItem, onDelete }:
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-              >
-                Salvar {type === 'despesas' ? 'despesa' : 'receita'}
-              </button>
+              {!confirmDeleteMode && (
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                </button>
+              )}
 
               {onDelete && (
                 <button
                   type="button"
                   onClick={() => {
-                    onDelete(editItem.id)
-                    onClose()
+                    if (!confirmDeleteMode) {
+                      setConfirmDeleteMode(true)
+                    } else {
+                      onDelete(editItem.id)
+                      onClose()
+                    }
                   }}
-                  className="mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition"
+                  className={`w-full mt-2 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2
+                    ${confirmDeleteMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-red-600 hover:bg-red-700'}
+                  `}
                 >
-                  Excluir {type === 'despesas' ? 'despesa' : 'receita'}
+                  <Trash className="w-4 h-4" />
+                  {confirmDeleteMode ? 'Confirmar Exclusão' : `Excluir ${type === 'despesas' ? 'despesa' : 'receita'}`}
                 </button>
               )}
             </form>
