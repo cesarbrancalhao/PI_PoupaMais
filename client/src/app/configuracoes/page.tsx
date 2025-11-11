@@ -23,7 +23,7 @@ export default function ConfiguracoesPage() {
         : "";
 
     const color = isActive
-      ? "bg-indigo-600 text-white font-medium"
+      ? "bg-blue-600 hover:bg-blue-700 text-white font-medium"
       : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200";
 
     return `${base} ${rounded} ${color}`;
@@ -120,7 +120,7 @@ export default function ConfiguracoesPage() {
                 type="text"
                 value={user?.nome || 'Carregando...'}
                 readOnly
-                className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-2 focus:outline-none text-sm"
+                className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
               />
             </div>
 
@@ -133,14 +133,14 @@ export default function ConfiguracoesPage() {
                   type="email"
                   value="exemplo@gmail.com"
                   readOnly
-                  className="max-w-fit bg-gray-300 dark:bg-gray-600 rounded-lg px-3 sm:px-4 py-2 text-sm focus:outline-none text-gray-800 dark:text-gray-100"
+                  className="max-w-fit bg-gray-300 dark:bg-gray-600 rounded-lg px-3 sm:px-4 py-3 text-sm focus:outline-none text-gray-800 dark:text-gray-100"
                 />
               </div>
 
               {/* Senha */}
               <div className="flex flex-col justify-end">
                 <label className="block font-medium mb-2">Senha</label>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium flex items-center gap-2 w-fit">
+                <button className="px-4 py-3 rounded-lg bg-blue-600 *:hover:bg-blue-700 text-white text-sm font-medium flex items-center gap-2 w-fit">
                   <Settings size={16} />
                   Alterar senha
                 </button>
