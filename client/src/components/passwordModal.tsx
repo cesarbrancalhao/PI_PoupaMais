@@ -24,7 +24,6 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
     onClose();
   };
 
-  // Prevent click inside modal from closing
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };

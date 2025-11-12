@@ -33,17 +33,11 @@ export default function ConfiguracoesPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Sidebar fixa à esquerda */}
       <Sidebar />
-
-      {/* Conteúdo principal */}
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col">
           <h1 className="text-lg sm:text-xl font-semibold mb-8">Configurações</h1>
-
-          {/* Grupo de Moeda / Tema / Idioma */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
-            {/* Moeda */}
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className="font-medium mb-3">Moeda</h2>
               <div className="flex flex-wrap">
@@ -67,8 +61,6 @@ export default function ConfiguracoesPage() {
                 </button>
               </div>
             </div>
-
-            {/* Tema */}
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className="font-medium mb-3">Tema</h2>
               <div className="flex flex-wrap">
@@ -86,8 +78,6 @@ export default function ConfiguracoesPage() {
                 </button>
               </div>
             </div>
-
-            {/* Idioma */}
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className="font-medium mb-3">Idioma</h2>
               <div className="flex flex-wrap">
@@ -112,10 +102,7 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
           </div>
-
-          {/* Campos Nome / Email / Senha */}
           <div className="flex flex-col gap-6 flex-grow">
-            {/* Nome */}
             <div className="flex flex-col">
               <label className="block font-medium mb-2">Nome</label>
               <input
@@ -125,10 +112,7 @@ export default function ConfiguracoesPage() {
                 className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
               />
             </div>
-
-            {/* Linha com E-mail e Senha */}
             <div className="flex flex-col sm:flex-row gap-6">
-              {/* Email */}
               <div className="flex flex-col">
                 <label className="block font-medium mb-2">Email</label>
                 <input
@@ -138,8 +122,6 @@ export default function ConfiguracoesPage() {
                   className="max-w-fit bg-gray-300 dark:bg-gray-600 rounded-lg px-3 sm:px-4 py-3 text-sm focus:outline-none text-gray-800 dark:text-gray-100"
                 />
               </div>
-
-              {/* Senha */}
               <div className="flex flex-col justify-end">
                 <label className="block font-medium mb-2">Senha</label>
                 <button
@@ -154,8 +136,6 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
       </main>
-
-      {/* Modal de alteração de senha */}
       <PasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setPasswordModalOpen(false)}
