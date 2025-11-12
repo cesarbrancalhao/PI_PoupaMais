@@ -26,16 +26,16 @@ export default function ConfiguracoesPage() {
 
     const color = isActive
       ? "bg-blue-600 hover:bg-blue-700 text-white font-medium"
-      : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200";
+      : "bg-gray-100 hover:bg-gray-200";
 
     return `${base} ${rounded} ${color}`;
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col">
+        <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col">
           <h1 className="text-lg sm:text-xl font-semibold mb-8">Configurações</h1>
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
             <div className="flex flex-col w-full sm:w-auto">
@@ -109,7 +109,7 @@ export default function ConfiguracoesPage() {
                 type="text"
                 value={user?.nome || "Carregando..."}
                 readOnly
-                className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
+                className="w-fit bg-gray-100 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-6">
@@ -119,7 +119,7 @@ export default function ConfiguracoesPage() {
                   type="email"
                   value={user?.email || "Carregando..."}
                   readOnly
-                  className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
+                  className="w-fit bg-gray-100 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
                 />
               </div>
               <div className="flex flex-col justify-end">
