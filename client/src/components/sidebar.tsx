@@ -50,7 +50,7 @@ export default function Sidebar() {
       </button>
 
       <aside
-        className={`fixed md:static top-0 left-0 h-full w-64 bg-white flex flex-col justify-between transform transition-transform duration-300 z-40 ${
+        className={`fixed md:static top-0 left-0 h-screen w-64 bg-white flex flex-col justify-between transform transition-transform duration-300 z-40 ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
