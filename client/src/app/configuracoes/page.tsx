@@ -117,9 +117,9 @@ export default function ConfiguracoesPage() {
                 <label className="block font-medium mb-2">Email</label>
                 <input
                   type="email"
-                  value="exemplo@gmail.com"
+                  value={user?.email || "Carregando..."}
                   readOnly
-                  className="max-w-fit bg-gray-300 dark:bg-gray-600 rounded-lg px-3 sm:px-4 py-3 text-sm focus:outline-none text-gray-800 dark:text-gray-100"
+                  className="w-fit bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm"
                 />
               </div>
               <div className="flex flex-col justify-end">
