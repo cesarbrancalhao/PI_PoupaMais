@@ -67,7 +67,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* BACKDROP */}
           <motion.div
             className="fixed inset-0 bg-black/40 z-40"
             initial={{ opacity: 0 }}
@@ -76,7 +75,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
             onClick={onClose}
           />
 
-          {/* SIDEBAR MODAL */}
           <motion.div
             className={`fixed right-0 top-0 h-full w-full max-w-md z-50 flex flex-col p-6 overflow-y-auto shadow-xl
               transition-colors
@@ -87,7 +85,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           >
-            {/* ERROR POPUP */}
             <AnimatePresence>
               {showError && (
                 <motion.div
@@ -109,7 +106,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
               )}
             </AnimatePresence>
 
-            {/* HEADER */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">
                 Adicionar {type === 'categorias' ? 'Categoria' : 'Fonte'}
@@ -122,10 +118,8 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
               </button>
             </div>
 
-            {/* FORM */}
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
               
-              {/* Nome */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Nome
@@ -145,7 +139,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                 />
               </div>
 
-              {/* Ícones */}
               <div>
                 <label className="block text-sm font-medium mb-3">
                   Ícone
@@ -186,7 +179,6 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                 </div>
               </div>
 
-              {/* Botão Salvar */}
               <button
                 type="submit"
                 className={`
