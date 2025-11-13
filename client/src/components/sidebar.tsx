@@ -36,7 +36,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Botão Mobile */}
       <button
         className={`md:hidden fixed top-4 left-4 z-50 p-2 rounded-md shadow transition
           ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
@@ -46,17 +45,16 @@ export default function Sidebar() {
         <Menu className="w-6 h-6" />
       </button>
 
-      {/* Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-screen w-64 flex flex-col justify-between
-          transform transition-transform duration-300 z-40
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-          ${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'}
+          fixed top-0 left-0 h-screen w-64 flex flex-col justify-between
+          transform transition-transform duration-300 z-40 overflow-y-auto
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
         `}
       >
+
         <div>
-          {/* Perfil */}
           <div className="flex items-center gap-3 p-4 border-b border-white/10">
             <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
               <span className="text-white text-sm font-medium">{initials}</span>
@@ -77,7 +75,6 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* Navegação */}
           <nav className="mt-4">
             {links.map(link => {
               const active = pathname === link.href
@@ -107,7 +104,6 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Modal Logout */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div

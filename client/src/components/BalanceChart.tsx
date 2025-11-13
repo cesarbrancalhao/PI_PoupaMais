@@ -11,14 +11,9 @@ import {
   Legend,
   ChartOptions
 } from 'chart.js'
+import { useTheme } from '@/contexts/ThemeContext'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-  Legend
-)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 interface MonthlyBalance {
   month: string
@@ -31,15 +26,14 @@ interface BalanceChartProps {
 
 export default function BalanceChart({ data }: BalanceChartProps) {
   const [containerKey, setContainerKey] = useState(0)
+  const { theme } = useTheme()
+  const isDark = theme === 'escuro'
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
-
     const handleResize = () => {
       clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        setContainerKey(prev => prev + 1)
-      }, 150)
+      timeoutId = setTimeout(() => setContainerKey(prev => prev + 1), 150)
     }
 
     window.addEventListener('resize', handleResize)
@@ -49,6 +43,27 @@ export default function BalanceChart({ data }: BalanceChartProps) {
     }
   }, [])
 
+  const textColor = isDark ? '#f5f5f5' : '#1f2937'
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+  const tooltipBg = isDark ? '#2b2b2b' : '#ffffff'
+  const tooltipText = isDark ? '#f5f5f5' : '#111111'
+
+  const positiveBar = isDark
+    ? 'rgba(96, 165, 250, 0.8)' 
+    : 'rgba(59, 130, 246, 0.8)'
+
+  const positiveBorder = isDark
+    ? 'rgba(147, 197, 253, 1)'
+    : 'rgba(59, 130, 246, 1)'
+
+  const negativeBar = isDark
+    ? 'rgba(248, 113, 113, 0.8)' 
+    : 'rgba(251, 146, 120, 0.8)'
+
+  const negativeBorder = isDark
+    ? 'rgba(239, 68, 68, 1)'
+    : 'rgba(251, 146, 120, 1)'
+
   const chartData = {
     labels: data.map(item => item.month),
     datasets: [
@@ -56,13 +71,13 @@ export default function BalanceChart({ data }: BalanceChartProps) {
         label: 'Balanço',
         data: data.map(item => item.balance),
         backgroundColor: data.map(item =>
-          item.balance >= 0 ? 'rgba(59, 130, 246, 0.8)' : 'rgba(251, 146, 120, 0.8)'
+          item.balance >= 0 ? positiveBar : negativeBar
         ),
         borderColor: data.map(item =>
-          item.balance >= 0 ? 'rgba(59, 130, 246, 1)' : 'rgba(251, 146, 120, 1)'
+          item.balance >= 0 ? positiveBorder : negativeBorder
         ),
         borderWidth: 1,
-        borderRadius: 6,
+        borderRadius: 6
       }
     ]
   }
@@ -71,19 +86,19 @@ export default function BalanceChart({ data }: BalanceChartProps) {
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
-    layout: {
-      padding: {
-        right: 10,
-        left: 0
-      }
-    },
+
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
+
       tooltip: {
+        backgroundColor: tooltipBg,
+        titleColor: tooltipText,
+        bodyColor: tooltipText,
+        borderColor: isDark ? '#444' : '#ddd',
+        borderWidth: 1,
+        padding: 12,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const value = context.parsed.x ?? 0
             return new Intl.NumberFormat('pt-BR', {
               style: 'currency',
@@ -93,37 +108,49 @@ export default function BalanceChart({ data }: BalanceChartProps) {
         }
       }
     },
+
     scales: {
       x: {
         beginAtZero: true,
         grid: {
-          display: false
+          display: true,
+          color: gridColor
         },
         ticks: {
-          callback: function(value) {
-            const numValue = value as number
-            if (Math.abs(numValue) >= 1000) {
-              return `R$ ${(numValue / 1000).toFixed(0)}k`
-            }
+          color: textColor,
+          callback: function (value) {
+            const num = value as number
+            if (Math.abs(num) >= 1000) return `R$ ${(num / 1000).toFixed(0)}k`
+
             return new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
               minimumFractionDigits: 0,
               maximumFractionDigits: 0
-            }).format(numValue)
+            }).format(num)
           }
         }
       },
+
       y: {
         grid: {
           display: false
+        },
+        ticks: {
+          color: textColor
         }
       }
     }
   }
 
   return (
-    <div key={containerKey} className="relative w-full h-full">
+    <div
+      key={containerKey}
+      className={`
+        relative w-full h-full rounded-xl p-4 transition
+        ${isDark ? 'bg-[var(--bg-card)]' : 'bg-white'}
+      `}
+    >
       <Bar data={chartData} options={options} />
     </div>
   )

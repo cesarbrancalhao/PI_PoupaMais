@@ -31,7 +31,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
-            {children}
+            <div className="md:ml-64">
+              {children}
+            </div>
           </ThemeProvider>
         </AuthProvider>
       </body>
