@@ -64,8 +64,8 @@ const ConfiguracoesPage = () => {
   };
 
   const isDark = tema === "escuro";
-  const accentColor = isDark ? "bg-purple-600" : "bg-blue-600";
-  const accentHover = isDark ? "hover:bg-purple-700" : "hover:bg-blue-700";
+  const accentColor =  "bg-blue-600";
+  const accentHover = "hover:bg-blue-700";
   const pageBg = isDark ? "bg-[#1E1E1E]" : "bg-[#F9FAFB]";
   const containerBg = isDark ? "bg-[#2B2B2B]" : "bg-white";
   const textColor = isDark ? "text-gray-100" : "text-gray-900";

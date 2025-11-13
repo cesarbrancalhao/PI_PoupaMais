@@ -5,32 +5,26 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Goal, LineChart, Settings, SquareStack, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const { user, logout } = useAuth()
+  const { theme } = useTheme()
 
-  const handleLogout = () => {
-    setShowLogoutModal(true)
-  }
+  const isDark = theme === "escuro"
 
+  const handleLogout = () => setShowLogoutModal(true)
   const confirmLogout = () => {
     setShowLogoutModal(false)
     logout()
   }
-
-  const cancelLogout = () => {
-    setShowLogoutModal(false)
-  }
+  const cancelLogout = () => setShowLogoutModal(false)
 
   const initials = user?.nome
-    ? user.nome
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
+    ? user.nome.split(' ').map(word => word[0]).join('').toUpperCase()
     : 'JS'
 
   const links = [
@@ -42,70 +36,106 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Botão Mobile */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow"
+        className={`md:hidden fixed top-4 left-4 z-50 p-2 rounded-md shadow transition
+          ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
+        `}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Menu className="w-6 h-6 text-gray-800" />
+        <Menu className="w-6 h-6" />
       </button>
 
+      {/* Sidebar */}
       <aside
-        className={`fixed md:static top-0 left-0 h-screen w-64 bg-white flex flex-col justify-between transform transition-transform duration-300 z-40 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`
+          fixed md:static top-0 left-0 h-screen w-64 flex flex-col justify-between
+          transform transition-transform duration-300 z-40
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          ${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'}
+        `}
       >
         <div>
-          <div className="flex items-center gap-3 p-4">
+          {/* Perfil */}
+          <div className="flex items-center gap-3 p-4 border-b border-white/10">
             <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
               <span className="text-white text-sm font-medium">{initials}</span>
             </div>
+
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-800">{user?.nome || 'Carregando...'}</p>
+              <p className="text-sm font-medium">{user?.nome || 'Carregando...'}</p>
             </div>
+
             <button
               onClick={handleLogout}
-              className="p-1 hover:bg-gray-100 rounded"
+              className={`p-1 rounded transition 
+                ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}
+              `}
               title="Sair"
             >
-              <LogOut className="w-4 h-4 text-gray-500" />
+              <LogOut className={`w-4 h-4 ${isDark ? "text-gray-300" : "text-gray-500"}`} />
             </button>
           </div>
 
+          {/* Navegação */}
           <nav className="mt-4">
-            {links.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors ${
-                  pathname === link.href
-                    ? 'text-gray-800 bg-gradient-to-r from-blue-100 to-white'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.icon}
-                {link.name}
-              </Link>
-            ))}
+            {links.map(link => {
+              const active = pathname === link.href
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 px-6 py-3 text-sm transition-colors 
+                    ${active
+                      ? isDark
+                        ? "text-white bg-gradient-to-r from-blue-900/50 to-transparent"
+                        : "text-gray-800 bg-gradient-to-r from-blue-100 to-white"
+                      : isDark
+                        ? "text-gray-300 hover:bg-white/10"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }
+                  `}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.icon}
+                  {link.name}
+                </Link>
+              )
+            })}
           </nav>
         </div>
       </aside>
 
+      {/* Modal Logout */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirmar saída</h3>
-            <p className="text-sm text-gray-600 mb-6">Tem certeza que deseja sair?</p>
+          <div
+            className={`
+              max-w-sm w-full mx-4 p-6 rounded-lg shadow-lg
+              transition
+              ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
+            `}
+          >
+            <h3 className="text-lg font-semibold mb-2">Confirmar saída</h3>
+            <p className="text-sm opacity-80 mb-6">Tem certeza que deseja sair?</p>
+
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelLogout}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition
+                  ${isDark ? "bg-white/10 text-gray-200 hover:bg-white/20" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+                `}
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmLogout}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium text-white transition
+                  ${isDark ? "bg-indigo-700 hover:bg-indigo-800" : "bg-indigo-600 hover:bg-indigo-700"}
+                `}
               >
                 Sair
               </button>
