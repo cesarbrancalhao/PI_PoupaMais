@@ -6,6 +6,11 @@ export class CreateMetaDto {
   @IsString()
   nome: string;
 
+  @ApiProperty({ example: 'Planejando uma viagem para conhecer a Europa', required: false })
+  @IsString()
+  @IsOptional()
+  descricao?: string;
+
   @ApiProperty({ example: 5000.00 })
   @IsNumber()
   @Min(0.01)
@@ -21,4 +26,9 @@ export class CreateMetaDto {
   @IsDateString()
   @IsOptional()
   data_inicio?: string;
+
+  @ApiProperty({ example: '2026-12-31', required: false })
+  @IsDateString()
+  @IsOptional()
+  data_alvo?: string;
 }
