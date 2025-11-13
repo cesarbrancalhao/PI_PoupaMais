@@ -63,10 +63,23 @@ CREATE TABLE receita (
 CREATE TABLE meta (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(70) NOT NULL,
+    descricao TEXT,
     valor DECIMAL(11,2) NOT NULL CHECK (valor > 0),
+    valor_atual DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0), -- valor_atual é a soma de todas as contribuicao_meta
     economia_mensal DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (economia_mensal >= 0),
     data_inicio DATE NOT NULL DEFAULT CURRENT_DATE,
+    data_alvo DATE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
+);
+
+CREATE TABLE contribuicao_meta (
+    id SERIAL PRIMARY KEY,
+    valor DECIMAL(11,2) NOT NULL CHECK (valor >= 0),
+    data DATE NOT NULL DEFAULT CURRENT_DATE,
+    observacao TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    meta_id INT NOT NULL REFERENCES meta(id) ON DELETE CASCADE,
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
@@ -76,3 +89,38 @@ CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);
 CREATE INDEX idx_despesa_usuario_id ON despesa(usuario_id);
 CREATE INDEX idx_receita_usuario_id ON receita(usuario_id);
 CREATE INDEX idx_meta_usuario_id ON meta(usuario_id);
+CREATE INDEX idx_contribuicao_meta_meta_id ON contribuicao_meta(meta_id);
+CREATE INDEX idx_contribuicao_meta_usuario_id ON contribuicao_meta(usuario_id);
+
+CREATE OR REPLACE FUNCTION atualizar_valor_atual_meta() -- função para atualizar automaticamente valor_atual da meta quando contribuições são alteradas
+RETURNS TRIGGER AS $$
+DECLARE
+    target_meta_id INT;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        target_meta_id := OLD.meta_id;
+    ELSE
+        target_meta_id := NEW.meta_id;
+    END IF;
+
+    UPDATE meta
+    SET valor_atual = (
+        SELECT COALESCE(SUM(valor), 0)
+        FROM contribuicao_meta
+        WHERE meta_id = target_meta_id
+    )
+    WHERE id = target_meta_id;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_atualizar_meta ON contribuicao_meta;
+CREATE TRIGGER trigger_atualizar_meta
+AFTER INSERT OR UPDATE OR DELETE ON contribuicao_meta
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_valor_atual_meta();
