@@ -7,9 +7,11 @@ import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
 import { authService } from "@/services/auth.service";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();    
+  const { setTheme: setGlobalTheme } = useTheme();
 
   const [moeda, setMoeda] = useState<"real" | "dolar" | "euro">("real");
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
@@ -21,13 +23,15 @@ const ConfiguracoesPage = () => {
       setIdioma(user.idioma ?? "portugues");
       setMoeda(user.moeda ?? "real");
       setTema(user.tema ? "escuro" : "claro");
+      setGlobalTheme(user.tema ? "escuro" : "claro");
     }
-  }, [user]);  
+  }, [user, setGlobalTheme]);
 
   const handleThemeChange = async (newTema: "claro" | "escuro") => {
     const temaBoolean = newTema === "escuro";
 
     setTema(newTema);
+    setGlobalTheme(newTema);
 
     try {
       await axios.put(
@@ -60,8 +64,8 @@ const ConfiguracoesPage = () => {
   };
 
   const isDark = tema === "escuro";
-  const accentColor =  "bg-blue-600";
-  const accentHover = "hover:bg-blue-700";
+  const accentColor = isDark ? "bg-blue-600" : "bg-blue-600";
+  const accentHover = isDark ? "hover:bg-blue-700" : "hover:bg-blue-700";
   const pageBg = isDark ? "bg-[#1E1E1E]" : "bg-[#F9FAFB]";
   const containerBg = isDark ? "bg-[#2B2B2B]" : "bg-white";
   const textColor = isDark ? "text-gray-100" : "text-gray-900";
@@ -85,7 +89,7 @@ const ConfiguracoesPage = () => {
   };
 
   return (
-    <div className={`flex min-h-screen ${pageBg} ${textColor}`}>
+    <div className={`flex min-h-screen ${pageBg} ${textColor} transition-colors duration-300`}>
       <Sidebar />
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
         <div
