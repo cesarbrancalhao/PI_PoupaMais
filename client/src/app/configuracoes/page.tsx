@@ -6,54 +6,60 @@ import axios from "axios";
 import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
+import { authService } from "@/services/auth.service";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const ConfiguracoesPage = () => {
-  const [moeda, setMoeda] = useState("real");
-  const [tema, setTema] = useState("claro");
-  const [idioma, setIdioma] = useState("portugues");
+  const { user, setUser } = useAuth();    
+  const { setTheme: setGlobalTheme } = useTheme();
+
+  const [moeda, setMoeda] = useState<"real" | "dolar" | "euro">("real");
+  const [tema, setTema] = useState<"claro" | "escuro">("claro");
+  const [idioma, setIdioma] = useState<"portugues" | "ingles" | "espanhol">("portugues");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
-  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      if (user && user.token) {
-        try {
-          const response = await axios.get(`http://localhost:3001/configs`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          });
-          setMoeda(response.data.moeda);
-          setTema(response.data.tema === true ? "escuro" : "claro");
-          setIdioma(response.data.idioma);
-        } catch (error) {
-          console.error("Failed to fetch user configuration:", error);
-        }
-      }
-    };
+    if (user) {
+      setIdioma(user.idioma ?? "portugues");
+      setMoeda(user.moeda ?? "real");
+      setTema(user.tema ? "escuro" : "claro");
+      setGlobalTheme(user.tema ? "escuro" : "claro");
+    }
+  }, [user, setGlobalTheme]);
 
-    fetchConfig();
-  }, [user]);
+  const handleThemeChange = async (newTema: "claro" | "escuro") => {
+    const temaBoolean = newTema === "escuro";
 
-  const handleThemeChange = (newTema: string) => {
     setTema(newTema);
-    if (user && user.token) {
-      axios
-        .put(
-          `http://localhost:3001/configs`,
-          {
-            tema: newTema === "escuro",
-            idioma,
-            moeda,
+    setGlobalTheme(newTema);
+
+    try {
+      await axios.put(
+        "http://localhost:3002/api/v1/configs",
+        {
+          tema: temaBoolean,
+          idioma,
+          moeda,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authService.getToken()}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          }
-        )
-        .then((response) => console.log("Theme updated successfully:", response.data))
-        .catch((error) => console.error("Failed to update theme:", error));
+        }
+      );
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              tema: temaBoolean,
+              idioma: idioma,
+              moeda: moeda,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("Erro ao atualizar tema:", err);
     }
   };
 
@@ -92,25 +98,17 @@ const ConfiguracoesPage = () => {
           <h1 className="text-lg sm:text-xl font-semibold mb-8">Configurações</h1>
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
+
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Moeda</h2>
               <div className="flex">
-                <button
-                  className={btnClass(moeda === "dolar", "left")}
-                  onClick={() => setMoeda("dolar")}
-                >
+                <button className={btnClass(moeda === "dolar", "left")} onClick={() => setMoeda("dolar")}>
                   Dólar $
                 </button>
-                <button
-                  className={btnClass(moeda === "euro")}
-                  onClick={() => setMoeda("euro")}
-                >
+                <button className={btnClass(moeda === "euro")} onClick={() => setMoeda("euro")}>
                   Euro €
                 </button>
-                <button
-                  className={btnClass(moeda === "real", "right")}
-                  onClick={() => setMoeda("real")}
-                >
+                <button className={btnClass(moeda === "real", "right")} onClick={() => setMoeda("real")}>
                   Real R$
                 </button>
               </div>
@@ -119,16 +117,10 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Tema</h2>
               <div className="flex">
-                <button
-                  className={btnClass(tema === "claro", "left")}
-                  onClick={() => handleThemeChange("claro")}
-                >
+                <button className={btnClass(tema === "claro", "left")} onClick={() => handleThemeChange("claro")}>
                   Claro
                 </button>
-                <button
-                  className={btnClass(tema === "escuro", "right")}
-                  onClick={() => handleThemeChange("escuro")}
-                >
+                <button className={btnClass(tema === "escuro", "right")} onClick={() => handleThemeChange("escuro")}>
                   Escuro
                 </button>
               </div>
@@ -137,22 +129,13 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Idioma</h2>
               <div className="flex">
-                <button
-                  className={btnClass(idioma === "espanhol", "left")}
-                  onClick={() => setIdioma("espanhol")}
-                >
+                <button className={btnClass(idioma === "espanhol", "left")} onClick={() => setIdioma("espanhol")}>
                   Espanhol
                 </button>
-                <button
-                  className={btnClass(idioma === "ingles")}
-                  onClick={() => setIdioma("ingles")}
-                >
+                <button className={btnClass(idioma === "ingles")} onClick={() => setIdioma("ingles")}>
                   Inglês
                 </button>
-                <button
-                  className={btnClass(idioma === "portugues", "right")}
-                  onClick={() => setIdioma("portugues")}
-                >
+                <button className={btnClass(idioma === "portugues", "right")} onClick={() => setIdioma("portugues")}>
                   Português
                 </button>
               </div>
@@ -187,7 +170,7 @@ const ConfiguracoesPage = () => {
                   <button
                     onClick={() => setPasswordModalOpen(true)}
                     className={`px-4 py-3 rounded ${accentColor} ${accentHover} text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors w-fit`}
-                    >
+                  >
                     <Settings size={16} />
                     Alterar senha
                   </button>

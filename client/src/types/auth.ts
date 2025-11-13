@@ -3,6 +3,9 @@ export interface User {
   nome: string;
   email: string;
   created_at?: string;
+  tema?: boolean;  
+  idioma?: "portugues" | "ingles" | "espanhol";
+  moeda?: "real" | "dolar" | "euro";
 }
 
 export interface LoginRequest {
