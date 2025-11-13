@@ -7,11 +7,9 @@ import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
 import { authService } from "@/services/auth.service";
-import { useTheme } from "@/contexts/ThemeContext";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();    
-  const { setTheme: setGlobalTheme } = useTheme();
 
   const [moeda, setMoeda] = useState<"real" | "dolar" | "euro">("real");
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
@@ -23,15 +21,13 @@ const ConfiguracoesPage = () => {
       setIdioma(user.idioma ?? "portugues");
       setMoeda(user.moeda ?? "real");
       setTema(user.tema ? "escuro" : "claro");
-      setGlobalTheme(user.tema ? "escuro" : "claro");
     }
-  }, [user, setGlobalTheme]);
+  }, [user]);  
 
   const handleThemeChange = async (newTema: "claro" | "escuro") => {
     const temaBoolean = newTema === "escuro";
 
     setTema(newTema);
-    setGlobalTheme(newTema);
 
     try {
       await axios.put(
@@ -89,7 +85,7 @@ const ConfiguracoesPage = () => {
   };
 
   return (
-    <div className={`flex min-h-screen ${pageBg} ${textColor} transition-colors duration-300`}>
+    <div className={`flex min-h-screen ${pageBg} ${textColor}`}>
       <Sidebar />
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
         <div
