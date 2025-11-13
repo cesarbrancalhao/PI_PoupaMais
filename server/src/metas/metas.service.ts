@@ -9,12 +9,32 @@ export class MetasService {
   constructor(private databaseService: DatabaseService) {}
 
   async create(userId: number, data: CreateMetaDto) {
-    const result = await this.databaseService.query(
-      `INSERT INTO meta (nome, valor, economia_mensal, data_inicio, usuario_id)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [data.nome, data.valor, data.economia_mensal || 0, data.data_inicio || new Date(), userId],
-    );
-    return result.rows[0];
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      const result = await client.query(
+        `INSERT INTO meta (nome, descricao, valor, economia_mensal, data_inicio, data_alvo, usuario_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [
+          data.nome,
+          data.descricao || null,
+          data.valor,
+          data.economia_mensal || 0,
+          data.data_inicio || new Date(),
+          data.data_alvo || null,
+          userId
+        ],
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {
@@ -55,17 +75,31 @@ export class MetasService {
   }
 
   async update(id: number, userId: number, data: UpdateMetaDto) {
-    const result = await this.databaseService.query(
-      `UPDATE meta
-       SET nome = COALESCE($1, nome),
-           valor = COALESCE($2, valor),
-           economia_mensal = COALESCE($3, economia_mensal),
-           data_inicio = COALESCE($4, data_inicio)
-       WHERE id = $5 AND usuario_id = $6 RETURNING *`,
-      [data.nome, data.valor, data.economia_mensal, data.data_inicio, id, userId],
-    );
-    if (result.rows.length === 0) throw new NotFoundException('Meta não encontrada');
-    return result.rows[0];
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      const result = await client.query(
+        `UPDATE meta
+         SET nome = COALESCE($1, nome),
+             descricao = COALESCE($2, descricao),
+             valor = COALESCE($3, valor),
+             economia_mensal = COALESCE($4, economia_mensal),
+             data_inicio = COALESCE($5, data_inicio),
+             data_alvo = COALESCE($6, data_alvo)
+         WHERE id = $7 AND usuario_id = $8 RETURNING *`,
+        [data.nome, data.descricao, data.valor, data.economia_mensal, data.data_inicio, data.data_alvo, id, userId],
+      );
+      if (result.rows.length === 0) throw new NotFoundException('Meta não encontrada');
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async remove(id: number, userId: number) {
