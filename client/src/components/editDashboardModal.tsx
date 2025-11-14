@@ -9,7 +9,7 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 
-interface EditModalProps {
+interface EditDashboardModalProps {
   isOpen: boolean
   onClose: () => void
   type: 'despesas' | 'receitas'
@@ -165,7 +165,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   )
 }
 
-export default function EditModal({ isOpen, onClose, type, editItem, onDelete }: EditModalProps) {
+export default function EditDashboardModal({ isOpen, onClose, type, editItem, onDelete }: EditDashboardModalProps) {
   const [name, setName] = useState(editItem.name)
   const [category, setCategory] = useState(editItem.category)
   const [value, setValue] = useState(editItem.value)

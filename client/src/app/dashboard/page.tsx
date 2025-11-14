@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddDashboardModal from '@/components/addDashboardModal'
-import EditModal from '@/components/editModal'
+import EditDashboardModal from '@/components/editDashboardModal'
 import AddCategoriaModal from '@/components/addCategoriaModal'
 import EditCategoriaModal from '@/components/editCategoriaModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -671,7 +671,7 @@ export default function DashboardPage() {
       <AddDashboardModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
       
       {selectedItem && (
-        <EditModal
+        <EditDashboardModal
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
           type={activeTab}
