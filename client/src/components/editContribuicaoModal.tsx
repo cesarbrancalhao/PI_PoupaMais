@@ -1,14 +1,20 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { contribuicaoMetaService } from '@/services/contribuicao-meta.service'
 
-interface AddContribuicaoModalProps {
+interface EditContribuicaoModalProps {
   isOpen: boolean
   onClose: () => void
-  metaId: number
+  editItem: {
+    id: number
+    valor: number
+    data: string
+    observacao?: string
+  }
+  onDelete?: (id: number) => void
 }
 
 interface CalendarProps {
@@ -152,25 +158,42 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   )
 }
 
-export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddContribuicaoModalProps) {
-  const [valor, setValor] = useState('')
-  const [data, setData] = useState('')
-  const [observacao, setObservacao] = useState('')
+export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDelete }: EditContribuicaoModalProps) {
+  // Helper function to normalize date from ISO or YYYY-MM-DD to YYYY-MM-DD
+  const normalizeDateString = (dateString: string): string => {
+    if (!dateString) return ''
+
+    // If it's already in YYYY-MM-DD format (10 chars), return as is
+    if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateString
+    }
+
+    // If it's an ISO string, extract the date part
+    const date = new Date(dateString)
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    return dateString
+  }
+
+  const [valor, setValor] = useState(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+  const [data, setData] = useState(normalizeDateString(editItem.data))
+  const [observacao, setObservacao] = useState(editItem.observacao || '')
   const formRef = useRef<HTMLFormElement>(null)
   const [showError, setShowError] = useState(false)
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
 
   useEffect(() => {
-    if (!isOpen) {
-      setValor('')
-      setData('')
-      setObservacao('')
-      setShowError(false)
-    } else {
-      const today = new Date()
-      const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-      setData(todayString)
-    }
-  }, [isOpen])
+    setValor(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+    setData(normalizeDateString(editItem.data))
+    setObservacao(editItem.observacao || '')
+    setShowError(false)
+    setConfirmDeleteMode(false)
+  }, [editItem])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '')
@@ -191,8 +214,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
         return
       }
 
-      await contribuicaoMetaService.create({
-        meta_id: metaId,
+      await contribuicaoMetaService.update(editItem.id, {
         valor: numericValor,
         data: data || undefined,
         observacao: observacao || undefined,
@@ -200,7 +222,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
 
       onClose()
     } catch (error) {
-      console.error('Erro ao criar contribuição:', error)
+      console.error('Erro ao atualizar contribuição:', error)
       setShowError(true)
       setTimeout(() => setShowError(false), 3000)
     }
@@ -243,7 +265,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">Adicionar Contribuição</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Alterar Contribuição</h2>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
@@ -281,13 +303,52 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Salvar contribuição
-              </button>
+              {!confirmDeleteMode && (
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Salvar contribuição
+                </button>
+              )}
+
+              {onDelete && (
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(editItem.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir contribuição
+                    </button>
+                  )}
+                </>
+              )}
             </form>
           </motion.div>
         </>

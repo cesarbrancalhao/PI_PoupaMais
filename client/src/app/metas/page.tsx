@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddMetaModal from '@/components/addMetaModal'
 import AddContribuicaoModal from '@/components/addContribuicaoModal'
+import EditMetaModal from '@/components/editMetaModal'
+import EditContribuicaoModal from '@/components/editContribuicaoModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
 import { Meta, ContribuicaoMeta } from '@/types'
@@ -15,6 +17,10 @@ export default function MetasPage() {
   const [contribuicoes, setContribuicoes] = useState<ContribuicaoMeta[]>([])
   const [isAddMetaModalOpen, setIsAddMetaModalOpen] = useState(false)
   const [isAddContribuicaoModalOpen, setIsAddContribuicaoModalOpen] = useState(false)
+  const [isEditMetaModalOpen, setIsEditMetaModalOpen] = useState(false)
+  const [isEditContribuicaoModalOpen, setIsEditContribuicaoModalOpen] = useState(false)
+  const [editingMeta, setEditingMeta] = useState<Meta | null>(null)
+  const [editingContribuicao, setEditingContribuicao] = useState<ContribuicaoMeta | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [receitaMedia, setReceitaMedia] = useState(0)
@@ -53,8 +59,22 @@ export default function MetasPage() {
       const totalReceitas = recentReceitas.reduce((sum: number, r: { valor: number }) => sum + (Number(r.valor) || 0), 0)
       const totalDespesas = recentDespesas.reduce((sum: number, d: { valor: number }) => sum + (Number(d.valor) || 0), 0)
 
-      setReceitaMedia(totalReceitas / 6)
-      setDespesaMedia(totalDespesas / 6)
+      const ReceitaMonths = new Set(
+        recentReceitas.map((r: { data: string }) => {
+          const date = new Date(r.data)
+          return `${date.getFullYear()}-${date.getMonth()}`
+        })
+      ).size
+
+      const DespesaMonths = new Set(
+        recentDespesas.map((d: { data: string }) => {
+          const date = new Date(d.data)
+          return `${date.getFullYear()}-${date.getMonth()}`
+        })
+      ).size
+
+      setReceitaMedia(ReceitaMonths > 0 ? totalReceitas / ReceitaMonths : 0)
+      setDespesaMedia(DespesaMonths > 0 ? totalDespesas / DespesaMonths : 0)
 
       if (metasData.length > 0 && !selectedMeta) {
         setSelectedMeta(metasData[0])
@@ -104,6 +124,55 @@ export default function MetasPage() {
     }
   }
 
+  const openEditMetaModal = (meta: Meta) => {
+    setEditingMeta(meta)
+    setIsEditMetaModalOpen(true)
+  }
+
+  const closeEditMetaModal = () => {
+    setIsEditMetaModalOpen(false)
+    setEditingMeta(null)
+    fetchData()
+  }
+
+  const openEditContribuicaoModal = (contribuicao: ContribuicaoMeta) => {
+    setEditingContribuicao(contribuicao)
+    setIsEditContribuicaoModalOpen(true)
+  }
+
+  const closeEditContribuicaoModal = () => {
+    setIsEditContribuicaoModalOpen(false)
+    setEditingContribuicao(null)
+    if (selectedMeta) {
+      fetchContribuicoes(selectedMeta.id)
+      fetchData()
+    }
+  }
+
+  const handleDeleteMeta = async (id: number) => {
+    try {
+      await metasService.delete(id)
+      if (selectedMeta?.id === id) {
+        setSelectedMeta(null)
+      }
+      fetchData()
+    } catch (err) {
+      console.error('Erro ao excluir meta:', err)
+    }
+  }
+
+  const handleDeleteContribuicao = async (id: number) => {
+    try {
+      await contribuicaoMetaService.delete(id)
+      if (selectedMeta) {
+        fetchContribuicoes(selectedMeta.id)
+        fetchData()
+      }
+    } catch (err) {
+      console.error('Erro ao excluir contribuição:', err)
+    }
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -120,29 +189,34 @@ export default function MetasPage() {
   }
 
   const calculateProgress = (meta: Meta) => {
-    return meta.valor > 0 ? (meta.valor_atual / meta.valor) * 100 : 0
+    const valor = Number(meta.valor) || 0
+    const valorAtual = Number(meta.valor_atual) || 0
+    return valor > 0 ? (valorAtual / valor) * 100 : 0
   }
 
   const calculateTimeRemaining = (meta: Meta) => {
-    if (!meta.data_alvo) return null
-
-    const today = new Date()
-    const target = new Date(meta.data_alvo)
-    const diffTime = target.getTime() - today.getTime()
-    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30))
-
-    if (diffMonths < 0) return '~ 0 meses'
-    return `~ ${diffMonths} ${diffMonths === 1 ? 'mês' : 'meses'}`
+    const economiaMensal = Number(meta.economia_mensal) || 0
+    
+    if (economiaMensal === 0) return '∞'
+    
+    const valorTotal = Number(meta.valor) || 0
+    const valorAtual = Number(meta.valor_atual) || 0
+    const remaining = valorTotal - valorAtual
+    
+    if (remaining <= 0) return '0 meses'
+    
+    const monthsRemaining = Math.ceil(remaining / economiaMensal)
+    return `${monthsRemaining} ${monthsRemaining === 1 ? 'mês' : 'meses'}`
   }
 
   const percentualAlocado = useMemo(() => {
     if (receitaMedia === 0) return 0
-    const totalEconomiaMensal = metas.reduce((sum, meta) => sum + (meta.economia_mensal || 0), 0)
+    const totalEconomiaMensal = metas.reduce((sum, meta) => sum + (Number(meta.economia_mensal) || 0), 0)
     return (totalEconomiaMensal / receitaMedia) * 100
   }, [metas, receitaMedia])
 
   const valorTotalNecessario = useMemo(() => {
-    return metas.reduce((sum, meta) => sum + meta.valor, 0)
+    return metas.reduce((sum, meta) => sum + (Number(meta.valor) || 0), 0)
   }, [metas])
 
   if (loading) {
@@ -233,51 +307,62 @@ export default function MetasPage() {
                       return (
                         <div
                           key={meta.id}
-                          onClick={() => setSelectedMeta(meta)}
                           className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
                             selectedMeta?.id === meta.id
                               ? 'border-blue-600 bg-blue-50'
                               : 'border-gray-200 hover:border-blue-300 bg-white'
                           }`}
+                          onClick={() => openEditMetaModal(meta)}
                         >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-800">{meta.nome}</h3>
-                              {meta.descricao && (
-                                <p className="text-sm text-gray-600 mt-1">{meta.descricao}</p>
-                              )}
+                          <div className="flex gap-3 items-start mb-2">
+                            <div className="flex items-start pt-1" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="radio"
+                                name="meta-selection"
+                                checked={selectedMeta?.id === meta.id}
+                                onChange={() => setSelectedMeta(meta)}
+                                className="w-4 h-4 text-blue-600 cursor-pointer"
+                              />
                             </div>
-                            <div className="text-right ml-4">
-                              <p className="text-sm text-gray-500">
-                                {formatCurrency(meta.economia_mensal)}/Mês
-                              </p>
+                            <div className="flex justify-between items-start flex-1">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-800">{meta.nome}</h3>
+                                {meta.descricao && (
+                                  <p className="text-sm text-gray-600 mt-1">{meta.descricao}</p>
+                                )}
+                              </div>
+                              <div className="text-right ml-4">
+                                <p className="text-sm text-gray-500">
+                                  {formatCurrency(Number(meta.economia_mensal) || 0)}/Mês
+                                </p>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4 text-sm mb-3">
-                            <div>
-                              <p className="text-gray-500">Objetivo</p>
-                              <p className="font-medium text-gray-800">{formatCurrency(meta.valor)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500">Progresso</p>
-                              <p className="font-medium text-green-600">{formatCurrency(meta.valor_atual)}</p>
-                            </div>
-                            {timeRemaining && (
+                          <div className="ml-7">
+                            <div className="grid grid-cols-3 gap-4 text-sm mb-3">
+                              <div>
+                                <p className="text-gray-500">Objetivo</p>
+                                <p className="font-medium text-gray-800">{formatCurrency(Number(meta.valor) || 0)}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Progresso</p>
+                                <p className="font-medium text-green-600">{formatCurrency(Number(meta.valor_atual) || 0)}</p>
+                              </div>
                               <div>
                                 <p className="text-gray-500">Tempo restante</p>
                                 <p className="font-medium text-gray-800">{timeRemaining}</p>
                               </div>
-                            )}
-                          </div>
+                            </div>
 
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div
-                              className="bg-blue-600 h-2.5 rounded-full transition-all"
-                              style={{ width: `${Math.min(progress, 100)}%` }}
-                            ></div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div
+                                className="bg-blue-600 h-2.5 rounded-full transition-all"
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                              ></div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(1)}%</p>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(1)}%</p>
                         </div>
                       )
                     })}
@@ -310,7 +395,8 @@ export default function MetasPage() {
                       {contribuicoes.map((contribuicao) => (
                         <div
                           key={contribuicao.id}
-                          className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                          onClick={() => openEditContribuicaoModal(contribuicao)}
+                          className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-blue-300 cursor-pointer transition-all"
                         >
                           <div className="flex justify-between items-start mb-1">
                             <p className="font-medium text-gray-800">{formatCurrency(contribuicao.valor)}</p>
@@ -356,6 +442,35 @@ export default function MetasPage() {
             isOpen={isAddContribuicaoModalOpen}
             onClose={closeAddContribuicaoModal}
             metaId={selectedMeta.id}
+          />
+        )}
+        {editingMeta && (
+          <EditMetaModal
+            isOpen={isEditMetaModalOpen}
+            onClose={closeEditMetaModal}
+            editItem={{
+              id: editingMeta.id,
+              nome: editingMeta.nome,
+              descricao: editingMeta.descricao,
+              valor: editingMeta.valor,
+              economia_mensal: editingMeta.economia_mensal,
+              data_inicio: editingMeta.data_inicio,
+              data_alvo: editingMeta.data_alvo,
+            }}
+            onDelete={handleDeleteMeta}
+          />
+        )}
+        {editingContribuicao && (
+          <EditContribuicaoModal
+            isOpen={isEditContribuicaoModalOpen}
+            onClose={closeEditContribuicaoModal}
+            editItem={{
+              id: editingContribuicao.id,
+              valor: editingContribuicao.valor,
+              data: editingContribuicao.data,
+              observacao: editingContribuicao.observacao,
+            }}
+            onDelete={handleDeleteContribuicao}
           />
         )}
       </div>

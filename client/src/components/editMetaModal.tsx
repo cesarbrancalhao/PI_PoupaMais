@@ -1,13 +1,23 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { metasService } from '@/services/metas.service'
 
-interface AddMetaModalProps {
+interface EditMetaModalProps {
   isOpen: boolean
   onClose: () => void
+  editItem: {
+    id: number
+    nome: string
+    descricao?: string
+    valor: number
+    economia_mensal?: number
+    data_inicio: string
+    data_alvo?: string
+  }
+  onDelete?: (id: number) => void
 }
 
 interface MonthYearPickerProps {
@@ -56,6 +66,7 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
   }
 
   const handleMonthClick = (monthIndex: number) => {
+    // Check if month is before minDate
     if (isMonthBeforeMinDate(currentYear, monthIndex + 1)) {
       return
     }
@@ -141,46 +152,76 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
   )
 }
 
-export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
-  const [nome, setNome] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [valor, setValor] = useState('')
+export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: EditMetaModalProps) {
+  // Helper function to normalize date from ISO or YYYY-MM-DD to YYYY-MM-DD
+  const normalizeDateString = (dateString: string): string => {
+    if (!dateString) return ''
+
+    // If it's already in YYYY-MM-DD format (10 chars), return as is
+    if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateString
+    }
+
+    // If it's an ISO string, extract the date part
+    const date = new Date(dateString)
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    return dateString
+  }
+
+  const [nome, setNome] = useState(editItem.nome)
+  const [descricao, setDescricao] = useState(editItem.descricao || '')
+  const [valor, setValor] = useState(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
   const [economiaMensal, setEconomiaMensal] = useState('')
-  const [dataInicio, setDataInicio] = useState('')
-  const [dataAlvo, setDataAlvo] = useState('')
-  const [goalType, setGoalType] = useState<'monthly' | 'deadline' | null>(null)
+  const [dataInicio, setDataInicio] = useState(normalizeDateString(editItem.data_inicio))
+  const [dataAlvo, setDataAlvo] = useState(normalizeDateString(editItem.data_alvo || ''))
+  const [goalType, setGoalType] = useState<'monthly' | 'deadline' | null>(
+    editItem.data_alvo ? 'deadline' : editItem.economia_mensal ? 'monthly' : null
+  )
   const formRef = useRef<HTMLFormElement>(null)
   const [showError, setShowError] = useState(false)
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
 
   useEffect(() => {
-    if (!isOpen) {
-      setNome('')
-      setDescricao('')
-      setValor('')
-      setEconomiaMensal('')
-      setDataInicio('')
-      setDataAlvo('')
-      setGoalType(null)
-      setShowError(false)
-    } else {
-      const today = new Date()
-      const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-      setDataInicio(todayString)
-    }
-  }, [isOpen])
+    setNome(editItem.nome)
+    setDescricao(editItem.descricao || '')
+    setValor(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+    setDataInicio(normalizeDateString(editItem.data_inicio))
+    setDataAlvo(normalizeDateString(editItem.data_alvo || ''))
+    setShowError(false)
+    setConfirmDeleteMode(false)
 
+    // Determine goal type based on existing data - prioritize data_alvo over economia_mensal
+    if (editItem.data_alvo) {
+      setGoalType('deadline')
+      setEconomiaMensal('')
+    } else if (editItem.economia_mensal) {
+      setGoalType('monthly')
+      setEconomiaMensal(Number(editItem.economia_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+    } else {
+      setGoalType(null)
+      setEconomiaMensal('')
+    }
+  }, [editItem])
+
+  // Validate and clear dataAlvo if it becomes invalid when dataInicio changes
   useEffect(() => {
     if (dataInicio && dataAlvo && goalType === 'deadline') {
       const inicioParts = dataInicio.split('-')
       const alvoParts = dataAlvo.split('-')
-      
+
       if (inicioParts.length === 3 && alvoParts.length === 3) {
         const inicioDate = new Date(parseInt(inicioParts[0]), parseInt(inicioParts[1]) - 1, parseInt(inicioParts[2]))
         const alvoDate = new Date(parseInt(alvoParts[0]), parseInt(alvoParts[1]) - 1, parseInt(alvoParts[2]))
-        
+
         inicioDate.setHours(0, 0, 0, 0)
         alvoDate.setHours(0, 0, 0, 0)
-        
+
         if (alvoDate < inicioDate) {
           setDataAlvo('')
         }
@@ -199,45 +240,45 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
 
   const calculateMonthsNeeded = (): number | null => {
     if (goalType !== 'monthly' || !valor || !economiaMensal) return null
-    
+
     const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
     const numericValor = parseFloat(cleanValor)
-    
+
     const cleanEconomiaMensal = economiaMensal.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
     const numericEconomiaMensal = parseFloat(cleanEconomiaMensal)
-    
+
     if (isNaN(numericValor) || numericValor <= 0 || isNaN(numericEconomiaMensal) || numericEconomiaMensal <= 0) {
       return null
     }
-    
+
     return Math.ceil(numericValor / numericEconomiaMensal)
   }
 
   const calculateMonthlySavingsNeeded = (): number | null => {
     if (goalType !== 'deadline' || !valor || !dataInicio || !dataAlvo) return null
-    
+
     const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
     const numericValor = parseFloat(cleanValor)
-    
+
     if (isNaN(numericValor) || numericValor <= 0) return null
-    
+
     // Parse dates
     const inicioParts = dataInicio.split('-')
     const alvoParts = dataAlvo.split('-')
-    
+
     if (inicioParts.length !== 3 || alvoParts.length !== 3) return null
-    
+
     const inicioDate = new Date(parseInt(inicioParts[0]), parseInt(inicioParts[1]) - 1, parseInt(inicioParts[2]))
     const alvoDate = new Date(parseInt(alvoParts[0]), parseInt(alvoParts[1]) - 1, parseInt(alvoParts[2]))
-    
+
     if (isNaN(inicioDate.getTime()) || isNaN(alvoDate.getTime())) return null
-    
+
     // Calculate months difference
-    const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 + 
+    const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 +
                        (alvoDate.getMonth() - inicioDate.getMonth())
-    
+
     if (monthsDiff <= 0) return null
-    
+
     return numericValor / monthsDiff
   }
 
@@ -275,6 +316,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
         return
       }
 
+      // Calculate economia_mensal when in deadline mode
       let economiaMensalToSave: number | undefined = undefined
 
       if (goalType === 'monthly' && numericEconomiaMensal > 0) {
@@ -286,7 +328,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
         }
       }
 
-      await metasService.create({
+      await metasService.update(editItem.id, {
         nome,
         descricao: descricao || undefined,
         valor: numericValor,
@@ -297,7 +339,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
 
       onClose()
     } catch (error) {
-      console.error('Erro ao criar meta:', error)
+      console.error('Erro ao atualizar meta:', error)
       setShowError(true)
       setTimeout(() => setShowError(false), 3000)
     }
@@ -340,7 +382,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">Adicionar Meta</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Alterar Meta</h2>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
@@ -424,9 +466,19 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                     </p>
                   ) : null
                 })()}
-                {goalType === 'monthly' && (
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Data de início</label>
+                <MonthYearPicker
+                  selectedDate={dataInicio}
+                  onDateSelect={setDataInicio}
+                />
+              </div>
+
+              {goalType === 'monthly' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mt-3 mb-1">Economia mensal</label>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Economia mensal</label>
                   <input
                     type="text"
                     placeholder="R$ 0,00"
@@ -437,15 +489,6 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                   />
                 </div>
               )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Data de início</label>
-                <MonthYearPicker
-                  selectedDate={dataInicio}
-                  onDateSelect={setDataInicio}
-                />
-              </div>
 
               {goalType === 'deadline' && (
                 <div>
@@ -458,13 +501,52 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Salvar meta
-              </button>
+              {!confirmDeleteMode && (
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Salvar meta
+                </button>
+              )}
+
+              {onDelete && (
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(editItem.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir meta
+                    </button>
+                  )}
+                </>
+              )}
             </form>
           </motion.div>
         </>
