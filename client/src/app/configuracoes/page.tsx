@@ -7,6 +7,7 @@ import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { useTheme } from "@/contexts/ThemeContext";
+import { configsService } from "@/services/configs.service";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();    
@@ -33,38 +34,26 @@ const ConfiguracoesPage = () => {
     setGlobalTheme(newTema);
   
     try {
-      const response = await fetch("http://localhost:3002/api/v1/configs", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authService.getToken()}`,
-        },
-        body: JSON.stringify({
-          tema: temaBoolean,
-          idioma,
-          moeda,
-        }),
+      await configsService.update({
+        tema: temaBoolean,
+        idioma,
+        moeda,
       });
-  
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
   
       setUser((prev) =>
         prev
           ? {
               ...prev,
               tema: temaBoolean,
-              idioma: idioma,
-              moeda: moeda,
+              idioma,
+              moeda,
             }
           : prev
       );
     } catch (err) {
       console.error("Erro ao atualizar tema:", err);
     }
-  };
-  
+  };  
 
   const isDark = tema === "escuro";
   const accentColor = isDark ? "bg-blue-600" : "bg-blue-600";
