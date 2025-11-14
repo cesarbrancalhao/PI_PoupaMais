@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
 import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
@@ -29,25 +28,28 @@ const ConfiguracoesPage = () => {
 
   const handleThemeChange = async (newTema: "claro" | "escuro") => {
     const temaBoolean = newTema === "escuro";
-
+  
     setTema(newTema);
     setGlobalTheme(newTema);
-
+  
     try {
-      await axios.put(
-        "http://localhost:3002/api/v1/configs",
-        {
+      const response = await fetch("http://localhost:3002/api/v1/configs", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authService.getToken()}`,
+        },
+        body: JSON.stringify({
           tema: temaBoolean,
           idioma,
           moeda,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${authService.getToken()}`,
-          },
-        }
-      );
-
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+  
       setUser((prev) =>
         prev
           ? {
@@ -62,6 +64,7 @@ const ConfiguracoesPage = () => {
       console.error("Erro ao atualizar tema:", err);
     }
   };
+  
 
   const isDark = tema === "escuro";
   const accentColor = isDark ? "bg-blue-600" : "bg-blue-600";
