@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
-import AddModal from '@/components/addModal'
+import AddDashboardModal from '@/components/addDashboardModal'
 import EditModal from '@/components/editModal'
 import AddCategoriaModal from '@/components/addCategoriaModal'
 import EditCategoriaModal from '@/components/editCategoriaModal'
@@ -668,7 +668,7 @@ export default function DashboardPage() {
         )}
       </main>
 
-      <AddModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
+      <AddDashboardModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
       
       {selectedItem && (
         <EditModal
