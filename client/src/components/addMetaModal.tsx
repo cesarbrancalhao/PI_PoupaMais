@@ -3,16 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CategoriaDespesa, FonteReceita } from '@/types'
-import { categoriasDespesaService } from '@/services/categorias.service'
-import { fontesReceitaService } from '@/services/fontes.service'
-import { despesasService } from '@/services/despesas.service'
-import { receitasService } from '@/services/receitas.service'
+import { metasService } from '@/services/metas.service'
 
-interface AddModalProps {
+interface AddMetaModalProps {
   isOpen: boolean
   onClose: () => void
-  type: 'despesas' | 'receitas'
 }
 
 interface CalendarProps {
@@ -22,7 +17,7 @@ interface CalendarProps {
 
 function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  
+
   useEffect(() => {
     if (selectedDate) {
       const selectedDateParts = selectedDate.split('-')
@@ -35,9 +30,9 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
       }
     }
   }, [selectedDate])
-  
+
   const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-  
+
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -45,20 +40,20 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = firstDay.getDay()
-    
+
     const days = []
-    
+
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null)
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day)
     }
-    
+
     return days
   }
-  
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newMonth = new Date(prev)
@@ -70,14 +65,14 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
       return newMonth
     })
   }
-  
+
   const handleDateClick = (day: number) => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     onDateSelect(dateString)
   }
-  
+
   const formatDisplayDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0')
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -92,9 +87,9 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
     const [year, month, day] = parts
     return `${day}/${month}/${year}`
   }
-  
+
   const days = getDaysInMonth(currentMonth)
-  
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
       <div className="flex items-center justify-between mb-4">
@@ -118,7 +113,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
           </button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-7 gap-1 mb-2">
         {dayNames.map((day, index) => (
           <div key={index} className="text-center text-sm font-medium text-gray-600 py-2">
@@ -126,16 +121,16 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
           </div>
         ))}
       </div>
-      
+
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, index) => {
           if (!day) {
             return <div key={index} className="h-8"></div>
           }
-          
+
           const currentDateString = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const isSelected = selectedDate === currentDateString
-          
+
           return (
             <button
               key={index}
@@ -156,103 +151,66 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   )
 }
 
-export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [value, setValue] = useState('')
-  const [recurring, setRecurring] = useState(false)
-  const [date, setDate] = useState('')
-  const [date_vencimento, setDateVencimento] = useState('')
-  const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
-  const [fontes, setFontes] = useState<FonteReceita[]>([])
+export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
+  const [nome, setNome] = useState('')
+  const [descricao, setDescricao] = useState('')
+  const [valor, setValor] = useState('')
+  const [economiaMensal, setEconomiaMensal] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataAlvo, setDataAlvo] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
-  const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
 
   useEffect(() => {
     if (!isOpen) {
-      setName('')
-      setCategory('')
-      setValue('')
-      setRecurring(false)
-      setDate('')
-      setDateVencimento('')
-      setDateError(false)
+      setNome('')
+      setDescricao('')
+      setValor('')
+      setEconomiaMensal('')
+      setDataInicio('')
+      setDataAlvo('')
       setShowError(false)
+    } else {
+      const today = new Date()
+      const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      setDataInicio(todayString)
     }
   }, [isOpen])
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        if (type === 'despesas') {
-          const data = await categoriasDespesaService.getAll()
-          setCategorias(data)
-        } else {
-          const data = await fontesReceitaService.getAll()
-          setFontes(data)
-        }
-      } catch (error) {
-        console.error('Erro ao buscar opções:', error)
-      }
-    }
-
-    if (isOpen) {
-      fetchOptions()
-    }
-  }, [isOpen, type])
-
-  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
     const rawValue = e.target.value.replace(/\D/g, '')
     const number = parseInt(rawValue || '0', 10)
-    setValue(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
+    setter(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (date === '') {
-      setDateError(true);
-      return
-    }
-
     try {
-      const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
-      const numericValue = parseFloat(cleanValue)
+      const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+      const numericValor = parseFloat(cleanValor)
 
-      if (isNaN(numericValue) || numericValue <= 0) {
+      const cleanEconomiaMensal = economiaMensal ? economiaMensal.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim() : '0'
+      const numericEconomiaMensal = parseFloat(cleanEconomiaMensal)
+
+      if (isNaN(numericValor) || numericValor <= 0) {
         setShowError(true)
         setTimeout(() => setShowError(false), 3000)
         return
       }
 
-      if (type === 'despesas') {
-        const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
-
-        await despesasService.create({
-          nome: name,
-          valor: numericValue,
-          recorrente: recurring,
-          data: date,
-          data_vencimento: date_vencimento || undefined,
-          categoria_despesa_id: categoryId
-        })
-      } else {
-        const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
-
-        await receitasService.create({
-          nome: name,
-          valor: numericValue,
-          recorrente: recurring,
-          data: date,
-          data_vencimento: date_vencimento || undefined,
-          fonte_receita_id: fonteId
-        })
-      }
+      await metasService.create({
+        nome,
+        descricao: descricao || undefined,
+        valor: numericValor,
+        economia_mensal: numericEconomiaMensal > 0 ? numericEconomiaMensal : undefined,
+        data_inicio: dataInicio || undefined,
+        data_alvo: dataAlvo || undefined,
+      })
 
       onClose()
     } catch (error) {
-      console.error('Erro ao criar:', error)
+      console.error('Erro ao criar meta:', error)
       setShowError(true)
       setTimeout(() => setShowError(false), 3000)
     }
@@ -295,9 +253,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {type === 'despesas' ? 'Adicionar Despesa' : 'Adicionar Receita'}
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-800">Adicionar Meta</h2>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
@@ -308,86 +264,70 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
                 <input
                   type="text"
-                  placeholder="Digite o nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Viagem para Europa"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
                   className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">
-                  {type === 'despesas' ? 'Categoria' : 'Fonte'}
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                >
-                  <option value="">Selecione uma {type === 'despesas' ? 'categoria' : 'fonte'}</option>
-                  {type === 'despesas'
-                    ? categorias.map((cat) => (
-                        <option key={cat.id} value={cat.nome}>
-                          {cat.nome}
-                        </option>
-                      ))
-                    : fontes.map((fonte) => (
-                        <option key={fonte.id} value={fonte.nome}>
-                          {fonte.nome}
-                        </option>
-                      ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Valor</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={value}
-                    onChange={handleValueChange}
-                    className="currency-input w-1/2 bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                    required
-                  />
-                  <label className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Recorrente</span>
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 accent-blue-600"
-                      checked={recurring}
-                      onChange={(e) => setRecurring(e.target.checked)}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Data</label>
-                <Calendar
-                  selectedDate={date}
-                  onDateSelect={setDate}
+                <label className="block text-sm font-medium text-gray-800 mb-1">Descrição (opcional)</label>
+                <textarea
+                  placeholder="Descreva sua meta..."
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 resize-none"
+                  rows={3}
                 />
-                {dateError && <p className="text-xs text-red-500 mt-1">A data é obrigatória</p>}
               </div>
 
-              {recurring && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-1">Data de Vencimento</label>
-                  <Calendar
-                    selectedDate={date_vencimento}
-                    onDateSelect={setDateVencimento}
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Valor objetivo</label>
+                <input
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={valor}
+                  onChange={(e) => handleValueChange(e, setValor)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Economia mensal (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={economiaMensal}
+                  onChange={(e) => handleValueChange(e, setEconomiaMensal)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Data de início</label>
+                <Calendar
+                  selectedDate={dataInicio}
+                  onDateSelect={setDataInicio}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Data alvo (opcional)</label>
+                <Calendar
+                  selectedDate={dataAlvo}
+                  onDateSelect={setDataAlvo}
+                />
+              </div>
 
               <button
                 type="submit"
                 className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                Salvar meta
               </button>
             </form>
           </motion.div>

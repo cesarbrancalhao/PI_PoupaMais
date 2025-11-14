@@ -1,0 +1,364 @@
+'use client'
+
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import Sidebar from '@/components/sidebar'
+import AddMetaModal from '@/components/addMetaModal'
+import AddContribuicaoModal from '@/components/addContribuicaoModal'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
+import { Meta, ContribuicaoMeta } from '@/types'
+import { metasService, contribuicaoMetaService, receitasService, despesasService } from '@/services'
+
+export default function MetasPage() {
+  const [metas, setMetas] = useState<Meta[]>([])
+  const [selectedMeta, setSelectedMeta] = useState<Meta | null>(null)
+  const [contribuicoes, setContribuicoes] = useState<ContribuicaoMeta[]>([])
+  const [isAddMetaModalOpen, setIsAddMetaModalOpen] = useState(false)
+  const [isAddContribuicaoModalOpen, setIsAddContribuicaoModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [receitaMedia, setReceitaMedia] = useState(0)
+  const [despesaMedia, setDespesaMedia] = useState(0)
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [metasResponse, receitasResponse, despesasResponse] = await Promise.all([
+        metasService.getAll(1, 100),
+        receitasService.getAll(1, 100),
+        despesasService.getAll(1, 100)
+      ])
+
+      const metasData = Array.isArray(metasResponse)
+        ? metasResponse
+        : (metasResponse?.data || [])
+
+      const receitasData = Array.isArray(receitasResponse)
+        ? receitasResponse
+        : (receitasResponse?.data || [])
+
+      const despesasData = Array.isArray(despesasResponse)
+        ? despesasResponse
+        : (despesasResponse?.data || [])
+
+      setMetas(metasData)
+
+      const now = new Date()
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+
+      const recentReceitas = receitasData.filter((r: { data: string }) => new Date(r.data) >= sixMonthsAgo)
+      const recentDespesas = despesasData.filter((d: { data: string }) => new Date(d.data) >= sixMonthsAgo)
+
+      const totalReceitas = recentReceitas.reduce((sum: number, r: { valor: number }) => sum + (Number(r.valor) || 0), 0)
+      const totalDespesas = recentDespesas.reduce((sum: number, d: { valor: number }) => sum + (Number(d.valor) || 0), 0)
+
+      setReceitaMedia(totalReceitas / 6)
+      setDespesaMedia(totalDespesas / 6)
+
+      if (metasData.length > 0 && !selectedMeta) {
+        setSelectedMeta(metasData[0])
+      }
+    } catch (err) {
+      console.error('Erro ao buscar dados:', err)
+      setError('Erro ao carregar dados. Verifique sua conexão.')
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedMeta])
+
+  const fetchContribuicoes = useCallback(async (metaId: number) => {
+    try {
+      const response = await contribuicaoMetaService.getAllByMeta(metaId, 1, 100)
+      const contribuicoesData = Array.isArray(response)
+        ? response
+        : (response?.data || [])
+      setContribuicoes(contribuicoesData)
+    } catch (err) {
+      console.error('Erro ao buscar contribuições:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    if (selectedMeta) {
+      fetchContribuicoes(selectedMeta.id)
+    }
+  }, [selectedMeta, fetchContribuicoes])
+
+  const openAddMetaModal = () => setIsAddMetaModalOpen(true)
+  const closeAddMetaModal = () => {
+    setIsAddMetaModalOpen(false)
+    fetchData()
+  }
+
+  const openAddContribuicaoModal = () => setIsAddContribuicaoModalOpen(true)
+  const closeAddContribuicaoModal = () => {
+    setIsAddContribuicaoModalOpen(false)
+    if (selectedMeta) {
+      fetchContribuicoes(selectedMeta.id)
+      fetchData()
+    }
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
+  const calculateProgress = (meta: Meta) => {
+    return meta.valor > 0 ? (meta.valor_atual / meta.valor) * 100 : 0
+  }
+
+  const calculateTimeRemaining = (meta: Meta) => {
+    if (!meta.data_alvo) return null
+
+    const today = new Date()
+    const target = new Date(meta.data_alvo)
+    const diffTime = target.getTime() - today.getTime()
+    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30))
+
+    if (diffMonths < 0) return '~ 0 meses'
+    return `~ ${diffMonths} ${diffMonths === 1 ? 'mês' : 'meses'}`
+  }
+
+  const percentualAlocado = useMemo(() => {
+    if (receitaMedia === 0) return 0
+    const totalEconomiaMensal = metas.reduce((sum, meta) => sum + (meta.economia_mensal || 0), 0)
+    return (totalEconomiaMensal / receitaMedia) * 100
+  }, [metas, receitaMedia])
+
+  const valorTotalNecessario = useMemo(() => {
+    return metas.reduce((sum, meta) => sum + meta.valor, 0)
+  }, [metas])
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-screen bg-gray-50">
+          <Sidebar />
+          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+            <div className="text-gray-500">Carregando...</div>
+          </main>
+        </div>
+      </ProtectedRoute>
+    )
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-screen bg-gray-50">
+          <Sidebar />
+          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+            <div className="text-red-500">{error}</div>
+          </main>
+        </div>
+      </ProtectedRoute>
+    )
+  }
+
+  return (
+    <ProtectedRoute>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 p-4 md:p-8">
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
+            <h1 className="text-xl md:text-2xl font-semibold text-gray-800">Metas</h1>
+            <button
+              onClick={openAddMetaModal}
+              className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-auto whitespace-nowrap flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar meta
+            </button>
+          </header>
+
+          <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
+            <div className="w-full xl:w-4/6 flex flex-col gap-4 md:gap-6">
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <Target className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs md:text-sm">% da receita alocada</p>
+                      <p className="text-lg md:text-2xl font-semibold">{percentualAlocado.toFixed(0)}%</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs md:text-sm">Total necessário</p>
+                      <p className="text-lg md:text-2xl font-semibold">{formatCurrency(valorTotalNecessario)}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Minhas Metas</h2>
+
+                {metas.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>Nenhuma meta cadastrada ainda.</p>
+                    <p className="text-sm mt-2">Clique em &quot;Adicionar meta&quot; para começar!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {metas.map((meta) => {
+                      const progress = calculateProgress(meta)
+                      const timeRemaining = calculateTimeRemaining(meta)
+
+                      return (
+                        <div
+                          key={meta.id}
+                          onClick={() => setSelectedMeta(meta)}
+                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedMeta?.id === meta.id
+                              ? 'border-blue-600 bg-blue-50'
+                              : 'border-gray-200 hover:border-blue-300 bg-white'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-800">{meta.nome}</h3>
+                              {meta.descricao && (
+                                <p className="text-sm text-gray-600 mt-1">{meta.descricao}</p>
+                              )}
+                            </div>
+                            <div className="text-right ml-4">
+                              <p className="text-sm text-gray-500">
+                                {formatCurrency(meta.economia_mensal)}/Mês
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4 text-sm mb-3">
+                            <div>
+                              <p className="text-gray-500">Objetivo</p>
+                              <p className="font-medium text-gray-800">{formatCurrency(meta.valor)}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Progresso</p>
+                              <p className="font-medium text-green-600">{formatCurrency(meta.valor_atual)}</p>
+                            </div>
+                            {timeRemaining && (
+                              <div>
+                                <p className="text-gray-500">Tempo restante</p>
+                                <p className="font-medium text-gray-800">{timeRemaining}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-blue-600 h-2.5 rounded-full transition-all"
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(1)}%</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
+              {selectedMeta ? (
+                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-base md:text-lg font-semibold text-gray-800">Contribuições</h2>
+                    <button
+                      onClick={openAddContribuicaoModal}
+                      className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-700 transition flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Adicionar
+                    </button>
+                  </div>
+
+                  {contribuicoes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">Nenhuma contribuição ainda.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                      {contribuicoes.map((contribuicao) => (
+                        <div
+                          key={contribuicao.id}
+                          className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-gray-800">{formatCurrency(contribuicao.valor)}</p>
+                            <p className="text-xs text-gray-500">{formatDate(contribuicao.data)}</p>
+                          </div>
+                          {contribuicao.observacao && (
+                            <p className="text-sm text-gray-600 mt-1">{contribuicao.observacao}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              ) : (
+                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                  <div className="text-center py-12 text-gray-500">
+                    <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>Selecione uma meta para ver as contribuições</p>
+                  </div>
+                </section>
+              )}
+
+              <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Estatísticas</h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Receita média</p>
+                    <p className="text-lg font-semibold text-gray-800">{formatCurrency(receitaMedia)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Despesa média</p>
+                    <p className="text-lg font-semibold text-gray-800">{formatCurrency(despesaMedia)}</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </main>
+
+        <AddMetaModal isOpen={isAddMetaModalOpen} onClose={closeAddMetaModal} />
+        {selectedMeta && (
+          <AddContribuicaoModal
+            isOpen={isAddContribuicaoModalOpen}
+            onClose={closeAddContribuicaoModal}
+            metaId={selectedMeta.id}
+          />
+        )}
+      </div>
+    </ProtectedRoute>
+  )
+}
