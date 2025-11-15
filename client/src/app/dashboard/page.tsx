@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Sidebar from '@/components/sidebar'
-import AddModal from '@/components/addModal'
-import EditModal from '@/components/editModal'
+import AddDashboardModal from '@/components/addDashboardModal'
+import EditDashboardModal from '@/components/editDashboardModal'
 import AddCategoriaModal from '@/components/addCategoriaModal'
 import EditCategoriaModal from '@/components/editCategoriaModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import BalanceChart from '@/components/BalanceChart'
 import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus, TrendingUp, PieChart } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
 import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -466,15 +466,38 @@ export default function DashboardPage() {
                 <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
                   <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
                   <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
-                    <BalanceChart data={monthlyBalanceData} />
+                    {monthlyBalanceData.every(item => item.balance === 0) ? (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                        <TrendingUp className="w-10 h-10 mb-3 text-gray-300" />
+                        <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
+                      </div>
+                    ) : (
+                      <BalanceChart data={monthlyBalanceData} />
+                    )}
                   </div>
                 </div>
 
                 <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
                   {configTab === 'categorias' ? (
-                    <DespesasChart data={despesasChartData} />
+                    despesasChartData.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                        <PieChart className="w-12 h-12 mb-4 text-gray-300" />
+                        <p>Nenhuma despesa por categoria</p>
+                        <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
+                      </div>
+                    ) : (
+                      <DespesasChart data={despesasChartData} />
+                    )
                   ) : (
-                    <ReceitasChart data={receitasChartData} />
+                    receitasChartData.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                        <PieChart className="w-12 h-12 mb-4 text-gray-300" />
+                        <p>Nenhuma receita por fonte</p>
+                        <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
+                      </div>
+                    ) : (
+                      <ReceitasChart data={receitasChartData} />
+                    )
                   )}
                 </div>
               </div>
@@ -582,68 +605,94 @@ export default function DashboardPage() {
               </div>
               
               <div className="md:hidden">
-                <div className="grid grid-cols-4 gap-2 pb-2 mb-2 border-b border-gray-200 text-xs text-gray-500 font-medium">
-                  <div>Data</div>
-                  <div className="col-span-2">Nome</div>
-                  <div className="text-right">Valor</div>
-                </div>
-                
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row) => (
-                    <div
-                      key={row.id}
-                      className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer grid grid-cols-4 gap-2 items-center"
-                      onClick={() => openEditModal(row)}
-                    >
-                      <div className="text-xs font-medium">{row.date}</div>
-                      <div className="col-span-2 flex items-center gap-2 min-w-0">
-                        <span className="flex-shrink-0">{row.icon}</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">{row.name}</div>
-                          <div className="text-xs text-gray-500 truncate">{row.category}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold">{row.value}</div>
-                        <div className={`text-xs ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'}`}>{row.saldo}</div>
-                      </div>
+                {(activeTab === 'despesas' ? despesasRows : receitasRows).length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    {activeTab === 'despesas' ? (
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    ) : (
+                      <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    )}
+                    <p>Nenhuma {activeTab === 'despesas' ? 'despesa' : 'receita'} cadastrada ainda.</p>
+                    <p className="text-sm mt-2">Clique em &quot;Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}&quot; para começar!</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-4 gap-2 pb-2 mb-2 border-b border-gray-200 text-xs text-gray-500 font-medium">
+                      <div>Data</div>
+                      <div className="col-span-2">Nome</div>
+                      <div className="text-right">Valor</div>
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row) => (
+                        <div
+                          key={row.id}
+                          className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer grid grid-cols-4 gap-2 items-center"
+                          onClick={() => openEditModal(row)}
+                        >
+                          <div className="text-xs font-medium">{row.date}</div>
+                          <div className="col-span-2 flex items-center gap-2 min-w-0">
+                            <span className="flex-shrink-0">{row.icon}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-sm truncate">{row.name}</div>
+                              <div className="text-xs text-gray-500 truncate">{row.category}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold">{row.value}</div>
+                            <div className={`text-xs ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'}`}>{row.saldo}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-xs md:text-sm table-fixed min-w-[500px]">
-                  <thead className="text-gray-500">
-                    <tr>
-                      <th className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4">Data</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
-                      <th className="py-1 md:py-2 font-medium text-left w-24">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-700">
-                    {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row) => (
-                      <tr
-                        key={row.id}
-                        className="odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
-                        onClick={() => openEditModal(row)}
-                      >
-                        <td className="py-2 md:py-3 pl-3 md:pl-4 align-middle">{row.date}</td>
-                        <td className="py-2 md:py-3 align-middle">
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <span className="flex-shrink-0">{row.icon}</span>
-                            <span className="truncate text-xs md:text-sm">{row.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-2 md:py-3 align-middle text-xs md:text-sm">{row.value}</td>
-                        <td className="py-2 md:py-3 align-middle truncate text-xs md:text-sm">{row.category}</td>
-                        <td className={`py-2 md:py-3 align-middle ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'} text-xs md:text-sm`}>{row.saldo}</td>
+                {(activeTab === 'despesas' ? despesasRows : receitasRows).length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    {activeTab === 'despesas' ? (
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    ) : (
+                      <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    )}
+                    <p>Nenhuma {activeTab === 'despesas' ? 'despesa' : 'receita'} cadastrada ainda.</p>
+                    <p className="text-sm mt-2">Clique em &quot;Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}&quot; para começar!</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-xs md:text-sm table-fixed min-w-[500px]">
+                    <thead className="text-gray-500">
+                      <tr>
+                        <th className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4">Data</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-24">Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="text-gray-700">
+                      {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row) => (
+                        <tr
+                          key={row.id}
+                          className="odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+                          onClick={() => openEditModal(row)}
+                        >
+                          <td className="py-2 md:py-3 pl-3 md:pl-4 align-middle">{row.date}</td>
+                          <td className="py-2 md:py-3 align-middle">
+                            <div className="flex items-center gap-1 md:gap-2">
+                              <span className="flex-shrink-0">{row.icon}</span>
+                              <span className="truncate text-xs md:text-sm">{row.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 md:py-3 align-middle text-xs md:text-sm">{row.value}</td>
+                          <td className="py-2 md:py-3 align-middle truncate text-xs md:text-sm">{row.category}</td>
+                          <td className={`py-2 md:py-3 align-middle ${activeTab === 'despesas' ? 'text-orange-600' : 'text-green-600'} text-xs md:text-sm`}>{row.saldo}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </section>
           </div>
@@ -652,14 +701,37 @@ export default function DashboardPage() {
             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
               <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-3">Balanço Mensal</h2>
               <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
-                <BalanceChart data={monthlyBalanceData} />
+                {monthlyBalanceData.every(item => item.balance === 0) ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                    <TrendingUp className="w-10 h-10 mb-3 text-gray-300" />
+                    <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
+                  </div>
+                ) : (
+                  <BalanceChart data={monthlyBalanceData} />
+                )}
               </div>
             </div>
             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]">
               {activeTab === 'despesas' ? (
-                <DespesasChart data={despesasChartData} />
+                despesasChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                    <PieChart className="w-12 h-12 mb-4 text-gray-300" />
+                    <p>Nenhuma despesa por categoria</p>
+                    <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
+                  </div>
+                ) : (
+                  <DespesasChart data={despesasChartData} />
+                )
               ) : (
-                <ReceitasChart data={receitasChartData} />
+                receitasChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+                    <PieChart className="w-12 h-12 mb-4 text-gray-300" />
+                    <p>Nenhuma receita por fonte</p>
+                    <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
+                  </div>
+                ) : (
+                  <ReceitasChart data={receitasChartData} />
+                )
               )}
             </div>
           </div>
@@ -668,10 +740,10 @@ export default function DashboardPage() {
         )}
       </main>
 
-      <AddModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
+      <AddDashboardModal isOpen={isModalOpen} onClose={closeModal} type={activeTab} />
       
       {selectedItem && (
-        <EditModal
+        <EditDashboardModal
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
           type={activeTab}

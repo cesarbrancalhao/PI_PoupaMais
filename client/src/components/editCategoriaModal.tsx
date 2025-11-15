@@ -34,12 +34,14 @@ export default function EditCategoriaModal({ isOpen, onClose, type, item, onDele
   const [nome, setNome] = useState(item.nome)
   const [icone, setIcone] = useState(item.icone || 'Home')
   const [showError, setShowError] = useState(false)
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     setNome(item.nome)
     setIcone(item.icone || 'Home')
     setShowError(false)
+    setConfirmDeleteMode(false)
   }, [item])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,28 +145,51 @@ export default function EditCategoriaModal({ isOpen, onClose, type, item, onDele
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Salvar {type === 'categorias' ? 'categoria' : 'fonte'}
-              </button>
+              {!confirmDeleteMode && (
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Salvar {type === 'categorias' ? 'categoria' : 'fonte'}
+                </button>
+              )}
 
               {onDelete && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`Deseja excluir ${item.nome}?`)) {
-                      onDelete(item.id)
-                      onClose()
-                    }
-                  }}
-                  className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
-                >
-                  <Trash className="w-4 h-4" />
-                  Excluir {type === 'categorias' ? 'categoria' : 'fonte'}
-                </button>
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(item.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir {type === 'categorias' ? 'categoria' : 'fonte'}
+                    </button>
+                  )}
+                </>
               )}
             </form>
           </motion.div>

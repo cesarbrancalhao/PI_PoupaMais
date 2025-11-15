@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -9,10 +9,19 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 
-interface AddModalProps {
+interface EditDashboardModalProps {
   isOpen: boolean
   onClose: () => void
   type: 'despesas' | 'receitas'
+  editItem: {
+    id: string
+    name: string
+    category: string
+    value: string
+    recurring: boolean
+    date: string
+  }
+  onDelete?: (id: string) => void
 }
 
 interface CalendarProps {
@@ -156,31 +165,31 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   )
 }
 
-export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [value, setValue] = useState('')
-  const [recurring, setRecurring] = useState(false)
-  const [date, setDate] = useState('')
+export default function EditDashboardModal({ isOpen, onClose, type, editItem, onDelete }: EditDashboardModalProps) {
+  const [name, setName] = useState(editItem.name)
+  const [category, setCategory] = useState(editItem.category)
+  const [value, setValue] = useState(editItem.value)
+  const [recurring, setRecurring] = useState(editItem.recurring)
+  const [date, setDate] = useState(editItem.date)
   const [date_vencimento, setDateVencimento] = useState('')
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [fontes, setFontes] = useState<FonteReceita[]>([])
   const formRef = useRef<HTMLFormElement>(null)
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
 
   useEffect(() => {
-    if (!isOpen) {
-      setName('')
-      setCategory('')
-      setValue('')
-      setRecurring(false)
-      setDate('')
-      setDateVencimento('')
-      setDateError(false)
-      setShowError(false)
-    }
-  }, [isOpen])
+    setName(editItem.name)
+    setCategory(editItem.category)
+    setValue(editItem.value)
+    setRecurring(editItem.recurring)
+    setDate(editItem.date)
+    setDateVencimento('')
+    setDateError(false)
+    setShowError(false)
+    setConfirmDeleteMode(false)
+  }, [editItem])
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -188,9 +197,15 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         if (type === 'despesas') {
           const data = await categoriasDespesaService.getAll()
           setCategorias(data)
+          if (editItem.category && editItem.category !== 'Sem categoria') {
+            setCategory(editItem.category)
+          }
         } else {
           const data = await fontesReceitaService.getAll()
           setFontes(data)
+          if (editItem.category && editItem.category !== 'Sem fonte') {
+            setCategory(editItem.category)
+          }
         }
       } catch (error) {
         console.error('Erro ao buscar opções:', error)
@@ -200,7 +215,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
     if (isOpen) {
       fetchOptions()
     }
-  }, [isOpen, type])
+  }, [isOpen, type, editItem.category])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '')
@@ -229,7 +244,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
       if (type === 'despesas') {
         const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
 
-        await despesasService.create({
+        await despesasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
           recorrente: recurring,
@@ -240,7 +255,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
       } else {
         const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
 
-        await receitasService.create({
+        await receitasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
           recorrente: recurring,
@@ -252,7 +267,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 
       onClose()
     } catch (error) {
-      console.error('Erro ao criar:', error)
+      console.error('Erro ao atualizar:', error)
       setShowError(true)
       setTimeout(() => setShowError(false), 3000)
     }
@@ -262,7 +277,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <motion.div 
             className="fixed inset-0 bg-black/30 z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -296,7 +311,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-800">
-                {type === 'despesas' ? 'Adicionar Despesa' : 'Adicionar Receita'}
+                {type === 'despesas' ? 'Alterar Despesa' : 'Alterar Receita'}
               </h2>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
@@ -382,13 +397,52 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Salvar {type === 'despesas' ? 'despesa' : 'receita'}
-              </button>
+              {!confirmDeleteMode && (
+                <button
+                  type="submit"
+                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                </button>
+              )}
+
+              {onDelete && (
+                <>
+                  {confirmDeleteMode ? (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteMode(false)}
+                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(editItem.id)
+                          onClose()
+                        }}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                        Confirmar Exclusão
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteMode(true)}
+                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                    >
+                      <Trash className="w-4 h-4" />
+                      Excluir {type === 'despesas' ? 'despesa' : 'receita'}
+                    </button>
+                  )}
+                </>
+              )}
             </form>
           </motion.div>
         </>

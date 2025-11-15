@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateMetaDto } from './dto/create-meta.dto';
 import { UpdateMetaDto } from './dto/update-meta.dto';
@@ -12,6 +12,14 @@ export class MetasService {
     const client = await this.databaseService.getClient();
     try {
       await client.query('BEGIN');
+
+      const userCheck = await client.query(
+        'SELECT id FROM usuario WHERE id = $1',
+        [userId],
+      );
+      if (userCheck.rows.length === 0) {
+        throw new BadRequestException(`User with ID ${userId} does not exist`);
+      }
 
       const result = await client.query(
         `INSERT INTO meta (nome, descricao, valor, economia_mensal, data_inicio, data_alvo, usuario_id)

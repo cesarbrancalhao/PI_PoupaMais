@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, Home, Plug, Shirt, ShoppingCart, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Save, Trash} from 'lucide-react'
+import { X, Home, Plug, Shirt, ShoppingCart, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Save } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
@@ -109,7 +109,7 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                 <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
                 <input
                   type="text"
-                  placeholder="Digite o nome"
+                  placeholder={"Nome da " + (type === 'categorias' ? 'categoria' : 'fonte')}
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
