@@ -10,8 +10,14 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
 import { Meta, ContribuicaoMeta } from '@/types'
 import { metasService, contribuicaoMetaService, receitasService, despesasService } from '@/services'
+import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { formatCurrency as formatMoney } from '@/app/terminology/currency'
 
 export default function MetasPage() {
+  const { theme } = useTheme()
+  const isDark = theme === 'escuro'
+  const { user } = useAuth()
   const [metas, setMetas] = useState<Meta[]>([])
   const [selectedMeta, setSelectedMeta] = useState<Meta | null>(null)
   const [contribuicoes, setContribuicoes] = useState<ContribuicaoMeta[]>([])
@@ -174,10 +180,7 @@ export default function MetasPage() {
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
+    return formatMoney(value, user?.moeda || "real")
   }
 
   const formatDate = (dateString: string) => {
@@ -222,10 +225,10 @@ export default function MetasPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="flex min-h-screen bg-gray-50">
+        <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
           <Sidebar />
-          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
-            <div className="text-gray-500">Carregando...</div>
+          <main className={`flex-1 p-4 md:p-8 flex items-center justify-center ${isDark ? 'text-[var(--text-main)]' : ''}`}>
+            <div className={isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}>Carregando...</div>
           </main>
         </div>
       </ProtectedRoute>
@@ -235,9 +238,9 @@ export default function MetasPage() {
   if (error) {
     return (
       <ProtectedRoute>
-        <div className="flex min-h-screen bg-gray-50">
+        <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
           <Sidebar />
-          <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+          <main className={`flex-1 p-4 md:p-8 flex items-center justify-center ${isDark ? 'text-[var(--text-main)]' : ''}`}>
             <div className="text-red-500">{error}</div>
           </main>
         </div>
@@ -247,11 +250,11 @@ export default function MetasPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
         <Sidebar />
-        <main className="flex-1 p-4 md:p-8">
+        <main className={`flex-1 p-4 md:p-8 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
           <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
-            <h1 className="text-xl md:text-2xl font-semibold text-gray-800">Metas</h1>
+            <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold' : 'text-xl md:text-2xl font-semibold text-gray-800'}`}>Metas</h1>
             <button
               onClick={openAddMetaModal}
               className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-auto whitespace-nowrap flex items-center justify-center gap-2"
@@ -264,37 +267,37 @@ export default function MetasPage() {
           <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
             <div className="w-full xl:w-4/6 flex flex-col gap-4 md:gap-6">
               <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <div className="flex items-center gap-2 md:gap-3 mb-2">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-yellow-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center'}`}>
                       <Target className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs md:text-sm">% da receita alocada</p>
-                      <p className="text-lg md:text-2xl font-semibold">{percentualAlocado.toFixed(0)}%</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>% da receita alocada</p>
+                      <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{percentualAlocado.toFixed(0)}%</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <div className="flex items-center gap-2 md:gap-3 mb-2">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'}`}>
                       <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs md:text-sm">Total necessário</p>
-                      <p className="text-lg md:text-2xl font-semibold">{formatCurrency(valorTotalNecessario)}</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Total necessário</p>
+                      <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{formatCurrency(valorTotalNecessario)}</p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Minhas Metas</h2>
+              <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
+                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>Minhas Metas</h2>
 
                 {metas.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <Target className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                     <p>Nenhuma meta cadastrada ainda.</p>
                     <p className="text-sm mt-2">Clique em &quot;Adicionar meta&quot; para começar!</p>
                   </div>
@@ -309,8 +312,8 @@ export default function MetasPage() {
                           key={meta.id}
                           className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
                             selectedMeta?.id === meta.id
-                              ? 'border-blue-600 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300 bg-white'
+                              ? isDark ? 'border-blue-600 bg-blue-900/20' : 'border-blue-600 bg-blue-50'
+                              : isDark ? 'border-white/10 hover:border-blue-300 bg-[var(--bg-main)]' : 'border-gray-200 hover:border-blue-300 bg-white'
                           }`}
                           onClick={() => openEditMetaModal(meta)}
                         >
@@ -326,13 +329,13 @@ export default function MetasPage() {
                             </div>
                             <div className="flex justify-between items-start flex-1">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-gray-800">{meta.nome}</h3>
+                                <h3 className={`font-semibold ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{meta.nome}</h3>
                                 {meta.descricao && (
-                                  <p className="text-sm text-gray-600 mt-1">{meta.descricao}</p>
+                                  <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{meta.descricao}</p>
                                 )}
                               </div>
                               <div className="text-right ml-4">
-                                <p className="text-sm text-gray-500">
+                                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                   {formatCurrency(Number(meta.economia_mensal) || 0)}/Mês
                                 </p>
                               </div>
@@ -342,26 +345,26 @@ export default function MetasPage() {
                           <div className="ml-7">
                             <div className="grid grid-cols-3 gap-4 text-sm mb-3">
                               <div>
-                                <p className="text-gray-500">Objetivo</p>
-                                <p className="font-medium text-gray-800">{formatCurrency(Number(meta.valor) || 0)}</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Objetivo</p>
+                                <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(Number(meta.valor) || 0)}</p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Progresso</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Progresso</p>
                                 <p className="font-medium text-green-600">{formatCurrency(Number(meta.valor_atual) || 0)}</p>
                               </div>
                               <div>
-                                <p className="text-gray-500">Tempo restante</p>
-                                <p className="font-medium text-gray-800">{timeRemaining}</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Tempo restante</p>
+                                <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{timeRemaining}</p>
                               </div>
                             </div>
 
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className={`w-full rounded-full h-2.5 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
                               <div
                                 className="bg-blue-600 h-2.5 rounded-full transition-all"
                                 style={{ width: `${Math.min(progress, 100)}%` }}
                               ></div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(1)}%</p>
+                            <p className={`text-xs mt-1 text-right ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{progress.toFixed(1)}%</p>
                           </div>
                         </div>
                       )
@@ -373,9 +376,9 @@ export default function MetasPage() {
 
             <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
               {selectedMeta ? (
-                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+                <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-base md:text-lg font-semibold text-gray-800">Contribuições</h2>
+                    <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>Contribuições</h2>
                     <button
                       onClick={openAddContribuicaoModal}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-700 transition flex items-center gap-1"
@@ -386,8 +389,8 @@ export default function MetasPage() {
                   </div>
 
                   {contribuicoes.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <Calendar className={`w-10 h-10 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                       <p className="text-sm">Nenhuma contribuição ainda.</p>
                     </div>
                   ) : (
@@ -396,14 +399,18 @@ export default function MetasPage() {
                         <div
                           key={contribuicao.id}
                           onClick={() => openEditContribuicaoModal(contribuicao)}
-                          className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-blue-300 cursor-pointer transition-all"
+                          className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                            isDark 
+                              ? 'bg-[var(--bg-main)] border-white/10 hover:bg-white/5 hover:border-blue-300' 
+                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-blue-300'
+                          }`}
                         >
                           <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-gray-800">{formatCurrency(contribuicao.valor)}</p>
-                            <p className="text-xs text-gray-500">{formatDate(contribuicao.data)}</p>
+                            <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(contribuicao.valor)}</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{formatDate(contribuicao.data)}</p>
                           </div>
                           {contribuicao.observacao && (
-                            <p className="text-sm text-gray-600 mt-1">{contribuicao.observacao}</p>
+                            <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{contribuicao.observacao}</p>
                           )}
                         </div>
                       ))}
@@ -411,24 +418,24 @@ export default function MetasPage() {
                   )}
                 </section>
               ) : (
-                <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                  <div className="text-center py-12 text-gray-500">
-                    <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
+                  <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <Target className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                     <p>Selecione uma meta para ver as contribuições</p>
                   </div>
                 </section>
               )}
 
-              <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Estatísticas</h3>
+              <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
+                <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>Estatísticas</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-gray-500">Receita média</p>
-                    <p className="text-lg font-semibold text-gray-800">{formatCurrency(receitaMedia)}</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Receita média</p>
+                    <p className={`text-lg font-semibold ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(receitaMedia)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Despesa média</p>
-                    <p className="text-lg font-semibold text-gray-800">{formatCurrency(despesaMedia)}</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Despesa média</p>
+                    <p className={`text-lg font-semibold ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(despesaMedia)}</p>
                   </div>
                 </div>
               </section>
