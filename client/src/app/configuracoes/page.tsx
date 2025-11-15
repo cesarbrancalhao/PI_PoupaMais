@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
-import { authService } from "@/services/auth.service";
 import { useTheme } from "@/contexts/ThemeContext";
 import { configsService } from "@/services/configs.service";
 
@@ -53,7 +52,57 @@ const ConfiguracoesPage = () => {
     } catch (err) {
       console.error("Erro ao atualizar tema:", err);
     }
-  };  
+  };
+
+  const handleMoedaChange = async (newMoeda: "real" | "dolar" | "euro") => {
+    setMoeda(newMoeda);
+  
+    try {
+      await configsService.update({
+        tema: tema === "escuro",
+        idioma,
+        moeda: newMoeda,
+      });
+  
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              tema: tema === "escuro",
+              idioma,
+              moeda: newMoeda,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("Erro ao atualizar moeda:", err);
+    }
+  };
+
+  const handleIdiomaChange = async (newIdioma: "portugues" | "ingles" | "espanhol") => {
+    setIdioma(newIdioma);
+  
+    try {
+      await configsService.update({
+        tema: tema === "escuro",
+        idioma: newIdioma,
+        moeda,
+      });
+  
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              tema: tema === "escuro",
+              idioma: newIdioma,
+              moeda,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("Erro ao atualizar idioma:", err);
+    }
+  };
 
   const isDark = tema === "escuro";
   const accentColor = isDark ? "bg-blue-600" : "bg-blue-600";
@@ -94,13 +143,13 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Moeda</h2>
               <div className="flex">
-                <button className={btnClass(moeda === "dolar", "left")} onClick={() => setMoeda("dolar")}>
+                <button className={btnClass(moeda === "dolar", "left")} onClick={() => handleMoedaChange("dolar")}>
                   Dólar $
                 </button>
-                <button className={btnClass(moeda === "euro")} onClick={() => setMoeda("euro")}>
+                <button className={btnClass(moeda === "euro")} onClick={() => handleMoedaChange("euro")}>
                   Euro €
                 </button>
-                <button className={btnClass(moeda === "real", "right")} onClick={() => setMoeda("real")}>
+                <button className={btnClass(moeda === "real", "right")} onClick={() => handleMoedaChange("real")}>
                   Real R$
                 </button>
               </div>
@@ -121,13 +170,13 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Idioma</h2>
               <div className="flex">
-                <button className={btnClass(idioma === "espanhol", "left")} onClick={() => setIdioma("espanhol")}>
+                <button className={btnClass(idioma === "espanhol", "left")} onClick={() => handleIdiomaChange("espanhol")}>
                   Espanhol
                 </button>
-                <button className={btnClass(idioma === "ingles")} onClick={() => setIdioma("ingles")}>
+                <button className={btnClass(idioma === "ingles")} onClick={() => handleIdiomaChange("ingles")}>
                   Inglês
                 </button>
-                <button className={btnClass(idioma === "portugues", "right")} onClick={() => setIdioma("portugues")}>
+                <button className={btnClass(idioma === "portugues", "right")} onClick={() => handleIdiomaChange("portugues")}>
                   Português
                 </button>
               </div>
