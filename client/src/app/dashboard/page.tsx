@@ -16,6 +16,8 @@ import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency as formatMoney } from "@/app/terminology/currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TableRow {
   id: string
@@ -29,9 +31,8 @@ interface TableRow {
 }
 
 export default function DashboardPage() {
-const { theme } = useTheme()
-const isDark = theme === "escuro"
-
+  const { theme } = useTheme()
+  const isDark = theme === "escuro"
   const [activeTab, setActiveTab] = useState<'despesas' | 'receitas'>('despesas')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -47,6 +48,7 @@ const isDark = theme === "escuro"
   const [configTab, setConfigTab] = useState<'categorias' | 'fontes'>('categorias')
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
   const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchData()
@@ -167,11 +169,8 @@ const isDark = theme === "escuro"
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
-  }
+    return formatMoney(value, user?.moeda || "real");
+  };
 
   const getIconComponent = (iconName: string) => {
     const iconMap: Record<string, React.ElementType> = {
@@ -472,7 +471,7 @@ const isDark = theme === "escuro"
                         <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
                       </div>
                     ) : (
-                      <BalanceChart data={monthlyBalanceData} />
+                      <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
                     )}
                   </div>
                 </div>
@@ -486,7 +485,7 @@ const isDark = theme === "escuro"
                         <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
                       </div>
                     ) : (
-                      <DespesasChart data={despesasChartData} />
+                      <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
                     )
                   ) : (
                     receitasChartData.length === 0 ? (
@@ -496,7 +495,7 @@ const isDark = theme === "escuro"
                         <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
                       </div>
                     ) : (
-                      <ReceitasChart data={receitasChartData} />
+                      <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
                     )
                   )}
                 </div>
@@ -703,7 +702,7 @@ const isDark = theme === "escuro"
                     <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
                   </div>
                 ) : (
-                  <BalanceChart data={monthlyBalanceData} />
+                  <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
                 )}
               </div>
             </div>
@@ -716,7 +715,7 @@ const isDark = theme === "escuro"
                     <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
                   </div>
                 ) : (
-                  <DespesasChart data={despesasChartData} />
+                  <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
                 )
               ) : (
                 receitasChartData.length === 0 ? (
@@ -726,7 +725,7 @@ const isDark = theme === "escuro"
                     <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
                   </div>
                 ) : (
-                  <ReceitasChart data={receitasChartData} />
+                  <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
                 )
               )}
             </div>
@@ -752,6 +751,7 @@ const isDark = theme === "escuro"
             date: convertDateForEditModal(selectedItem.date)
           }}
           onDelete={handleDelete}
+          moeda ={user?.moeda ?? "real"}
         />
       )}
 

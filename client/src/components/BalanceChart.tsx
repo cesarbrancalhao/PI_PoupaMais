@@ -12,6 +12,8 @@ import {
   ChartOptions
 } from 'chart.js'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency } from "@/app/terminology/currency";
+import { Moeda } from "@/types/configs";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -21,10 +23,11 @@ interface MonthlyBalance {
 }
 
 interface BalanceChartProps {
-  data: MonthlyBalance[]
+  data: MonthlyBalance[];
+  moeda: Moeda;
 }
 
-export default function BalanceChart({ data }: BalanceChartProps) {
+export default function BalanceChart({ data, moeda }: BalanceChartProps) {
   const [containerKey, setContainerKey] = useState(0)
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
@@ -49,7 +52,7 @@ export default function BalanceChart({ data }: BalanceChartProps) {
   const tooltipText = isDark ? '#f5f5f5' : '#111111'
 
   const positiveBar = isDark
-    ? 'rgba(96, 165, 250, 0.8)' 
+    ? 'rgba(96, 165, 250, 0.8)'
     : 'rgba(59, 130, 246, 0.8)'
 
   const positiveBorder = isDark
@@ -57,7 +60,7 @@ export default function BalanceChart({ data }: BalanceChartProps) {
     : 'rgba(59, 130, 246, 1)'
 
   const negativeBar = isDark
-    ? 'rgba(248, 113, 113, 0.8)' 
+    ? 'rgba(248, 113, 113, 0.8)'
     : 'rgba(251, 146, 120, 0.8)'
 
   const negativeBorder = isDark
@@ -100,10 +103,7 @@ export default function BalanceChart({ data }: BalanceChartProps) {
         callbacks: {
           label: function (context) {
             const value = context.parsed.x ?? 0
-            return new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            }).format(value)
+            return formatCurrency(value, moeda)
           }
         }
       }
@@ -118,24 +118,21 @@ export default function BalanceChart({ data }: BalanceChartProps) {
         },
         ticks: {
           color: textColor,
-          callback: function (value) {
+          callback: (value) => {
             const num = value as number
-            if (Math.abs(num) >= 1000) return `R$ ${(num / 1000).toFixed(0)}k`
 
-            return new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0
-            }).format(num)
+            if (Math.abs(num) >= 1000) {
+              const shortened = num / 1000
+              return formatCurrency(shortened, moeda)
+            }
+
+            return formatCurrency(num, moeda)
           }
         }
       },
 
       y: {
-        grid: {
-          display: false
-        },
+        grid: { display: false },
         ticks: {
           color: textColor
         }

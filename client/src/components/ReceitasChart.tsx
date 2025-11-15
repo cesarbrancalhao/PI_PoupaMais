@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from 'chart.js'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency } from "@/app/terminology/currency"
+import { Moeda } from "@/types/configs"
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -15,9 +17,10 @@ interface SourceData {
 
 interface ReceitasChartProps {
   data: SourceData[]
+  moeda: Moeda
 }
 
-export default function ReceitasChart({ data }: ReceitasChartProps) {
+export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
   const [containerKey, setContainerKey] = useState(0)
   const { theme } = useTheme()
   const dark = theme === 'escuro'
@@ -60,10 +63,7 @@ export default function ReceitasChart({ data }: ReceitasChartProps) {
         callbacks: {
           label: function (context) {
             const value = context.parsed
-            return new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            }).format(value)
+            return formatCurrency(value, moeda)
           }
         }
       }
