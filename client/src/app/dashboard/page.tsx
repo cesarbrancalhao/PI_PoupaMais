@@ -16,6 +16,8 @@ import { despesasService, receitasService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency as formatMoney } from "@/app/terminology/currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TableRow {
   id: string
@@ -29,9 +31,8 @@ interface TableRow {
 }
 
 export default function DashboardPage() {
-const { theme } = useTheme()
-const isDark = theme === "escuro"
-
+  const { theme } = useTheme()
+  const isDark = theme === "escuro"
   const [activeTab, setActiveTab] = useState<'despesas' | 'receitas'>('despesas')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -47,6 +48,7 @@ const isDark = theme === "escuro"
   const [configTab, setConfigTab] = useState<'categorias' | 'fontes'>('categorias')
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
   const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchData()
@@ -167,11 +169,8 @@ const isDark = theme === "escuro"
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
-  }
+    return formatMoney(value, user?.moeda || "real");
+  };
 
   const getIconComponent = (iconName: string) => {
     const iconMap: Record<string, React.ElementType> = {

@@ -5,27 +5,46 @@ import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
-import { authService } from "@/services/auth.service";
 import { useTheme } from "@/contexts/ThemeContext";
 import { configsService } from "@/services/configs.service";
+import { Moeda } from "@/types/configs";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();    
   const { setTheme: setGlobalTheme } = useTheme();
 
-  const [moeda, setMoeda] = useState<"real" | "dolar" | "euro">("real");
+  const [moeda, setMoeda] = useState<Moeda>("real");
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [idioma, setIdioma] = useState<"portugues" | "ingles" | "espanhol">("portugues");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setIdioma(user.idioma ?? "portugues");
-      setMoeda(user.moeda ?? "real");
-      setTema(user.tema ? "escuro" : "claro");
-      setGlobalTheme(user.tema ? "escuro" : "claro");
+    async function loadConfigs() {
+      try {
+        const configs = await configsService.get();
+  
+        setMoeda(configs.moeda);
+        setTema(configs.tema ? "escuro" : "claro");
+        setGlobalTheme(configs.tema ? "escuro" : "claro");
+  
+        setUser(prev =>
+          prev
+            ? {
+                ...prev,
+                tema: configs.tema,
+                idioma: configs.idioma as "portugues" | "ingles" | "espanhol",
+                moeda: configs.moeda as "real" | "dolar" | "euro",
+              }
+            : prev
+        );        
+      } catch (err) {
+        console.error("Erro ao carregar configs:", err);
+      }
     }
-  }, [user, setGlobalTheme]);
+  
+    loadConfigs();
+  }, []);
+  
 
   const handleThemeChange = async (newTema: "claro" | "escuro") => {
     const temaBoolean = newTema === "escuro";
@@ -45,13 +64,34 @@ const ConfiguracoesPage = () => {
           ? {
               ...prev,
               tema: temaBoolean,
-              idioma,
-              moeda,
             }
           : prev
       );
     } catch (err) {
       console.error("Erro ao atualizar tema:", err);
+    }
+  };  
+
+  const handleMoedaChange = async (newMoeda: Moeda) => {
+    setMoeda(newMoeda);
+  
+    try {
+      await configsService.update({
+        tema: tema === "escuro",
+        idioma,
+        moeda: newMoeda,
+      });
+  
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              moeda: newMoeda,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("Erro ao atualizar moeda:", err);
     }
   };  
 
@@ -94,13 +134,13 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Moeda</h2>
               <div className="flex">
-                <button className={btnClass(moeda === "dolar", "left")} onClick={() => setMoeda("dolar")}>
+                <button className={btnClass(moeda === "dolar", "left")} onClick={() => handleMoedaChange("dolar")}>
                   Dólar $
                 </button>
-                <button className={btnClass(moeda === "euro")} onClick={() => setMoeda("euro")}>
+                <button className={btnClass(moeda === "euro")} onClick={() => handleMoedaChange("euro")}>
                   Euro €
                 </button>
-                <button className={btnClass(moeda === "real", "right")} onClick={() => setMoeda("real")}>
+                <button className={btnClass(moeda === "real", "right")} onClick={() => handleMoedaChange("real")}>
                   Real R$
                 </button>
               </div>
