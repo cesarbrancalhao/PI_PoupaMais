@@ -465,7 +465,7 @@ export default function DashboardPage() {
                 <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>Balanço Mensal</h2>
                   <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
-                    <BalanceChart data={monthlyBalanceData} />
+                    <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
                   </div>
                 </div>
 
@@ -647,7 +647,7 @@ export default function DashboardPage() {
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>Balanço Mensal</h2>
               <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
-                <BalanceChart data={monthlyBalanceData} />
+                <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
               </div>
             </div>
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]`}>

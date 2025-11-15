@@ -29,8 +29,9 @@ const currencyMap: Record<Moeda, CurrencyInfo> = {
 };
   
 
-export function formatCurrency(value: number, moeda: Moeda) {
-  const config = currencyMap[moeda];
+export function formatCurrency(value: number, moeda?: Moeda) {
+  const safeMoeda = moeda ?? "real"; 
+  const config = currencyMap[safeMoeda];
 
   return new Intl.NumberFormat(config.locale, {
     style: "currency",
@@ -38,8 +39,8 @@ export function formatCurrency(value: number, moeda: Moeda) {
   }).format(value);
 }
 
-export function getCurrencySymbol(moeda: Moeda) {
-  return currencyMap[moeda].symbol;
+export function getCurrencySymbol(moeda?: Moeda) {
+  return currencyMap[moeda ?? "real"].symbol;
 }
 
 export function getCurrencyPlaceholder(moeda: Moeda) {
