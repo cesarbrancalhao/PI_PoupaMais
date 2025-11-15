@@ -45,10 +45,8 @@ export default function DespesasChart({ data }: DespesasChartProps) {
     }
   }, [])
 
-  const textColor = isDark ? '#f5f5f5' : '#1f2937'
-  const tooltipBg = isDark ? '#2b2b2b' : '#ffffff'
-  const tooltipText = isDark ? '#f5f5f5' : '#111111'
-  const legendText = isDark ? '#e5e7eb' : '#4b5563'
+  const tooltipBg = isDark ? 'bg-gray-800' : 'bg-white'
+  const tooltipText = isDark ? 'text-gray-100' : 'text-gray-900'
 
   const chartData = {
     labels: data.map(item => item.category),

@@ -3,5 +3,7 @@ export * from './despesas.service';
 export * from './receitas.service';
 export * from './categorias.service';
 export * from './fontes.service';
+export * from './metas.service';
+export * from './contribuicao-meta.service';
 export * from './auth.service';
 export * from './configs.service';

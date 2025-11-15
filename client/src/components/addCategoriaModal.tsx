@@ -126,7 +126,7 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                 </label>
                 <input
                   type="text"
-                  placeholder="Digite o nome"
+                  placeholder={"Nome da " + (type === 'categorias' ? 'categoria' : 'fonte')}
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   className={`

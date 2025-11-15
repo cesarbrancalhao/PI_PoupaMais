@@ -1,0 +1,472 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { metasService } from '@/services/metas.service'
+
+interface AddMetaModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+interface MonthYearPickerProps {
+  selectedDate: string
+  onDateSelect: (date: string) => void
+  minDate?: string
+}
+
+function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPickerProps) {
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+
+  useEffect(() => {
+    if (selectedDate) {
+      const selectedDateParts = selectedDate.split('-')
+      if (selectedDateParts.length === 3) {
+        const selectedYear = parseInt(selectedDateParts[0], 10)
+        if (!isNaN(selectedYear)) {
+          setCurrentYear(selectedYear)
+        }
+      }
+    }
+  }, [selectedDate])
+
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+
+  const navigateYear = (direction: 'prev' | 'next') => {
+    setCurrentYear(prev => direction === 'prev' ? prev - 1 : prev + 1)
+  }
+
+  const isMonthBeforeMinDate = (year: number, month: number): boolean => {
+    if (!minDate) return false
+
+    const minDateParts = minDate.split('-')
+    if (minDateParts.length !== 3) return false
+
+    const minYear = parseInt(minDateParts[0])
+    const minMonth = parseInt(minDateParts[1])
+
+    if (year < minYear) return true
+    if (year === minYear && month < minMonth) return true
+
+    return false
+  }
+
+  const handleMonthClick = (monthIndex: number) => {
+    if (isMonthBeforeMinDate(currentYear, monthIndex + 1)) {
+      return
+    }
+
+    const dateString = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-01`
+    onDateSelect(dateString)
+  }
+
+  const formatSelectedDate = (dateString: string) => {
+    if (!dateString) return 'Selecione mês/ano'
+    const parts = dateString.split('-')
+    if (parts.length !== 3) return 'Selecione mês/ano'
+    const [year, month] = parts
+    const monthIndex = parseInt(month) - 1
+    return `${months[monthIndex]} ${year}`
+  }
+
+  const getSelectedMonth = () => {
+    if (!selectedDate) return -1
+    const parts = selectedDate.split('-')
+    if (parts.length !== 3) return -1
+    const [year, month] = parts
+    if (parseInt(year) === currentYear) {
+      return parseInt(month) - 1
+    }
+    return -1
+  }
+
+  const selectedMonth = getSelectedMonth()
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-lg font-medium text-gray-800">
+          {formatSelectedDate(selectedDate)}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigateYear('prev')}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-medium text-gray-600 min-w-[60px] text-center">
+            {currentYear}
+          </span>
+          <button
+            type="button"
+            onClick={() => navigateYear('next')}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {months.map((month, index) => {
+          const isSelected = selectedMonth === index
+          const isDisabled = isMonthBeforeMinDate(currentYear, index + 1)
+
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleMonthClick(index)}
+              disabled={isDisabled}
+              className={`py-2 px-3 text-sm rounded-lg transition-colors ${
+                isDisabled
+                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  : isSelected
+                  ? 'bg-blue-600 text-white font-medium'
+                  : 'text-gray-700 hover:bg-gray-100 font-medium'
+              }`}
+            >
+              {month}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
+  const [nome, setNome] = useState('')
+  const [descricao, setDescricao] = useState('')
+  const [valor, setValor] = useState('')
+  const [economiaMensal, setEconomiaMensal] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataAlvo, setDataAlvo] = useState('')
+  const [goalType, setGoalType] = useState<'monthly' | 'deadline' | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const [showError, setShowError] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setNome('')
+      setDescricao('')
+      setValor('')
+      setEconomiaMensal('')
+      setDataInicio('')
+      setDataAlvo('')
+      setGoalType(null)
+      setShowError(false)
+    } else {
+      const today = new Date()
+      const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      setDataInicio(todayString)
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (dataInicio && dataAlvo && goalType === 'deadline') {
+      const inicioParts = dataInicio.split('-')
+      const alvoParts = dataAlvo.split('-')
+      
+      if (inicioParts.length === 3 && alvoParts.length === 3) {
+        const inicioDate = new Date(parseInt(inicioParts[0]), parseInt(inicioParts[1]) - 1, parseInt(inicioParts[2]))
+        const alvoDate = new Date(parseInt(alvoParts[0]), parseInt(alvoParts[1]) - 1, parseInt(alvoParts[2]))
+        
+        inicioDate.setHours(0, 0, 0, 0)
+        alvoDate.setHours(0, 0, 0, 0)
+        
+        if (alvoDate < inicioDate) {
+          setDataAlvo('')
+        }
+      }
+    }
+  }, [dataInicio, dataAlvo, goalType])
+
+  const handleGoalTypeChange = (type: 'monthly' | 'deadline') => {
+    setGoalType(type)
+    if (type === 'monthly') {
+      setDataAlvo('')
+    } else {
+      setEconomiaMensal('')
+    }
+  }
+
+  const calculateMonthsNeeded = (): number | null => {
+    if (goalType !== 'monthly' || !valor || !economiaMensal) return null
+    
+    const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+    const numericValor = parseFloat(cleanValor)
+    
+    const cleanEconomiaMensal = economiaMensal.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+    const numericEconomiaMensal = parseFloat(cleanEconomiaMensal)
+    
+    if (isNaN(numericValor) || numericValor <= 0 || isNaN(numericEconomiaMensal) || numericEconomiaMensal <= 0) {
+      return null
+    }
+    
+    return Math.ceil(numericValor / numericEconomiaMensal)
+  }
+
+  const calculateMonthlySavingsNeeded = (): number | null => {
+    if (goalType !== 'deadline' || !valor || !dataInicio || !dataAlvo) return null
+    
+    const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+    const numericValor = parseFloat(cleanValor)
+    
+    if (isNaN(numericValor) || numericValor <= 0) return null
+    
+    const inicioParts = dataInicio.split('-')
+    const alvoParts = dataAlvo.split('-')
+    
+    if (inicioParts.length !== 3 || alvoParts.length !== 3) return null
+    
+    const inicioDate = new Date(parseInt(inicioParts[0]), parseInt(inicioParts[1]) - 1, parseInt(inicioParts[2]))
+    const alvoDate = new Date(parseInt(alvoParts[0]), parseInt(alvoParts[1]) - 1, parseInt(alvoParts[2]))
+    
+    if (isNaN(inicioDate.getTime()) || isNaN(alvoDate.getTime())) return null
+    
+    const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 + 
+                       (alvoDate.getMonth() - inicioDate.getMonth())
+    
+    if (monthsDiff <= 0) return null
+    
+    return numericValor / monthsDiff
+  }
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
+    const rawValue = e.target.value.replace(/\D/g, '')
+    const number = parseInt(rawValue || '0', 10)
+    setter(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      const cleanValor = valor.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
+      const numericValor = parseFloat(cleanValor)
+
+      const cleanEconomiaMensal = economiaMensal ? economiaMensal.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim() : '0'
+      const numericEconomiaMensal = parseFloat(cleanEconomiaMensal)
+
+      if (isNaN(numericValor) || numericValor <= 0) {
+        setShowError(true)
+        setTimeout(() => setShowError(false), 3000)
+        return
+      }
+
+      if (goalType === 'monthly' && (!economiaMensal || numericEconomiaMensal <= 0)) {
+        setShowError(true)
+        setTimeout(() => setShowError(false), 3000)
+        return
+      }
+
+      if (goalType === 'deadline' && !dataAlvo) {
+        setShowError(true)
+        setTimeout(() => setShowError(false), 3000)
+        return
+      }
+
+      let economiaMensalToSave: number | undefined = undefined
+
+      if (goalType === 'monthly' && numericEconomiaMensal > 0) {
+        economiaMensalToSave = numericEconomiaMensal
+      } else if (goalType === 'deadline' && dataAlvo) {
+        const calculatedSavings = calculateMonthlySavingsNeeded()
+        if (calculatedSavings !== null && calculatedSavings > 0) {
+          economiaMensalToSave = calculatedSavings
+        }
+      }
+
+      await metasService.create({
+        nome,
+        descricao: descricao || undefined,
+        valor: numericValor,
+        economia_mensal: economiaMensalToSave,
+        data_inicio: dataInicio || undefined,
+        data_alvo: goalType === 'deadline' && dataAlvo ? dataAlvo : undefined,
+      })
+
+      onClose()
+    } catch (error) {
+      console.error('Erro ao criar meta:', error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black/30 z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+
+          <motion.div
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col p-6 overflow-y-auto"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          >
+            <AnimatePresence>
+              {showError && (
+                <motion.div
+                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                >
+                  <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
+                    <X className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-800">Adicionar Meta</h2>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
+                <input
+                  type="text"
+                  placeholder="Nome da meta"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Descrição</label>
+                <textarea
+                  placeholder="Descrição da meta"
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Valor total</label>
+                <input
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={valor}
+                  onChange={(e) => handleValueChange(e, setValor)}
+                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-3">Definir meta por:</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="goalType"
+                      value="monthly"
+                      checked={goalType === 'monthly'}
+                      onChange={() => handleGoalTypeChange('monthly')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Economia mensal</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="goalType"
+                      value="deadline"
+                      checked={goalType === 'deadline'}
+                      onChange={() => handleGoalTypeChange('deadline')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Data final</span>
+                  </label>
+                </div>
+                {goalType === 'monthly' && (() => {
+                  const months = calculateMonthsNeeded()
+                  return months !== null ? (
+                    <p className="mt-3 text-sm font-bold text-blue-600">
+                      Você precisará de {months} {months === 1 ? 'mês' : 'meses'} para alcançar sua meta.
+                    </p>
+                  ) : null
+                })()}
+                {goalType === 'deadline' && (() => {
+                  const monthlySavings = calculateMonthlySavingsNeeded()
+                  return monthlySavings !== null ? (
+                    <p className="mt-3 text-sm font-bold text-blue-600">
+                      Você precisará economizar {monthlySavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por mês para alcançar sua meta.
+                    </p>
+                  ) : null
+                })()}
+                {goalType === 'monthly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mt-3 mb-1">Economia mensal</label>
+                  <input
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={economiaMensal}
+                    onChange={(e) => handleValueChange(e, setEconomiaMensal)}
+                    className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                    required
+                  />
+                </div>
+              )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Data de início</label>
+                <MonthYearPicker
+                  selectedDate={dataInicio}
+                  onDateSelect={setDataInicio}
+                />
+              </div>
+
+              {goalType === 'deadline' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-1">Data final</label>
+                  <MonthYearPicker
+                    selectedDate={dataAlvo}
+                    onDateSelect={setDataAlvo}
+                    minDate={dataInicio}
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Salvar meta
+              </button>
+            </form>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
