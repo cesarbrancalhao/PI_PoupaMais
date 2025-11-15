@@ -471,9 +471,9 @@ export default function DashboardPage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]`}>
                   {configTab === 'categorias' ? (
-                    <DespesasChart data={despesasChartData} />
+                    <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
                   ) : (
-                    <ReceitasChart data={receitasChartData} />
+                    <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
                   )}
                 </div>
               </div>
@@ -652,9 +652,9 @@ export default function DashboardPage() {
             </div>
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm min-h-[200px] md:min-h-[300px]`}>
               {activeTab === 'despesas' ? (
-                <DespesasChart data={despesasChartData} />
+                <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
               ) : (
-                <ReceitasChart data={receitasChartData} />
+                <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
               )}
             </div>
           </div>
@@ -679,6 +679,7 @@ export default function DashboardPage() {
             date: convertDateForEditModal(selectedItem.date)
           }}
           onDelete={handleDelete}
+          moeda ={user?.moeda ?? "real"}
         />
       )}
 

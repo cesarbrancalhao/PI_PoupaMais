@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '../services/auth.service';
+import { configsService } from '@/services/configs.service';
 import { User, LoginRequest, RegisterRequest } from '../types/auth';
 
 interface AuthContextType {
@@ -23,38 +24,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const initAuth = async () => {
+    async function initAuth() {
       try {
-        if (authService.isAuthenticated()) {
-          const currentUser = authService.getUser();
-
-          const response = await fetch(
-            'http://localhost:3002/api/v1/configs',
-            {
-              headers: {
-                Authorization: `Bearer ${authService.getToken()}`,
-              },
-            }
-          );
-
-          const configs = await response.json();
-
-          setUser({
-            ...currentUser!,
-            tema: configs.tema,
-            idioma: configs.idioma,
-            moeda: configs.moeda,
-          });
-        } else {
+        if (!authService.isAuthenticated()) {
           setUser(null);
+          return;
         }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
+
+        const baseUser = authService.getUser();
+        if (!baseUser) {
+          setUser(null);
+          return;
+        }
+
+        const configs = await configsService.get();
+
+        setUser({
+          ...baseUser,
+          tema: configs.tema,
+          moeda: configs.moeda,
+        });
+
+      } catch (err) {
+        console.error("Erro ao inicializar auth:", err);
         setUser(null);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     initAuth();
   }, []);
@@ -62,22 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     try {
       const response = await authService.login(data);
-
-      const configsResponse = await fetch(
-        'http://localhost:3002/api/v1/configs',
-        {
-          headers: {
-            Authorization: `Bearer ${authService.getToken()}`,
-          },
-        }
-      );
-
-      const configs = await configsResponse.json();
+      const configs = await configsService.get();
 
       setUser({
         ...response.user!,
         tema: configs.tema,
-        idioma: configs.idioma,
         moeda: configs.moeda,
       });
 
@@ -90,22 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterRequest) => {
     try {
       const response = await authService.register(data);
-
-      const configsResponse = await fetch(
-        'http://localhost:3002/api/v1/configs',
-        {
-          headers: {
-            Authorization: `Bearer ${authService.getToken()}`,
-          },
-        }
-      );
-
-      const configs = await configsResponse.json();
+      const configs = await configsService.get();
 
       setUser({
         ...response.user!,
         tema: configs.tema,
-        idioma: configs.idioma,
         moeda: configs.moeda,
       });
 
@@ -123,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    setUser, 
+    setUser,
     loading,
     login,
     register,

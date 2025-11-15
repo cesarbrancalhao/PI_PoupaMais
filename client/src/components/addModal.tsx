@@ -9,7 +9,7 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
-import { formatCurrency, getCurrencySymbol, getCurrencyPlaceholder } from "@/app/terminology/currency";
+import { formatCurrency, getCurrencyPlaceholder } from "@/app/terminology/currency";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AddModalProps {
