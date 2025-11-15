@@ -2,7 +2,7 @@ import { apiService } from './api';
 import { UserConfigs, UpdateConfigsRequest } from '@/types/configs';
 
 export const configsService = {
-  async get(): Promise<UserConfigs> {
+  async getConfig(): Promise<UserConfigs> {
     return apiService.get('/configs');
   },
 

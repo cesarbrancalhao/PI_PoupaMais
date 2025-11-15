@@ -1,12 +1,12 @@
 export interface UserConfigs {
-    tema: boolean;
-    idioma: string;
-    moeda: string;
-  }
-  
-  export interface UpdateConfigsRequest {
-    tema: boolean;
-    idioma: string;
-    moeda: string;
-  }
+  tema: boolean;
+  idioma: "portugues" | "ingles" | "espanhol";
+  moeda: "real" | "dolar" | "euro";
+}
+
+export interface UpdateConfigsRequest {
+  tema: boolean;
+  idioma: "portugues" | "ingles" | "espanhol";
+  moeda: "real" | "dolar" | "euro";
+}
   

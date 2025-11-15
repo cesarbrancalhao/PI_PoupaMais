@@ -4,3 +4,4 @@ export * from './receitas.service';
 export * from './categorias.service';
 export * from './fontes.service';
 export * from './auth.service';
+export * from './configs.service';
