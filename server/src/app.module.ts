@@ -11,6 +11,7 @@ import { FonteReceitaModule } from './fonte-receita/fonte-receita.module';
 import { DespesasModule } from './despesas/despesas.module';
 import { ReceitasModule } from './receitas/receitas.module';
 import { MetasModule } from './metas/metas.module';
+import { ContribuicaoMetaModule } from './contribuicao-meta/contribuicao-meta.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MetasModule } from './metas/metas.module';
     DespesasModule,
     ReceitasModule,
     MetasModule,
+    ContribuicaoMetaModule,
   ],
   providers: [
     {
