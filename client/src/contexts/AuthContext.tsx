@@ -24,34 +24,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const initAuth = async () => {
+    async function initAuth() {
       try {
-        if (authService.isAuthenticated()) {
-          const currentUser = authService.getUser();
-
-          try {
-            const configs = await configsService.getConfig();
-
-            setUser({
-              ...currentUser!,
-              tema: configs.tema,
-              idioma: configs.idioma,
-              moeda: configs.moeda,
-            });
-          } catch (err) {
-            console.error('Erro ao buscar configurações:', err);
-            setUser(currentUser);
-          }
-        } else {
+        if (!authService.isAuthenticated()) {
           setUser(null);
+          return;
         }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
+
+        const baseUser = authService.getUser();
+        if (!baseUser) {
+          setUser(null);
+          return;
+        }
+
+        const configs = await configsService.get();
+
+        setUser({
+          ...baseUser,
+          tema: configs.tema,
+          moeda: configs.moeda,
+          idioma: configs.idioma,
+        });
+
+      } catch (err) {
+        console.error("Erro ao inicializar auth:", err);
         setUser(null);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     initAuth();
   }, []);
@@ -59,20 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     try {
       const response = await authService.login(data);
+      const configs = await configsService.get();
 
-      try {
-        const configs = await configsService.getConfig();
-
-        setUser({
-          ...response.user!,
-          tema: configs.tema,
-          idioma: configs.idioma,
-          moeda: configs.moeda,
-        });
-      } catch (err) {
-        console.error('Erro ao buscar configurações:', err);
-        setUser(response.user);
-      }
+      setUser({
+        ...response.user!,
+        tema: configs.tema,
+        moeda: configs.moeda,
+        idioma: configs.idioma,
+      });
 
       router.push('/dashboard');
     } catch (error) {
@@ -83,20 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterRequest) => {
     try {
       const response = await authService.register(data);
+      const configs = await configsService.get();
 
-      try {
-        const configs = await configsService.getConfig();
-
-        setUser({
-          ...response.user!,
-          tema: configs.tema,
-          idioma: configs.idioma,
-          moeda: configs.moeda,
-        });
-      } catch (err) {
-        console.error('Erro ao buscar configurações:', err);
-        setUser(response.user);
-      }
+      setUser({
+        ...response.user!,
+        tema: configs.tema,
+        moeda: configs.moeda,
+        idioma: configs.idioma,
+      });
 
       router.push('/dashboard');
     } catch (error) {
@@ -112,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    setUser, 
+    setUser,
     loading,
     login,
     register,

@@ -7,106 +7,66 @@ import PasswordModal from "@/components/passwordModal";
 import { Settings } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { configsService } from "@/services/configs.service";
+import { Moeda, Tema, Idioma } from "@/types/configs";
 
 const ConfiguracoesPage = () => {
-  const { user, setUser } = useAuth();    
+  const { user, setUser } = useAuth();
   const { setTheme: setGlobalTheme } = useTheme();
 
-  const [moeda, setMoeda] = useState<"real" | "dolar" | "euro">("real");
-  const [tema, setTema] = useState<"claro" | "escuro">("claro");
-  const [idioma, setIdioma] = useState<"portugues" | "ingles" | "espanhol">("portugues");
+  const [moeda, setMoeda] = useState<Moeda>("real");
+  const [tema, setTema] = useState<Tema>("claro");
+  const [idioma, setIdioma] = useState<Idioma>("portugues");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setIdioma(user.idioma ?? "portugues");
-      setMoeda(user.moeda ?? "real");
-      setTema(user.tema ? "escuro" : "claro");
-      setGlobalTheme(user.tema ? "escuro" : "claro");
-    }
+    if (!user) return;
+
+    setMoeda((user.moeda ?? "real") as Moeda);
+    setTema(user.tema ? "escuro" : "claro");
+    setIdioma((user.idioma ?? "portugues") as Idioma);
+    setGlobalTheme(user.tema ? "escuro" : "claro");
   }, [user, setGlobalTheme]);
 
-  const handleThemeChange = async (newTema: "claro" | "escuro") => {
-    const temaBoolean = newTema === "escuro";
-  
-    setTema(newTema);
-    setGlobalTheme(newTema);
-  
+  const updateConfigs = async (newData: Partial<{ tema: boolean; moeda: Moeda; idioma: Idioma }>) => {
     try {
-      await configsService.update({
-        tema: temaBoolean,
-        idioma,
-        moeda,
+      const updated = await configsService.update({
+        tema: newData.tema ?? (tema === "escuro"),
+        moeda: newData.moeda ?? moeda,
+        idioma: newData.idioma ?? idioma,
       });
-  
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              tema: temaBoolean,
-              idioma,
-              moeda,
-            }
-          : prev
-      );
-    } catch (err) {
-      console.error("Erro ao atualizar tema:", err);
-    }
-  };
 
-  const handleMoedaChange = async (newMoeda: "real" | "dolar" | "euro") => {
-    setMoeda(newMoeda);
-  
-    try {
-      await configsService.update({
-        tema: tema === "escuro",
-        idioma,
-        moeda: newMoeda,
-      });
-  
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              tema: tema === "escuro",
-              idioma,
-              moeda: newMoeda,
-            }
-          : prev
-      );
-    } catch (err) {
-      console.error("Erro ao atualizar moeda:", err);
-    }
-  };
+      if ("tema" in newData) {
+        setTema(updated.tema ? "escuro" : "claro");
+        setGlobalTheme(updated.tema ? "escuro" : "claro");
+      }
 
-  const handleIdiomaChange = async (newIdioma: "portugues" | "ingles" | "espanhol") => {
-    setIdioma(newIdioma);
-  
-    try {
-      await configsService.update({
-        tema: tema === "escuro",
-        idioma: newIdioma,
-        moeda,
-      });
-  
+      if ("moeda" in newData) {
+        setMoeda(updated.moeda);
+      }
+
+      if ("idioma" in newData) {
+        setIdioma(updated.idioma);
+      }
+
       setUser((prev) =>
         prev
           ? {
               ...prev,
-              tema: tema === "escuro",
-              idioma: newIdioma,
-              moeda,
+              tema: updated.tema,
+              moeda: updated.moeda,
+              idioma: updated.idioma,
             }
           : prev
       );
     } catch (err) {
-      console.error("Erro ao atualizar idioma:", err);
+      console.error("Erro ao atualizar configs:", err);
     }
   };
 
   const isDark = tema === "escuro";
-  const accentColor = isDark ? "bg-blue-600" : "bg-blue-600";
-  const accentHover = isDark ? "hover:bg-blue-700" : "hover:bg-blue-700";
+  const accentColor = "bg-blue-600";
+  const accentHover = "hover:bg-blue-700";
+
   const pageBg = isDark ? "bg-[#1E1E1E]" : "bg-[#F9FAFB]";
   const containerBg = isDark ? "bg-[#2B2B2B]" : "bg-white";
   const textColor = isDark ? "text-gray-100" : "text-gray-900";
@@ -130,58 +90,104 @@ const ConfiguracoesPage = () => {
   };
 
   return (
-    <div className={`flex min-h-screen ${pageBg} ${textColor} transition-colors duration-300`}>
+    <div className={`flex min-h-screen ${pageBg} ${textColor}`}>
       <Sidebar />
+
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
         <div
-          className={`${containerBg} rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col transition-colors duration-300`}
+          className={`${containerBg} rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col`}
         >
           <h1 className="text-lg sm:text-xl font-semibold mb-8">Configurações</h1>
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
-
+  
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Moeda</h2>
               <div className="flex">
-                <button className={btnClass(moeda === "dolar", "left")} onClick={() => handleMoedaChange("dolar")}>
+
+                <button
+                  className={btnClass(moeda === "dolar", "left")}
+                  disabled={moeda === "dolar"}
+                  onClick={() => moeda !== "dolar" && updateConfigs({ moeda: "dolar" })}
+                >
                   Dólar $
                 </button>
-                <button className={btnClass(moeda === "euro")} onClick={() => handleMoedaChange("euro")}>
+
+                <button
+                  className={btnClass(moeda === "euro")}
+                  disabled={moeda === "euro"}
+                  onClick={() => moeda !== "euro" && updateConfigs({ moeda: "euro" })}
+                >
                   Euro €
                 </button>
-                <button className={btnClass(moeda === "real", "right")} onClick={() => handleMoedaChange("real")}>
+
+                <button
+                  className={btnClass(moeda === "real", "right")}
+                  disabled={moeda === "real"}
+                  onClick={() => moeda !== "real" && updateConfigs({ moeda: "real" })}
+                >
                   Real R$
                 </button>
+
               </div>
             </div>
 
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Tema</h2>
               <div className="flex">
-                <button className={btnClass(tema === "claro", "left")} onClick={() => handleThemeChange("claro")}>
+
+                <button
+                  className={btnClass(tema === "claro", "left")}
+                  disabled={tema === "claro"}
+                  onClick={() => tema !== "claro" && updateConfigs({ tema: false })}
+                >
                   Claro
                 </button>
-                <button className={btnClass(tema === "escuro", "right")} onClick={() => handleThemeChange("escuro")}>
+
+                <button
+                  className={btnClass(tema === "escuro", "right")}
+                  disabled={tema === "escuro"}
+                  onClick={() => tema !== "escuro" && updateConfigs({ tema: true })}
+                >
                   Escuro
                 </button>
+
               </div>
             </div>
 
             <div className="flex flex-col w-full sm:w-auto">
               <h2 className={`font-medium mb-3 ${labelColor}`}>Idioma</h2>
               <div className="flex">
-                <button className={btnClass(idioma === "espanhol", "left")} onClick={() => handleIdiomaChange("espanhol")}>
+
+                <button
+                  className={btnClass(idioma === "espanhol", "left")}
+                  disabled={idioma === "espanhol"}
+                  onClick={() => idioma !== "espanhol" && updateConfigs({ idioma: "espanhol" })}
+                >
                   Espanhol
                 </button>
-                <button className={btnClass(idioma === "ingles")} onClick={() => handleIdiomaChange("ingles")}>
+
+                <button
+                  className={btnClass(idioma === "ingles")}
+                  disabled={idioma === "ingles"}
+                  onClick={() => idioma !== "ingles" && updateConfigs({ idioma: "ingles" })}
+                >
                   Inglês
                 </button>
-                <button className={btnClass(idioma === "portugues", "right")} onClick={() => handleIdiomaChange("portugues")}>
+
+                <button
+                  className={btnClass(idioma === "portugues", "right")}
+                  disabled={idioma === "portugues"}
+                  onClick={() => idioma !== "portugues" && updateConfigs({ idioma: "portugues" })}
+                >
                   Português
                 </button>
+
               </div>
             </div>
+
           </div>
+
 
           <div className="flex flex-col gap-6 flex-grow">
             <div className="flex flex-col gap-6">
@@ -191,7 +197,7 @@ const ConfiguracoesPage = () => {
                   type="text"
                   value={user?.nome || "Carregando..."}
                   readOnly
-                  className={`w-fit ${inputBg} rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm`}
+                  className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
                 />
               </div>
 
@@ -202,7 +208,7 @@ const ConfiguracoesPage = () => {
                     type="email"
                     value={user?.email || "Carregando..."}
                     readOnly
-                    className={`w-fit ${inputBg} rounded-lg px-3 sm:px-4 py-3 focus:outline-none text-sm`}
+                    className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
                   />
                 </div>
 
@@ -210,7 +216,7 @@ const ConfiguracoesPage = () => {
                   <label className={`block font-medium mb-2 ${labelColor}`}>Senha</label>
                   <button
                     onClick={() => setPasswordModalOpen(true)}
-                    className={`px-4 py-3 rounded ${accentColor} ${accentHover} text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors w-fit`}
+                    className={`px-4 py-3 rounded ${accentColor} ${accentHover} text-white text-sm font-medium flex items-center justify-center gap-2`}
                   >
                     <Settings size={16} />
                     Alterar senha
@@ -219,13 +225,11 @@ const ConfiguracoesPage = () => {
               </div>
             </div>
           </div>
+
         </div>
       </main>
 
-      <PasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setPasswordModalOpen(false)}
-      />
+      <PasswordModal isOpen={isPasswordModalOpen} onClose={() => setPasswordModalOpen(false)} />
     </div>
   );
 };

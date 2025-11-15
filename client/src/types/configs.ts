@@ -1,12 +1,15 @@
+export type Moeda = "real" | "dolar" | "euro";
+export type Idioma = "portugues" | "ingles" | "espanhol";
+export type Tema = "claro" | "escuro";
+
 export interface UserConfigs {
   tema: boolean;
-  idioma: "portugues" | "ingles" | "espanhol";
-  moeda: "real" | "dolar" | "euro";
+  idioma: Idioma;
+  moeda: Moeda;
 }
 
 export interface UpdateConfigsRequest {
   tema: boolean;
-  idioma: "portugues" | "ingles" | "espanhol";
-  moeda: "real" | "dolar" | "euro";
+  idioma: Idioma;
+  moeda: Moeda;
 }
-  

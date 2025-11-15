@@ -9,6 +9,8 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency, getCurrencyPlaceholder } from "@/app/terminology/currency";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AddDashboardModalProps {
   isOpen: boolean
@@ -181,6 +183,8 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
   const formRef = useRef<HTMLFormElement>(null)
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
+  const { user } = useAuth();
+  const userCurrency = user?.moeda || "real";
 
   useEffect(() => {
     if (!isOpen) {
@@ -216,10 +220,17 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
   }, [isOpen, type])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '')
-    const number = parseInt(rawValue || '0', 10)
-    setValue(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
-  }
+    const raw = e.target.value.replace(/\D/g, "");
+    const number = parseInt(raw || "0", 10);
+  
+    if (!number) {
+      setValue("");
+      return;
+    }
+  
+    const float = number / 100;
+    setValue(formatCurrency(float, userCurrency));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -230,13 +241,20 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
     }
 
     try {
-      const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
-      const numericValue = parseFloat(cleanValue)
+      const cleaned = value.replace(/[^\d.,]/g, "");
 
-      if (isNaN(numericValue) || numericValue <= 0) {
-        setShowError(true)
-        setTimeout(() => setShowError(false), 3000)
-        return
+      let numericValue = 0;
+
+      if (userCurrency === "real" || userCurrency === "euro") {
+        numericValue = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+      } else {
+        numericValue = parseFloat(cleaned.replace(/,/g, ""));
+      }
+
+      if (isNaN(numericValue)) {
+        setShowError(true);
+        setTimeout(() => setShowError(false), 3000);
+        return;
       }
 
       if (type === 'despesas') {
@@ -379,7 +397,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
-                    placeholder="R$ 0,00"
+                    placeholder={getCurrencyPlaceholder(userCurrency)}
                     value={value}
                     onChange={handleValueChange}
                     className={`

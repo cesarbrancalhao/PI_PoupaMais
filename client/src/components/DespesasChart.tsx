@@ -10,6 +10,8 @@ import {
   ChartOptions
 } from 'chart.js'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency } from "@/app/terminology/currency"
+import { Moeda } from "@/types/configs"
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -21,9 +23,10 @@ interface CategoryData {
 
 interface DespesasChartProps {
   data: CategoryData[]
+  moeda: Moeda
 }
 
-export default function DespesasChart({ data }: DespesasChartProps) {
+export default function DespesasChart({ data, moeda }: DespesasChartProps) {
   const [containerKey, setContainerKey] = useState(0)
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
@@ -33,9 +36,10 @@ export default function DespesasChart({ data }: DespesasChartProps) {
 
     const handleResize = () => {
       clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        setContainerKey(prev => prev + 1)
-      }, 150)
+      timeoutId = setTimeout(
+        () => setContainerKey(prev => prev + 1),
+        150
+      )
     }
 
     window.addEventListener('resize', handleResize)
@@ -45,8 +49,8 @@ export default function DespesasChart({ data }: DespesasChartProps) {
     }
   }, [])
 
-  const tooltipBg = isDark ? 'bg-gray-800' : 'bg-white'
-  const tooltipText = isDark ? 'text-gray-100' : 'text-gray-900'
+  const tooltipBg = isDark ? '#2b2b2b' : '#ffffff'
+  const tooltipText = isDark ? '#f5f5f5' : '#111111'
 
   const chartData = {
     labels: data.map(item => item.category),
@@ -65,6 +69,7 @@ export default function DespesasChart({ data }: DespesasChartProps) {
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
+
       tooltip: {
         backgroundColor: tooltipBg,
         titleColor: tooltipText,
@@ -75,10 +80,7 @@ export default function DespesasChart({ data }: DespesasChartProps) {
         callbacks: {
           label(context) {
             const value = context.parsed
-            return new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            }).format(value)
+            return formatCurrency(value, moeda)
           }
         }
       }

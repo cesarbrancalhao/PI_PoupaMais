@@ -9,6 +9,9 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency, getCurrencyPlaceholder, getCurrencySymbol } from "@/app/terminology/currency";
+import { Moeda } from "@/types/configs";
+import { useAuth } from '@/contexts/AuthContext'
 
 interface EditDashboardModalProps {
   isOpen: boolean
@@ -23,6 +26,7 @@ interface EditDashboardModalProps {
     date: string
   }
   onDelete?: (id: string) => void
+  moeda: Moeda
 }
 
 interface CalendarProps {
@@ -168,7 +172,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   )
 }
 
-export default function EditDashboardModal({ isOpen, onClose, type, editItem, onDelete }: EditDashboardModalProps) {
+export default function EditDashboardModal({ isOpen, onClose, type, editItem, onDelete, moeda }: EditDashboardModalProps) {
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
 
@@ -184,6 +188,8 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
   const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
+  const { user } = useAuth();
+  const userCurrency = user?.moeda || "real";
 
   useEffect(() => {
     setName(editItem.name)
@@ -224,10 +230,19 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   }, [isOpen, type, editItem.category])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '')
-    const number = parseInt(rawValue || '0', 10)
-    setValue(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
-  }
+    const rawValue = e.target.value.replace(/\D/g, '');
+  
+    const number = parseInt(rawValue || "0", 10);
+  
+    if (!number) {
+      setValue("");
+      return;
+    }
+  
+    const formatted = formatCurrency(number / 100, moeda);
+  
+    setValue(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -238,8 +253,17 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
     }
 
     try {
-      const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim()
-      const numericValue = parseFloat(cleanValue)
+      const symbol = getCurrencySymbol(moeda);
+
+      const cleanValue = value
+        .replace(symbol, '')           
+        .replace(/\s*/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.')
+        .trim();
+
+      const numericValue = parseFloat(cleanValue);
+
 
       if (isNaN(numericValue) || numericValue <= 0) {
         setShowError(true)
@@ -366,7 +390,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                 <div className="flex items-center gap-4">
                   <input
                     type="text"
-                    placeholder="R$ 0,00"
+                    placeholder={getCurrencyPlaceholder(userCurrency)}
                     value={value}
                     onChange={handleValueChange}
                     className={`currency-input w-1/2 ${isDark ? 'bg-[#3C3C3C] text-gray-100 placeholder-gray-400' : 'bg-gray-50 text-gray-700 placeholder-gray-500'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none`}
