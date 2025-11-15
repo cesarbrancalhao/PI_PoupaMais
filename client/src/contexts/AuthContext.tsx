@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '../services/auth.service';
+import { configsService } from '../services/configs.service';
 import { User, LoginRequest, RegisterRequest } from '../types/auth';
 
 interface AuthContextType {
@@ -28,23 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (authService.isAuthenticated()) {
           const currentUser = authService.getUser();
 
-          const response = await fetch(
-            'http://localhost:3002/api/v1/configs',
-            {
-              headers: {
-                Authorization: `Bearer ${authService.getToken()}`,
-              },
-            }
-          );
+          try {
+            const configs = await configsService.getConfig();
 
-          const configs = await response.json();
-
-          setUser({
-            ...currentUser!,
-            tema: configs.tema,
-            idioma: configs.idioma,
-            moeda: configs.moeda,
-          });
+            setUser({
+              ...currentUser!,
+              tema: configs.tema,
+              idioma: configs.idioma,
+              moeda: configs.moeda,
+            });
+          } catch (err) {
+            console.error('Erro ao buscar configurações:', err);
+            setUser(currentUser);
+          }
         } else {
           setUser(null);
         }
@@ -63,23 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.login(data);
 
-      const configsResponse = await fetch(
-        'http://localhost:3002/api/v1/configs',
-        {
-          headers: {
-            Authorization: `Bearer ${authService.getToken()}`,
-          },
-        }
-      );
+      try {
+        const configs = await configsService.getConfig();
 
-      const configs = await configsResponse.json();
-
-      setUser({
-        ...response.user!,
-        tema: configs.tema,
-        idioma: configs.idioma,
-        moeda: configs.moeda,
-      });
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          idioma: configs.idioma,
+          moeda: configs.moeda,
+        });
+      } catch (err) {
+        console.error('Erro ao buscar configurações:', err);
+        setUser(response.user);
+      }
 
       router.push('/dashboard');
     } catch (error) {
@@ -91,23 +84,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.register(data);
 
-      const configsResponse = await fetch(
-        'http://localhost:3002/api/v1/configs',
-        {
-          headers: {
-            Authorization: `Bearer ${authService.getToken()}`,
-          },
-        }
-      );
+      try {
+        const configs = await configsService.getConfig();
 
-      const configs = await configsResponse.json();
-
-      setUser({
-        ...response.user!,
-        tema: configs.tema,
-        idioma: configs.idioma,
-        moeda: configs.moeda,
-      });
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          idioma: configs.idioma,
+          moeda: configs.moeda,
+        });
+      } catch (err) {
+        console.error('Erro ao buscar configurações:', err);
+        setUser(response.user);
+      }
 
       router.push('/dashboard');
     } catch (error) {
