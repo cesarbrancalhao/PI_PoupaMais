@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { Doughnut } from 'react-chartjs-2'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from 'chart.js'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartOptions
+} from 'chart.js'
+import { useTheme } from '@/contexts/ThemeContext'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -18,6 +25,8 @@ interface DespesasChartProps {
 
 export default function DespesasChart({ data }: DespesasChartProps) {
   const [containerKey, setContainerKey] = useState(0)
+  const { theme } = useTheme()
+  const isDark = theme === 'escuro'
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -36,6 +45,9 @@ export default function DespesasChart({ data }: DespesasChartProps) {
     }
   }, [])
 
+  const tooltipBg = isDark ? 'bg-gray-800' : 'bg-white'
+  const tooltipText = isDark ? 'text-gray-100' : 'text-gray-900'
+
   const chartData = {
     labels: data.map(item => item.category),
     datasets: [
@@ -52,12 +64,16 @@ export default function DespesasChart({ data }: DespesasChartProps) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
+        backgroundColor: tooltipBg,
+        titleColor: tooltipText,
+        bodyColor: tooltipText,
+        borderColor: isDark ? '#444' : '#ddd',
+        borderWidth: 1,
+        padding: 12,
         callbacks: {
-          label: function(context) {
+          label(context) {
             const value = context.parsed
             return new Intl.NumberFormat('pt-BR', {
               style: 'currency',
@@ -71,12 +87,23 @@ export default function DespesasChart({ data }: DespesasChartProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-4">Despesas por Categoria</h2>
-      <div key={containerKey} className="flex-1 flex items-center justify-center mb-4">
+      <h2
+        className={`text-base md:text-lg font-semibold mb-4 transition-colors ${
+          isDark ? 'text-gray-100' : 'text-gray-800'
+        }`}
+      >
+        Despesas por Categoria
+      </h2>
+
+      <div
+        key={containerKey}
+        className="flex-1 flex items-center justify-center mb-4"
+      >
         <div className="w-full max-w-[200px] h-[200px]">
           <Doughnut data={chartData} options={options} />
         </div>
       </div>
+
       <div className="flex flex-wrap gap-3 justify-center">
         {data.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
@@ -84,7 +111,13 @@ export default function DespesasChart({ data }: DespesasChartProps) {
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-xs text-gray-600">{item.category}</span>
+            <span
+              className={`text-xs transition-colors ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
+              {item.category}
+            </span>
           </div>
         ))}
       </div>

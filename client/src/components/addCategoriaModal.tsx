@@ -5,6 +5,7 @@ import { X, Home, Plug, Shirt, ShoppingCart, Utensils, Car, Heart, BookOpen, Bri
 import { motion, AnimatePresence } from 'framer-motion'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface AddCategoriaModalProps {
   isOpen: boolean
@@ -32,6 +33,9 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
   const [icone, setIcone] = useState('Home')
   const [showError, setShowError] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+
+  const { theme } = useTheme()
+  const isDark = theme === "escuro"
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,7 +68,7 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
       {isOpen && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/30 z-40"
+            className="fixed inset-0 bg-black/40 z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -72,7 +76,10 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
           />
 
           <motion.div
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col p-6 overflow-y-auto"
+            className={`fixed right-0 top-0 h-full w-full max-w-md z-50 flex flex-col p-6 overflow-y-auto shadow-xl
+              transition-colors
+              ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
+            `}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -81,7 +88,11 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
             <AnimatePresence>
               {showError && (
                 <motion.div
-                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3"
+                  className={`
+                    fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                    px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3
+                    ${isDark ? "bg-red-600 text-white" : "bg-red-500 text-white"}
+                  `}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -96,46 +107,72 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">
+              <h2 className="text-lg font-semibold">
                 Adicionar {type === 'categorias' ? 'Categoria' : 'Fonte'}
               </h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <button 
+                onClick={onClose} 
+                className={`transition ${isDark ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-700"}`}
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
+              
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
+                <label className="block text-sm font-medium mb-1">
+                  Nome
+                </label>
                 <input
                   type="text"
                   placeholder={"Nome da " + (type === 'categorias' ? 'categoria' : 'fonte')}
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                  className={`
+                    w-full rounded-lg px-3 py-2 outline-none transition
+                    ${isDark 
+                      ? "bg-[#3C3C3C] text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" 
+                      : "bg-gray-50 text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500"}
+                  `}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-3">Ícone</label>
+                <label className="block text-sm font-medium mb-3">
+                  Ícone
+                </label>
                 <div className="grid grid-cols-4 gap-3">
                   {availableIcons.map((icon) => {
                     const IconComponent = icon.component
+                    const isSelected = icone === icon.name
+
                     return (
                       <button
                         key={icon.name}
                         type="button"
                         onClick={() => setIcone(icon.name)}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          icone === icon.name
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                        className={`
+                          p-4 rounded-lg border-2 transition-all
+                          ${isSelected 
+                            ? isDark 
+                              ? "border-blue-500 bg-blue-900/30" 
+                              : "border-blue-600 bg-blue-50" 
+                            : isDark
+                              ? "border-gray-600 hover:border-gray-400"
+                              : "border-gray-200 hover:border-gray-300"
+                          }
+                        `}
                       >
-                        <IconComponent className={`w-6 h-6 mx-auto ${
-                          icone === icon.name ? 'text-blue-600' : 'text-gray-600'
-                        }`} />
+                        <IconComponent
+                          className={`w-6 h-6 mx-auto transition
+                            ${isSelected 
+                              ? "text-blue-500" 
+                              : isDark ? "text-gray-300" : "text-gray-600"
+                            }
+                          `}
+                        />
                       </button>
                     )
                   })}
@@ -144,7 +181,14 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
 
               <button
                 type="submit"
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                className={`
+                  w-full mt-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition
+                  text-white
+                  ${isDark 
+                    ? "bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600"
+                    : "bg-blue-600 hover:bg-blue-700"
+                  }
+                `}
               >
                 <Save className="w-4 h-4" />
                 Salvar {type === 'categorias' ? 'categoria' : 'fonte'}

@@ -159,16 +159,11 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 }
 
 export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDelete }: EditContribuicaoModalProps) {
-  // Helper function to normalize date from ISO or YYYY-MM-DD to YYYY-MM-DD
   const normalizeDateString = (dateString: string): string => {
     if (!dateString) return ''
 
-    // If it's already in YYYY-MM-DD format (10 chars), return as is
-    if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return dateString
-    }
+    if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) return dateString
 
-    // If it's an ISO string, extract the date part
     const date = new Date(dateString)
     if (!isNaN(date.getTime())) {
       const year = date.getFullYear()

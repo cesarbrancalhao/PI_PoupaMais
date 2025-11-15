@@ -3,10 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '../services/auth.service';
+import { configsService } from '../services/configs.service';
 import { User, LoginRequest, RegisterRequest } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
@@ -16,21 +18,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
         if (authService.isAuthenticated()) {
           const currentUser = authService.getUser();
-          setUser(currentUser);
+
+          try {
+            const configs = await configsService.getConfig();
+
+            setUser({
+              ...currentUser!,
+              tema: configs.tema,
+              idioma: configs.idioma,
+              moeda: configs.moeda,
+            });
+          } catch (err) {
+            console.error('Erro ao buscar configurações:', err);
+            setUser(currentUser);
+          }
         } else {
           setUser(null);
         }
@@ -48,7 +59,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (data: LoginRequest) => {
     try {
       const response = await authService.login(data);
-      setUser(response.user);
+
+      try {
+        const configs = await configsService.getConfig();
+
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          idioma: configs.idioma,
+          moeda: configs.moeda,
+        });
+      } catch (err) {
+        console.error('Erro ao buscar configurações:', err);
+        setUser(response.user);
+      }
+
       router.push('/dashboard');
     } catch (error) {
       throw error;
@@ -58,7 +83,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (data: RegisterRequest) => {
     try {
       const response = await authService.register(data);
-      setUser(response.user);
+
+      try {
+        const configs = await configsService.getConfig();
+
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          idioma: configs.idioma,
+          moeda: configs.moeda,
+        });
+      } catch (err) {
+        console.error('Erro ao buscar configurações:', err);
+        setUser(response.user);
+      }
+
       router.push('/dashboard');
     } catch (error) {
       throw error;
@@ -73,6 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     user,
+    setUser, 
     loading,
     login,
     register,
@@ -80,12 +120,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated: !!user && authService.isAuthenticated(),
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('Erro ao usar o contexto de autenticação');
   }
   return context;

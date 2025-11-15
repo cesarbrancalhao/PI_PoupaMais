@@ -221,7 +221,6 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
     
     if (isNaN(numericValor) || numericValor <= 0) return null
     
-    // Parse dates
     const inicioParts = dataInicio.split('-')
     const alvoParts = dataAlvo.split('-')
     
@@ -232,7 +231,6 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
     
     if (isNaN(inicioDate.getTime()) || isNaN(alvoDate.getTime())) return null
     
-    // Calculate months difference
     const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 + 
                        (alvoDate.getMonth() - inicioDate.getMonth())
     

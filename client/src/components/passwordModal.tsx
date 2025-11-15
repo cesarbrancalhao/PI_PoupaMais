@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface PasswordModalProps {
   isOpen: boolean;
@@ -8,6 +9,9 @@ interface PasswordModalProps {
 }
 
 export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
+  const { theme } = useTheme();
+  const dark = theme === "escuro";
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -44,20 +48,32 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-[#b9b9c2]/60 backdrop-blur-sm flex items-center justify-center z-50"
+      className={`fixed inset-0 ${
+        dark ? "bg-black/60" : "bg-[#b9b9c2]/60"
+      } backdrop-blur-sm flex items-center justify-center z-50`}
       onClick={handleClose}
     >
       <div
-        className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 animate-fadeIn"
+        className={`w-full max-w-md rounded-2xl shadow-xl p-8 animate-fadeIn ${
+          dark ? "bg-[#2B2B2B] text-gray-100" : "bg-white text-gray-900"
+        }`}
         onClick={handleModalClick}
       >
-        <h2 className="text-center text-xl font-semibold text-gray-900 mb-6">
+        <h2
+          className={`text-center text-xl font-semibold mb-6 ${
+            dark ? "text-gray-100" : "text-gray-900"
+          }`}
+        >
           Alterar senha
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="text-sm text-gray-600 block mb-2">
+            <label
+              className={`text-sm block mb-2 ${
+                dark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
               Senha atual
             </label>
             <input
@@ -65,13 +81,21 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
               placeholder="••••••••"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`w-full rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                dark
+                  ? "bg-[#3C3C3C] text-gray-100 placeholder-gray-400"
+                  : "bg-gray-100 text-gray-800 placeholder-gray-500"
+              }`}
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-600 block mb-2">
+            <label
+              className={`text-sm block mb-2 ${
+                dark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
               Nova senha
             </label>
             <input
@@ -79,13 +103,21 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
               placeholder="••••••••"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`w-full rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                dark
+                  ? "bg-[#3C3C3C] text-gray-100 placeholder-gray-400"
+                  : "bg-gray-100 text-gray-800 placeholder-gray-500"
+              }`}
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-600 block mb-2">
+            <label
+              className={`text-sm block mb-2 ${
+                dark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
               Repita a nova senha
             </label>
             <input
@@ -93,20 +125,34 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`w-full rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                dark
+                  ? "bg-[#3C3C3C] text-gray-100 placeholder-gray-400"
+                  : "bg-gray-100 text-gray-800 placeholder-gray-500"
+              }`}
               required
             />
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-2">
+            <div
+              className={`text-sm px-4 py-2 rounded-lg ${
+                dark
+                  ? "text-red-400 bg-red-900/30"
+                  : "text-red-600 bg-red-50"
+              }`}
+            >
               {error}
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full mt-4 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all"
+            className={`w-full mt-4 py-2.5 rounded-xl font-medium transition-all ${
+              dark
+                ? "bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600 text-white"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white"
+            }`}
           >
             Alterar senha
           </button>
@@ -114,7 +160,11 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
       </div>
 
       {success && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-fadeIn">
+        <div
+          className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg animate-fadeIn ${
+            dark ? "bg-green-700 text-white" : "bg-green-600 text-white"
+          }`}
+        >
           Senha alterada com sucesso!
         </div>
       )}
