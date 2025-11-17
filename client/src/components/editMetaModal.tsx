@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { metasService } from '@/services/metas.service'
+import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { formatCurrency, getCurrencySymbol } from '@/app/terminology/currency'
 
 interface EditMetaModalProps {
   isOpen: boolean
@@ -24,9 +27,10 @@ interface MonthYearPickerProps {
   selectedDate: string
   onDateSelect: (date: string) => void
   minDate?: string
+  isDark?: boolean
 }
 
-function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPickerProps) {
+function MonthYearPicker({ selectedDate, onDateSelect, minDate, isDark }: MonthYearPickerProps) {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
 
   useEffect(() => {
@@ -66,7 +70,6 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
   }
 
   const handleMonthClick = (monthIndex: number) => {
-    // Check if month is before minDate
     if (isMonthBeforeMinDate(currentYear, monthIndex + 1)) {
       return
     }
@@ -98,26 +101,38 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
   const selectedMonth = getSelectedMonth()
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+    <div className={`rounded-lg shadow-lg p-4 border ${
+      isDark 
+        ? 'bg-[var(--bg-card)] border-gray-700' 
+        : 'bg-white border-gray-200'
+    }`}>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-lg font-medium text-gray-800">
+        <span className={`text-lg font-medium ${
+          isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+        }`}>
           {formatSelectedDate(selectedDate)}
         </span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigateYear('prev')}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className={`p-1 ${
+              isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-medium text-gray-600 min-w-[60px] text-center">
+          <span className={`text-sm font-medium min-w-[60px] text-center ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             {currentYear}
           </span>
           <button
             type="button"
             onClick={() => navigateYear('next')}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className={`p-1 ${
+              isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -137,9 +152,13 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
               disabled={isDisabled}
               className={`py-2 px-3 text-sm rounded-lg transition-colors ${
                 isDisabled
-                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  ? isDark 
+                    ? 'text-gray-600 cursor-not-allowed bg-gray-800' 
+                    : 'text-gray-300 cursor-not-allowed bg-gray-50'
                   : isSelected
                   ? 'bg-blue-600 text-white font-medium'
+                  : isDark
+                  ? 'text-gray-200 hover:bg-white/10 font-medium'
                   : 'text-gray-700 hover:bg-gray-100 font-medium'
               }`}
             >
@@ -153,16 +172,18 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate }: MonthYearPicke
 }
 
 export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: EditMetaModalProps) {
-  // Helper function to normalize date from ISO or YYYY-MM-DD to YYYY-MM-DD
+  const { theme } = useTheme()
+  const isDark = theme === 'escuro'
+  const { user } = useAuth()
+  const userCurrency = user?.moeda || 'real'
+  
   const normalizeDateString = (dateString: string): string => {
     if (!dateString) return ''
 
-    // If it's already in YYYY-MM-DD format (10 chars), return as is
     if (dateString.length === 10 && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return dateString
     }
 
-    // If it's an ISO string, extract the date part
     const date = new Date(dateString)
     if (!isNaN(date.getTime())) {
       const year = date.getFullYear()
@@ -174,9 +195,17 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
     return dateString
   }
 
+  const formatValueWithoutSymbol = useCallback((value: number) => {
+    if (userCurrency === 'real' || userCurrency === 'euro') {
+      return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    } else {
+      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }
+  }, [userCurrency])
+
   const [nome, setNome] = useState(editItem.nome)
   const [descricao, setDescricao] = useState(editItem.descricao || '')
-  const [valor, setValor] = useState(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+  const [valor, setValor] = useState(formatValueWithoutSymbol(Number(editItem.valor)))
   const [economiaMensal, setEconomiaMensal] = useState('')
   const [dataInicio, setDataInicio] = useState(normalizeDateString(editItem.data_inicio))
   const [dataAlvo, setDataAlvo] = useState(normalizeDateString(editItem.data_alvo || ''))
@@ -190,26 +219,24 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
   useEffect(() => {
     setNome(editItem.nome)
     setDescricao(editItem.descricao || '')
-    setValor(Number(editItem.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+    setValor(formatValueWithoutSymbol(Number(editItem.valor)))
     setDataInicio(normalizeDateString(editItem.data_inicio))
     setDataAlvo(normalizeDateString(editItem.data_alvo || ''))
     setShowError(false)
     setConfirmDeleteMode(false)
 
-    // Determine goal type based on existing data - prioritize data_alvo over economia_mensal
     if (editItem.data_alvo) {
       setGoalType('deadline')
       setEconomiaMensal('')
     } else if (editItem.economia_mensal) {
       setGoalType('monthly')
-      setEconomiaMensal(Number(editItem.economia_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+      setEconomiaMensal(formatValueWithoutSymbol(Number(editItem.economia_mensal)))
     } else {
       setGoalType(null)
       setEconomiaMensal('')
     }
-  }, [editItem])
+  }, [editItem, userCurrency, formatValueWithoutSymbol])
 
-  // Validate and clear dataAlvo if it becomes invalid when dataInicio changes
   useEffect(() => {
     if (dataInicio && dataAlvo && goalType === 'deadline') {
       const inicioParts = dataInicio.split('-')
@@ -262,7 +289,6 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
 
     if (isNaN(numericValor) || numericValor <= 0) return null
 
-    // Parse dates
     const inicioParts = dataInicio.split('-')
     const alvoParts = dataAlvo.split('-')
 
@@ -273,9 +299,7 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
 
     if (isNaN(inicioDate.getTime()) || isNaN(alvoDate.getTime())) return null
 
-    // Calculate months difference
-    const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 +
-                       (alvoDate.getMonth() - inicioDate.getMonth())
+    const monthsDiff = (alvoDate.getFullYear() - inicioDate.getFullYear()) * 12 + (alvoDate.getMonth() - inicioDate.getMonth())
 
     if (monthsDiff <= 0) return null
 
@@ -285,7 +309,18 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
     const rawValue = e.target.value.replace(/\D/g, '')
     const number = parseInt(rawValue || '0', 10)
-    setter(number ? (number / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '')
+    
+    if (!number) {
+      setter('')
+      return
+    }
+    
+    const float = number / 100
+    if (userCurrency === 'real' || userCurrency === 'euro') {
+      setter(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+    } else {
+      setter(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -316,7 +351,6 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
         return
       }
 
-      // Calculate economia_mensal when in deadline mode
       let economiaMensalToSave: number | undefined = undefined
 
       if (goalType === 'monthly' && numericEconomiaMensal > 0) {
@@ -358,7 +392,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
           />
 
           <motion.div
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col p-6 overflow-y-auto"
+            className={`fixed right-0 top-0 h-full w-full max-w-md shadow-xl z-50 flex flex-col p-6 overflow-y-auto ${
+              isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'
+            }`}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -367,7 +403,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
             <AnimatePresence>
               {showError && (
                 <motion.div
-                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3"
+                  className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white px-6 py-4 rounded-lg shadow-2xl z-[60] flex items-center gap-3 ${
+                    isDark ? 'bg-red-600' : 'bg-red-500'
+                  }`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -382,50 +420,84 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">Alterar Meta</h2>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <h2 className={`text-lg font-semibold ${
+                isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+              }`}>Alterar Meta</h2>
+              <button onClick={onClose} className={isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Nome</label>
+                <label className={`block text-sm font-medium mb-1 ${
+                  isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                }`}>Nome</label>
                 <input
                   type="text"
                   placeholder="Nome da meta"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                  className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none ${
+                    isDark 
+                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400' 
+                      : 'bg-gray-50 text-gray-700 placeholder-gray-500'
+                  }`}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Descrição</label>
+                <label className={`block text-sm font-medium mb-1 ${
+                  isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                }`}>Descrição</label>
                 <textarea
                   placeholder="Descrição da meta"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
-                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 resize-none"
+                  className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none ${
+                    isDark 
+                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400' 
+                      : 'bg-gray-50 text-gray-700 placeholder-gray-500'
+                  }`}
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Valor total</label>
-                <input
-                  type="text"
-                  placeholder="R$ 0,00"
-                  value={valor}
-                  onChange={(e) => handleValueChange(e, setValor)}
-                  className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                  required
-                />
+                <label className={`block text-sm font-medium mb-1 ${
+                  isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                }`}>Valor total</label>
+                <div className={`
+                  flex items-center rounded-lg overflow-hidden
+                  ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
+                `}>
+                  <span className={`
+                    px-3 py-2 font-medium
+                    ${isDark ? 'text-gray-400' : 'text-gray-600'}
+                  `}>
+                    {getCurrencySymbol(userCurrency)}
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={valor}
+                    onChange={(e) => handleValueChange(e, setValor)}
+                    className={`
+                      flex-1 px-3 py-2 outline-none transition bg-transparent
+                      ${isDark 
+                        ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400' 
+                        : 'text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500'}
+                    `}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-3">Definir meta por:</label>
+                <label className={`block text-sm font-medium mb-3 ${
+                  isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                }`}>Definir meta por:</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -436,7 +508,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                       onChange={() => handleGoalTypeChange('monthly')}
                       className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">Economia mensal</span>
+                    <span className={`text-sm ${
+                      isDark ? 'text-gray-200' : 'text-gray-700'
+                    }`}>Economia mensal</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -447,7 +521,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                       onChange={() => handleGoalTypeChange('deadline')}
                       className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">Data final</span>
+                    <span className={`text-sm ${
+                      isDark ? 'text-gray-200' : 'text-gray-700'
+                    }`}>Data final</span>
                   </label>
                 </div>
                 {goalType === 'monthly' && (() => {
@@ -462,41 +538,65 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                   const monthlySavings = calculateMonthlySavingsNeeded()
                   return monthlySavings !== null ? (
                     <p className="mt-3 text-sm font-bold text-blue-600">
-                      Você precisará economizar {monthlySavings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por mês para alcançar sua meta.
+                      Você precisará economizar {formatCurrency(monthlySavings, userCurrency)} por mês para alcançar sua meta.
                     </p>
                   ) : null
                 })()}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800 mb-1">Data de início</label>
+                <label className={`block text-sm font-medium mb-1 ${
+                  isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                }`}>Data de início</label>
                 <MonthYearPicker
                   selectedDate={dataInicio}
                   onDateSelect={setDataInicio}
+                  isDark={isDark}
                 />
               </div>
 
               {goalType === 'monthly' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-1">Economia mensal</label>
-                  <input
-                    type="text"
-                    placeholder="R$ 0,00"
-                    value={economiaMensal}
-                    onChange={(e) => handleValueChange(e, setEconomiaMensal)}
-                    className="w-full bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                    required
-                  />
+                  <label className={`block text-sm font-medium mb-1 ${
+                    isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                  }`}>Economia mensal</label>
+                  <div className={`
+                    flex items-center rounded-lg overflow-hidden
+                    ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
+                  `}>
+                    <span className={`
+                      px-3 py-2 font-medium
+                      ${isDark ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                      {getCurrencySymbol(userCurrency)}
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={economiaMensal}
+                      onChange={(e) => handleValueChange(e, setEconomiaMensal)}
+                      className={`
+                        flex-1 px-3 py-2 outline-none transition bg-transparent
+                        ${isDark 
+                          ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400' 
+                          : 'text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500'}
+                      `}
+                      required
+                    />
+                  </div>
                 </div>
               )}
 
               {goalType === 'deadline' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-1">Data final</label>
+                  <label className={`block text-sm font-medium mb-1 ${
+                    isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+                  }`}>Data final</label>
                   <MonthYearPicker
                     selectedDate={dataAlvo}
                     onDateSelect={setDataAlvo}
                     minDate={dataInicio}
+                    isDark={isDark}
                   />
                 </div>
               )}
@@ -504,7 +604,11 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
               {!confirmDeleteMode && (
                 <button
                   type="submit"
-                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                    isDark 
+                      ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
                   <Save className="w-4 h-4" />
                   Salvar meta
@@ -518,7 +622,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteMode(false)}
-                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                        className={`flex-1 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 hover:bg-gray-600'
+                        }`}
                       >
                         <X className="w-4 h-4" />
                         Cancelar
@@ -529,7 +635,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                           onDelete(editItem.id)
                           onClose()
                         }}
-                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                        className={`flex-1 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'
+                        }`}
                       >
                         <Trash className="w-4 h-4" />
                         Confirmar Exclusão
@@ -539,7 +647,9 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteMode(true)}
-                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                      className={`w-full mt-2 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                        isDark ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600 hover:bg-red-700'
+                      }`}
                     >
                       <Trash className="w-4 h-4" />
                       Excluir meta

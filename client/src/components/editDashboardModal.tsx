@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
@@ -9,9 +9,8 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
-import { formatCurrency, getCurrencyPlaceholder, getCurrencySymbol } from "@/app/terminology/currency";
+import { getCurrencySymbol } from "@/app/terminology/currency";
 import { Moeda } from "@/types/configs";
-import { useAuth } from '@/contexts/AuthContext'
 
 interface EditDashboardModalProps {
   isOpen: boolean
@@ -176,9 +175,28 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
 
+  const formatValueWithoutSymbol = useCallback((valueString: string) => {
+    const symbol = getCurrencySymbol(moeda)
+    const cleanValue = valueString
+      .replace(symbol, '')
+      .replace(/\s*/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .trim()
+    
+    const numericValue = parseFloat(cleanValue)
+    if (isNaN(numericValue)) return ''
+    
+    if (moeda === 'real' || moeda === 'euro') {
+      return numericValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    } else {
+      return numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }
+  }, [moeda])
+
   const [name, setName] = useState(editItem.name)
   const [category, setCategory] = useState(editItem.category)
-  const [value, setValue] = useState(editItem.value)
+  const [value, setValue] = useState(formatValueWithoutSymbol(editItem.value))
   const [recurring, setRecurring] = useState(editItem.recurring)
   const [date, setDate] = useState(editItem.date)
   const [date_vencimento, setDateVencimento] = useState('')
@@ -188,20 +206,18 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
   const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
-  const { user } = useAuth();
-  const userCurrency = user?.moeda || "real";
 
   useEffect(() => {
     setName(editItem.name)
     setCategory(editItem.category)
-    setValue(editItem.value)
+    setValue(formatValueWithoutSymbol(editItem.value))
     setRecurring(editItem.recurring)
     setDate(editItem.date)
     setDateVencimento('')
     setDateError(false)
     setShowError(false)
     setConfirmDeleteMode(false)
-  }, [editItem])
+  }, [editItem, formatValueWithoutSymbol])
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -239,9 +255,12 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
       return;
     }
   
-    const formatted = formatCurrency(number / 100, moeda);
-  
-    setValue(formatted);
+    const float = number / 100;
+    if (moeda === 'real' || moeda === 'euro') {
+      setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    } else {
+      setValue(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -388,14 +407,30 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
               <div>
                 <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Valor</label>
                 <div className="flex items-center gap-4">
-                  <input
-                    type="text"
-                    placeholder={getCurrencyPlaceholder(userCurrency)}
-                    value={value}
-                    onChange={handleValueChange}
-                    className={`currency-input w-1/2 ${isDark ? 'bg-[#3C3C3C] text-gray-100 placeholder-gray-400' : 'bg-gray-50 text-gray-700 placeholder-gray-500'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none`}
-                    required
-                  />
+                  <div className={`
+                    w-1/2 flex items-center rounded-lg overflow-hidden
+                    ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
+                  `}>
+                    <span className={`
+                      px-3 py-2 font-medium
+                      ${isDark ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                      {getCurrencySymbol(moeda)}
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={value}
+                      onChange={handleValueChange}
+                      className={`
+                        flex-1 px-3 py-2 outline-none transition bg-transparent
+                        ${isDark 
+                          ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400' 
+                          : 'text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500'}
+                      `}
+                      required
+                    />
+                  </div>
                   <label className="flex items-center gap-2">
                     <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Recorrente</span>
                     <input

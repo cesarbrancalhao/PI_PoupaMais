@@ -9,7 +9,7 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
-import { formatCurrency, getCurrencyPlaceholder } from "@/app/terminology/currency";
+import { getCurrencySymbol } from "@/app/terminology/currency";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AddDashboardModalProps {
@@ -229,7 +229,11 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
     }
   
     const float = number / 100;
-    setValue(formatCurrency(float, userCurrency));
+    if (userCurrency === "real" || userCurrency === "euro") {
+      setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    } else {
+      setValue(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -395,19 +399,30 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
               <div>
                 <label className="block text-sm font-medium">Valor</label>
                 <div className="flex items-center gap-4">
-                  <input
-                    type="text"
-                    placeholder={getCurrencyPlaceholder(userCurrency)}
-                    value={value}
-                    onChange={handleValueChange}
-                    className={`
-                      w-1/2 rounded-lg px-3 py-2 mt-1 outline-none transition
-                      ${isDark
-                        ? 'bg-[#3C3C3C] text-white placeholder-gray-400 focus:ring-blue-400'
-                        : 'bg-gray-50 text-gray-700 placeholder-gray-600 focus:ring-blue-500'}
-                    `}
-                    required  
-                  />
+                  <div className={`
+                    w-1/2 mt-1 flex items-center rounded-lg overflow-hidden
+                    ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
+                  `}>
+                    <span className={`
+                      px-3 py-2 font-medium
+                      ${isDark ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                      {getCurrencySymbol(userCurrency)}
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="0,00"
+                      value={value}
+                      onChange={handleValueChange}
+                      className={`
+                        flex-1 px-3 py-2 outline-none transition bg-transparent
+                        ${isDark
+                          ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400'
+                          : 'text-gray-700 placeholder-gray-600 focus:ring-2 focus:ring-blue-500'}
+                      `}
+                      required  
+                    />
+                  </div>
                 <label className="ml-4 text-sm flex items-center gap-2">
                   <span className={isDark ? 'text-gray-200' : 'text-gray-700'}>
                     Recorrente
