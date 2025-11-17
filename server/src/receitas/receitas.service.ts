@@ -13,12 +13,15 @@ export class ReceitasService {
     try {
       await client.query('BEGIN');
 
-      const fonteExists = await client.query(
-        'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
-        [data.fonte_receita_id, userId],
-      );
-      if (fonteExists.rows.length === 0) {
-        throw new NotFoundException('Fonte de receita não encontrada');
+      // Only validate fonte if it's provided
+      if (data.fonte_receita_id !== undefined && data.fonte_receita_id !== null) {
+        const fonteExists = await client.query(
+          'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
+          [data.fonte_receita_id, userId],
+        );
+        if (fonteExists.rows.length === 0) {
+          throw new NotFoundException('Fonte de receita não encontrada');
+        }
       }
 
       const result = await client.query(
@@ -87,7 +90,8 @@ export class ReceitasService {
     try {
       await client.query('BEGIN');
 
-      if (data.fonte_receita_id !== undefined) {
+      // Only validate fonte if it's provided and not null
+      if (data.fonte_receita_id !== undefined && data.fonte_receita_id !== null) {
         const fonteExists = await client.query(
           'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
           [data.fonte_receita_id, userId],

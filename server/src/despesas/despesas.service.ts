@@ -13,12 +13,15 @@ export class DespesasService {
     try {
       await client.query('BEGIN');
 
-      const categoryExists = await client.query(
-        'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
-        [createDespesaDto.categoria_despesa_id, userId],
-      );
-      if (categoryExists.rows.length === 0) {
-        throw new NotFoundException('Categoria não encontrada');
+      // Only validate categoria if it's provided
+      if (createDespesaDto.categoria_despesa_id !== undefined && createDespesaDto.categoria_despesa_id !== null) {
+        const categoryExists = await client.query(
+          'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
+          [createDespesaDto.categoria_despesa_id, userId],
+        );
+        if (categoryExists.rows.length === 0) {
+          throw new NotFoundException('Categoria não encontrada');
+        }
       }
 
       const result = await client.query(
@@ -89,7 +92,8 @@ export class DespesasService {
     try {
       await client.query('BEGIN');
 
-      if (updateDespesaDto.categoria_despesa_id !== undefined) {
+      // Only validate categoria if it's provided and not null
+      if (updateDespesaDto.categoria_despesa_id !== undefined && updateDespesaDto.categoria_despesa_id !== null) {
         const categoryExists = await client.query(
           'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
           [updateDespesaDto.categoria_despesa_id, userId],
