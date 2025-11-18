@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       } catch (err) {
         console.error("Erro ao inicializar auth:", err);
+        authService.logout();
         setUser(null);
       } finally {
         setLoading(false);
