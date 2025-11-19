@@ -1,0 +1,40 @@
+export const sidebar = {
+  // Navigation items
+  dashboard: {
+    pt: 'Painel',
+    en: 'Dashboard',
+    es: 'Panel',
+  },
+  goals: {
+    pt: 'Metas',
+    en: 'Goals',
+    es: 'Metas',
+  },
+  analysis: {
+    pt: 'Análise',
+    en: 'Analysis',
+    es: 'Análisis',
+  },
+  settings: {
+    pt: 'Configurações',
+    en: 'Settings',
+    es: 'Configuraciones',
+  },
+
+  // Logout
+  logout: {
+    pt: 'Sair',
+    en: 'Logout',
+    es: 'Cerrar sesión',
+  },
+  logoutConfirmTitle: {
+    pt: 'Confirmar saída',
+    en: 'Confirm logout',
+    es: 'Confirmar cierre de sesión',
+  },
+  logoutConfirmMessage: {
+    pt: 'Tem certeza que deseja sair?',
+    en: 'Are you sure you want to logout?',
+    es: '¿Está seguro de que desea cerrar sesión?',
+  },
+} as const;

@@ -1,0 +1,101 @@
+export const editDashboardModal = {
+  // Titles
+  editExpenseTitle: {
+    pt: 'Editar Despesa',
+    en: 'Edit Expense',
+    es: 'Editar Gasto',
+  },
+  editIncomeTitle: {
+    pt: 'Editar Receita',
+    en: 'Edit Income',
+    es: 'Editar Ingreso',
+  },
+
+  // Recurring options
+  editOptions: {
+    pt: 'Opções de Edição',
+    en: 'Edit Options',
+    es: 'Opciones de Edición',
+  },
+  editSingle: {
+    pt: 'Editar apenas esta',
+    en: 'Edit only this one',
+    es: 'Editar solo esta',
+  },
+  editAll: {
+    pt: 'Editar todas',
+    en: 'Edit all',
+    es: 'Editar todas',
+  },
+  excludeSingle: {
+    pt: 'Excluir apenas esta',
+    en: 'Delete only this one',
+    es: 'Eliminar solo esta',
+  },
+  excludeAll: {
+    pt: 'Excluir todas',
+    en: 'Delete all',
+    es: 'Eliminar todas',
+  },
+
+  // Buttons
+  update: {
+    pt: 'Atualizar',
+    en: 'Update',
+    es: 'Actualizar',
+  },
+  delete: {
+    pt: 'Excluir',
+    en: 'Delete',
+    es: 'Eliminar',
+  },
+  cancel: {
+    pt: 'Cancelar',
+    en: 'Cancel',
+    es: 'Cancelar',
+  },
+
+  // Confirmation
+  confirmDelete: {
+    pt: 'Tem certeza que deseja excluir?',
+    en: 'Are you sure you want to delete?',
+    es: '¿Está seguro de que desea eliminar?',
+  },
+  confirmDeleteRecurring: {
+    pt: 'Esta é uma transação recorrente. O que deseja fazer?',
+    en: 'This is a recurring transaction. What would you like to do?',
+    es: 'Esta es una transacción recurrente. ¿Qué le gustaría hacer?',
+  },
+
+  // Success/Error messages
+  expenseUpdated: {
+    pt: 'Despesa atualizada com sucesso',
+    en: 'Expense updated successfully',
+    es: 'Gasto actualizado exitosamente',
+  },
+  incomeUpdated: {
+    pt: 'Receita atualizada com sucesso',
+    en: 'Income updated successfully',
+    es: 'Ingreso actualizado exitosamente',
+  },
+  expenseDeleted: {
+    pt: 'Despesa excluída com sucesso',
+    en: 'Expense deleted successfully',
+    es: 'Gasto eliminado exitosamente',
+  },
+  incomeDeleted: {
+    pt: 'Receita excluída com sucesso',
+    en: 'Income deleted successfully',
+    es: 'Ingreso eliminado exitosamente',
+  },
+  errorUpdating: {
+    pt: 'Erro ao atualizar',
+    en: 'Error updating',
+    es: 'Error al actualizar',
+  },
+  errorDeleting: {
+    pt: 'Erro ao excluir',
+    en: 'Error deleting',
+    es: 'Error al eliminar',
+  },
+} as const;
