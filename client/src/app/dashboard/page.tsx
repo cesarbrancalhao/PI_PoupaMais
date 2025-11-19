@@ -11,8 +11,8 @@ import BalanceChart from '@/components/BalanceChart'
 import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
 import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus, TrendingUp, PieChart } from 'lucide-react'
-import { Despesa, Receita, CategoriaDespesa, FonteReceita } from '@/types'
-import { despesasService, receitasService } from '@/services'
+import { Despesa, Receita, CategoriaDespesa, FonteReceita, DespesaExclusao, ReceitaExclusao } from '@/types'
+import { despesasService, receitasService, despesasExclusaoService, receitasExclusaoService } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -28,6 +28,8 @@ interface TableRow {
   saldo: string
   recurring: boolean
   icon: React.ReactNode
+  originalId: number
+  displayMonth: string
 }
 
 export default function DashboardPage() {
@@ -41,6 +43,8 @@ export default function DashboardPage() {
   const [receitas, setReceitas] = useState<Receita[]>([])
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [fontes, setFontes] = useState<FonteReceita[]>([])
+  const [despesasExclusoes, setDespesasExclusoes] = useState<DespesaExclusao[]>([])
+  const [receitasExclusoes, setReceitasExclusoes] = useState<ReceitaExclusao[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string>('')
@@ -75,11 +79,13 @@ export default function DashboardPage() {
     try {
       setLoading(true)
       setError(null)
-      const [despesasResponse, receitasResponse, categoriasResponse, fontesResponse] = await Promise.all([
+      const [despesasResponse, receitasResponse, categoriasResponse, fontesResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
         despesasService.getAll(1, 100),
         receitasService.getAll(1, 100),
         categoriasDespesaService.getAll(),
-        fontesReceitaService.getAll()
+        fontesReceitaService.getAll(),
+        despesasExclusaoService.getAll(),
+        receitasExclusaoService.getAll()
       ])
       
       const despesasData = Array.isArray(despesasResponse)
@@ -93,6 +99,8 @@ export default function DashboardPage() {
       setReceitas(receitasData)
       setCategorias(categoriasResponse)
       setFontes(fontesResponse)
+      setDespesasExclusoes(despesasExclusoesResponse)
+      setReceitasExclusoes(receitasExclusoesResponse)
     } catch (err) {
       console.error('Erro ao buscar dados:', err)
       setError('Erro ao carregar dados. Verifique sua conexão.')
@@ -196,29 +204,82 @@ export default function DashboardPage() {
   const calculateSaldo = (items: (Despesa | Receita)[], currentIndex: number, isReceita: boolean) => {
     let saldo = 0
     for (let i = items.length - 1; i >= currentIndex; i--) {
+      const valor = Number(items[i].valor) || 0
       if (isReceita) {
-        saldo += items[i].valor
+        saldo += valor
       } else {
-        saldo -= items[i].valor
+        saldo -= valor
       }
     }
     return saldo
   }
 
-  const filterItemsByMonth = <T extends { data: string }>(items: T[]): T[] => {
+  const expandRecurringEntries = <T extends Despesa | Receita>(
+    items: T[],
+    selectedMonth: string,
+    exclusoes: (DespesaExclusao | ReceitaExclusao)[]
+  ): T[] => {
     if (!selectedMonth) return items
 
     const [month, year] = selectedMonth.split('-')
-    return items.filter(item => {
-      const itemDate = new Date(item.data)
-      const itemMonth = String(itemDate.getMonth() + 1).padStart(2, '0')
-      const itemYear = itemDate.getFullYear().toString()
-      return itemMonth === month && itemYear === year
+    const targetDate = new Date(parseInt(year), parseInt(month) - 1, 1)
+    
+    const expandedItems: T[] = []
+
+    items.forEach(item => {
+      const itemStartDate = new Date(item.data)
+      const itemStartYear = itemStartDate.getFullYear()
+      const itemStartMonth = itemStartDate.getMonth()
+      const startOfItemMonth = new Date(itemStartYear, itemStartMonth, 1)
+
+      if (item.recorrente) {
+        const targetYear = targetDate.getFullYear()
+        const targetMonth = targetDate.getMonth()
+        const targetMonthStart = new Date(targetYear, targetMonth, 1)
+        
+        if (startOfItemMonth <= targetMonthStart) {
+          let isWithinEndDate = true
+          if (item.data_vencimento) {
+            const endDate = new Date(item.data_vencimento)
+            const endYear = endDate.getFullYear()
+            const endMonth = endDate.getMonth()
+            const endMonthStart = new Date(endYear, endMonth, 1)
+            isWithinEndDate = targetMonthStart <= endMonthStart
+          }
+
+          if (isWithinEndDate) {
+            const monthKey = `${year}-${month}-01`
+            const isExcluded = exclusoes.some(exc => {
+              const isDespesa = 'despesa_id' in exc
+              const itemId = isDespesa ? (exc as DespesaExclusao).despesa_id : (exc as ReceitaExclusao).receita_id
+              const excDate = new Date(exc.data_exclusao)
+              const excYear = excDate.getFullYear()
+              const excMonth = String(excDate.getMonth() + 1).padStart(2, '0')
+              const excKey = `${excYear}-${excMonth}-01`
+              
+              return itemId === item.id && excKey === monthKey
+            })
+
+            if (!isExcluded) {
+              const virtualEntry = { ...item }
+              expandedItems.push(virtualEntry)
+            }
+          }
+        }
+      } else {
+        const itemMonth = String(itemStartDate.getMonth() + 1).padStart(2, '0')
+        const itemYear = itemStartDate.getFullYear().toString()
+        if (itemMonth === month && itemYear === year) {
+          expandedItems.push(item)
+        }
+      }
     })
+
+    return expandedItems
   }
 
-  const filteredDespesas = filterItemsByMonth(despesas)
-  const filteredReceitas = filterItemsByMonth(receitas)
+  const filteredDespesas = expandRecurringEntries(despesas, selectedMonth, despesasExclusoes)
+  const filteredReceitas = expandRecurringEntries(receitas, selectedMonth, receitasExclusoes)
 
   const despesasRows: TableRow[] = (filteredDespesas ?? []).map((despesa, index) => {
     const categoria = categorias.find(c => c.id === despesa.categoria_despesa_id)
@@ -231,7 +292,9 @@ export default function DashboardPage() {
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
       saldo: formatCurrency(Math.abs(calculateSaldo(filteredDespesas ?? [], index, false))),
       recurring: despesa?.recorrente ?? false,
-      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />,
+      originalId: despesa?.id ?? 0,
+      displayMonth: selectedMonth
     }
   })
 
@@ -246,7 +309,9 @@ export default function DashboardPage() {
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
       saldo: formatCurrency(calculateSaldo(filteredReceitas ?? [], index, true)),
       recurring: receita?.recorrente ?? false,
-      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
+      icon: <IconComponent className="w-4 h-4 md:w-5 md:h-5 text-green-600" />,
+      originalId: receita?.id ?? 0,
+      displayMonth: selectedMonth
     }
   })
 
@@ -263,19 +328,8 @@ export default function DashboardPage() {
       const year = date.getFullYear()
       const monthKey = `${month}-${year}`
 
-      const monthDespesas = despesas.filter(d => {
-        const dDate = new Date(d.data)
-        const dMonth = String(dDate.getMonth() + 1).padStart(2, '0')
-        const dYear = dDate.getFullYear()
-        return `${dMonth}-${dYear}` === monthKey
-      })
-
-      const monthReceitas = receitas.filter(r => {
-        const rDate = new Date(r.data)
-        const rMonth = String(rDate.getMonth() + 1).padStart(2, '0')
-        const rYear = rDate.getFullYear()
-        return `${rMonth}-${rYear}` === monthKey
-      })
+      const monthDespesas = expandRecurringEntries(despesas, monthKey, despesasExclusoes)
+      const monthReceitas = expandRecurringEntries(receitas, monthKey, receitasExclusoes)
 
       const totalReceitasMonth = monthReceitas.reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
       const totalDespesasMonth = monthDespesas.reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
@@ -291,7 +345,7 @@ export default function DashboardPage() {
     }
 
     return balances
-  }, [despesas, receitas])
+  }, [despesas, receitas, despesasExclusoes, receitasExclusoes])
 
   const despesasChartData = useMemo(() => {
     const categoryTotals = new Map<number, number>()
@@ -367,7 +421,7 @@ export default function DashboardPage() {
     <ProtectedRoute>
       <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
       <Sidebar />
-      <main className={`flex-1 p-4 md:p-8 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
+      <main className={`flex-1 p-4 md:p-8 md:ml-64 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
         {showConfigView ? (
           <>
             <header className={`flex items-center gap-4 mb-6 md:mb-8 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
@@ -748,7 +802,9 @@ export default function DashboardPage() {
             category: selectedItem.category,
             value: selectedItem.value,
             recurring: selectedItem.recurring,
-            date: convertDateForEditModal(selectedItem.date)
+            date: convertDateForEditModal(selectedItem.date),
+            originalId: selectedItem.originalId,
+            displayMonth: selectedItem.displayMonth
           }}
           onDelete={handleDelete}
           moeda ={user?.moeda ?? "real"}

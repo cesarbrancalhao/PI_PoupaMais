@@ -1,5 +1,7 @@
 export * from './despesa';
 export * from './receita';
+export * from './despesa-exclusao';
+export * from './receita-exclusao';
 export * from './categoria-despesa';
 export * from './fonte-receita';
 export * from './meta';

@@ -60,6 +60,22 @@ CREATE TABLE receita (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
+CREATE TABLE despesa_exclusao (
+    id SERIAL PRIMARY KEY,
+    despesa_id INT NOT NULL REFERENCES despesa(id) ON DELETE CASCADE,
+    data_exclusao DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
+);
+
+CREATE TABLE receita_exclusao (
+    id SERIAL PRIMARY KEY,
+    receita_id INT NOT NULL REFERENCES receita(id) ON DELETE CASCADE,
+    data_exclusao DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
+);
+
 CREATE TABLE meta (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(70) NOT NULL,
@@ -88,6 +104,10 @@ CREATE INDEX idx_categoria_despesa_usuario_id ON categoria_despesa(usuario_id);
 CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);
 CREATE INDEX idx_despesa_usuario_id ON despesa(usuario_id);
 CREATE INDEX idx_receita_usuario_id ON receita(usuario_id);
+CREATE INDEX idx_despesa_exclusao_despesa_id ON despesa_exclusao(despesa_id);
+CREATE INDEX idx_despesa_exclusao_usuario_id ON despesa_exclusao(usuario_id);
+CREATE INDEX idx_receita_exclusao_receita_id ON receita_exclusao(receita_id);
+CREATE INDEX idx_receita_exclusao_usuario_id ON receita_exclusao(usuario_id);
 CREATE INDEX idx_meta_usuario_id ON meta(usuario_id);
 CREATE INDEX idx_contribuicao_meta_meta_id ON contribuicao_meta(meta_id);
 CREATE INDEX idx_contribuicao_meta_usuario_id ON contribuicao_meta(usuario_id);

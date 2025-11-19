@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateReceitaDto } from './dto/create-receita.dto';
 import { UpdateReceitaDto } from './dto/update-receita.dto';
+import { CreateReceitaExclusaoDto } from './dto/create-receita-exclusao.dto';
 import { PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
@@ -13,7 +14,6 @@ export class ReceitasService {
     try {
       await client.query('BEGIN');
 
-      // Only validate fonte if it's provided
       if (data.fonte_receita_id !== undefined && data.fonte_receita_id !== null) {
         const fonteExists = await client.query(
           'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
@@ -138,5 +138,51 @@ export class ReceitasService {
     );
     if (result.rowCount === 0) throw new NotFoundException('Receita não encontrada');
     return { message: 'Receita excluída com sucesso' };
+  }
+
+  async createExclusao(receitaId: number, userId: number, createExclusaoDto: CreateReceitaExclusaoDto) {
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+      
+      const receitaExists = await client.query(
+        'SELECT * FROM receita WHERE id = $1 AND usuario_id = $2',
+        [receitaId, userId],
+      );
+      if (receitaExists.rows.length === 0) {
+        throw new NotFoundException('Receita não encontrada');
+      }
+
+      const result = await client.query(
+        `INSERT INTO receita_exclusao (receita_id, data_exclusao, usuario_id)
+         VALUES ($1, $2, $3) RETURNING *`,
+        [receitaId, createExclusaoDto.data_exclusao, userId],
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async findAllExclusoes(userId: number) {
+    const result = await this.databaseService.query(
+      'SELECT * FROM receita_exclusao WHERE usuario_id = $1 ORDER BY data_exclusao DESC',
+      [userId],
+    );
+    return result.rows;
+  }
+
+  async removeExclusao(id: number, userId: number) {
+    const result = await this.databaseService.query(
+      'DELETE FROM receita_exclusao WHERE id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    if (result.rowCount === 0) throw new NotFoundException('Exclusão não encontrada');
+    return { message: 'Exclusão removida com sucesso' };
   }
 }

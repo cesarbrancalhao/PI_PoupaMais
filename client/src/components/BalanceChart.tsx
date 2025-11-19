@@ -103,7 +103,15 @@ export default function BalanceChart({ data, moeda }: BalanceChartProps) {
         callbacks: {
           label: function (context) {
             const value = context.parsed.x ?? 0
-            return formatCurrency(value, moeda)
+            const formatted = formatCurrency(1, moeda)
+            const symbol = formatted.replace(/[\d.,\s]/g, '')
+            
+            if (Math.abs(value) >= 1000) {
+              const shortened = Math.round(value / 1000)
+              return `${symbol} ${shortened}K`
+            }
+            
+            return `${symbol} ${Math.round(value)}`
           }
         }
       }
@@ -120,13 +128,16 @@ export default function BalanceChart({ data, moeda }: BalanceChartProps) {
           color: textColor,
           callback: (value) => {
             const num = value as number
+            
+            const formatted = formatCurrency(1, moeda)
+            const symbol = formatted.replace(/[\d.,\s]/g, '')
 
             if (Math.abs(num) >= 1000) {
-              const shortened = num / 1000
-              return formatCurrency(shortened, moeda)
+              const shortened = Math.round(num / 1000)
+              return `${symbol} ${shortened}K`
             }
 
-            return formatCurrency(num, moeda)
+            return `${symbol} ${Math.round(num)}`
           }
         }
       },

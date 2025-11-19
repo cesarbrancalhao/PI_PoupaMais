@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateDespesaDto } from './dto/create-despesa.dto';
 import { UpdateDespesaDto } from './dto/update-despesa.dto';
+import { CreateDespesaExclusaoDto } from './dto/create-despesa-exclusao.dto';
 import { PaginationResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
@@ -13,7 +14,6 @@ export class DespesasService {
     try {
       await client.query('BEGIN');
 
-      // Only validate categoria if it's provided
       if (createDespesaDto.categoria_despesa_id !== undefined && createDespesaDto.categoria_despesa_id !== null) {
         const categoryExists = await client.query(
           'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
@@ -141,5 +141,51 @@ export class DespesasService {
     );
     if (result.rowCount === 0) throw new NotFoundException('Despesa não encontrada');
     return { message: 'Despesa excluída com sucesso' };
+  }
+
+  async createExclusao(despesaId: number, userId: number, createExclusaoDto: CreateDespesaExclusaoDto) {
+    const client = await this.databaseService.getClient();
+    try {
+      await client.query('BEGIN');
+
+      const despesaExists = await client.query(
+        'SELECT * FROM despesa WHERE id = $1 AND usuario_id = $2',
+        [despesaId, userId],
+      );
+      if (despesaExists.rows.length === 0) {
+        throw new NotFoundException('Despesa não encontrada');
+      }
+
+      const result = await client.query(
+        `INSERT INTO despesa_exclusao (despesa_id, data_exclusao, usuario_id)
+         VALUES ($1, $2, $3) RETURNING *`,
+        [despesaId, createExclusaoDto.data_exclusao, userId],
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async findAllExclusoes(userId: number) {
+    const result = await this.databaseService.query(
+      'SELECT * FROM despesa_exclusao WHERE usuario_id = $1 ORDER BY data_exclusao DESC',
+      [userId],
+    );
+    return result.rows;
+  }
+
+  async removeExclusao(id: number, userId: number) {
+    const result = await this.databaseService.query(
+      'DELETE FROM despesa_exclusao WHERE id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    if (result.rowCount === 0) throw new NotFoundException('Exclusão não encontrada');
+    return { message: 'Exclusão removida com sucesso' };
   }
 }

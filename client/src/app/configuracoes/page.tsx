@@ -93,11 +93,14 @@ const ConfiguracoesPage = () => {
     <div className={`flex min-h-screen ${pageBg} ${textColor}`}>
       <Sidebar />
 
-      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 md:p-10 md:ml-64 overflow-y-auto">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
+          <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>Configurações</h1>
+        </header>
+
         <div
           className={`${containerBg} rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 max-w-6xl mx-auto w-full min-h-[85vh] flex flex-col`}
         >
-          <h1 className="text-lg sm:text-xl font-semibold mb-8">Configurações</h1>
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
   
