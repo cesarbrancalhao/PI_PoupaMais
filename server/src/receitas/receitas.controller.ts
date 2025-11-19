@@ -4,6 +4,7 @@ import { ReceitasService } from './receitas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateReceitaDto } from './dto/create-receita.dto';
 import { UpdateReceitaDto } from './dto/update-receita.dto';
+import { CreateReceitaExclusaoDto } from './dto/create-receita-exclusao.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('receitas')
@@ -36,5 +37,20 @@ export class ReceitasController {
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.service.remove(+id, req.user.userId);
+  }
+
+  @Post(':id/exclusoes')
+  createExclusao(@Param('id') id: string, @Request() req, @Body() createExclusaoDto: CreateReceitaExclusaoDto) {
+    return this.service.createExclusao(+id, req.user.userId, createExclusaoDto);
+  }
+
+  @Get('exclusoes/all')
+  findAllExclusoes(@Request() req) {
+    return this.service.findAllExclusoes(req.user.userId);
+  }
+
+  @Delete('exclusoes/:id')
+  removeExclusao(@Param('id') id: string, @Request() req) {
+    return this.service.removeExclusao(+id, req.user.userId);
   }
 }

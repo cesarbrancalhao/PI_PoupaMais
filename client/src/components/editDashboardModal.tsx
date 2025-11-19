@@ -8,6 +8,8 @@ import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { despesasService } from '@/services/despesas.service'
 import { receitasService } from '@/services/receitas.service'
+import { despesasExclusaoService } from '@/services/despesas-exclusao.service'
+import { receitasExclusaoService } from '@/services/receitas-exclusao.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getCurrencySymbol } from "@/app/terminology/currency";
 import { Moeda } from "@/types/configs";
@@ -23,6 +25,8 @@ interface EditDashboardModalProps {
     value: string
     recurring: boolean
     date: string
+    originalId?: number
+    displayMonth?: string
   }
   onDelete?: (id: string) => void
   moeda: Moeda
@@ -206,18 +210,23 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   const [dateError, setDateError] = useState(false)
   const [showError, setShowError] = useState(false)
   const [confirmDeleteMode, setConfirmDeleteMode] = useState(false)
+  const [confirmEditAllMode, setConfirmEditAllMode] = useState(false)
 
   useEffect(() => {
-    setName(editItem.name)
-    setCategory(editItem.category)
-    setValue(formatValueWithoutSymbol(editItem.value))
-    setRecurring(editItem.recurring)
-    setDate(editItem.date)
-    setDateVencimento('')
-    setDateError(false)
-    setShowError(false)
-    setConfirmDeleteMode(false)
-  }, [editItem, formatValueWithoutSymbol])
+    if (isOpen) {
+      setName(editItem.name)
+      setCategory(editItem.category)
+      setValue(formatValueWithoutSymbol(editItem.value))
+      setRecurring(editItem.recurring)
+      setDate(editItem.date)
+      setDateError(false)
+      setShowError(false)
+      setConfirmDeleteMode(false)
+      setConfirmEditAllMode(false)
+    } else {
+      setDateVencimento('')
+    }
+  }, [editItem, formatValueWithoutSymbol, isOpen])
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -240,10 +249,31 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
       }
     }
 
+    const fetchEntryData = async () => {
+      try {
+        if (type === 'despesas') {
+          const entry = await despesasService.getById(Number(editItem.id))
+          if (entry.data_vencimento) {
+            const dateOnly = entry.data_vencimento.split('T')[0]
+            setDateVencimento(dateOnly)
+          }
+        } else {
+          const entry = await receitasService.getById(Number(editItem.id))
+          if (entry.data_vencimento) {
+            const dateOnly = entry.data_vencimento.split('T')[0]
+            setDateVencimento(dateOnly)
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados da entrada:', error)
+      }
+    }
+
     if (isOpen) {
       fetchOptions()
+      fetchEntryData()
     }
-  }, [isOpen, type, editItem.category])
+  }, [isOpen, type, editItem.category, editItem.id])
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
@@ -263,7 +293,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEditThisOccurrence = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (date === '') {
@@ -273,16 +303,72 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
 
     try {
       const symbol = getCurrencySymbol(moeda);
-
       const cleanValue = value
         .replace(symbol, '')           
         .replace(/\s*/g, '')
         .replace(/\./g, '')
         .replace(',', '.')
         .trim();
-
       const numericValue = parseFloat(cleanValue);
 
+      if (isNaN(numericValue) || numericValue <= 0) {
+        setShowError(true)
+        setTimeout(() => setShowError(false), 3000)
+        return
+      }
+
+      if (editItem.originalId && editItem.displayMonth) {
+        const [month, year] = editItem.displayMonth.split('-')
+        const exclusionDate = `${year}-${month}-01`
+        
+        if (type === 'despesas') {
+          await despesasExclusaoService.create(editItem.originalId, exclusionDate)
+          const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
+          await despesasService.create({
+            nome: name,
+            valor: numericValue,
+            recorrente: false,
+            data: date,
+            data_vencimento: undefined,
+            categoria_despesa_id: categoryId
+          })
+        } else {
+          await receitasExclusaoService.create(editItem.originalId, exclusionDate)
+          const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
+          await receitasService.create({
+            nome: name,
+            valor: numericValue,
+            recorrente: false,
+            data: date,
+            data_vencimento: undefined,
+            fonte_receita_id: fonteId
+          })
+        }
+      }
+
+      onClose()
+    } catch (error) {
+      console.error('Erro ao atualizar:', error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  const handleEditAllOccurrences = async () => {
+    if (date === '') {
+      setDateError(true);
+      return
+    }
+
+    try {
+      const symbol = getCurrencySymbol(moeda);
+      const cleanValue = value
+        .replace(symbol, '')           
+        .replace(/\s*/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.')
+        .trim();
+      const numericValue = parseFloat(cleanValue);
 
       if (isNaN(numericValue) || numericValue <= 0) {
         setShowError(true)
@@ -292,7 +378,6 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
 
       if (type === 'despesas') {
         const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
-
         await despesasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
@@ -303,7 +388,6 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
         })
       } else {
         const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
-
         await receitasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
@@ -317,6 +401,39 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
       onClose()
     } catch (error) {
       console.error('Erro ao atualizar:', error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  const handleDeleteThisMonth = async () => {
+    try {
+      if (editItem.originalId && editItem.displayMonth) {
+        const [month, year] = editItem.displayMonth.split('-')
+        const exclusionDate = `${year}-${month}-01`
+        
+        if (type === 'despesas') {
+          await despesasExclusaoService.create(editItem.originalId, exclusionDate)
+        } else {
+          await receitasExclusaoService.create(editItem.originalId, exclusionDate)
+        }
+      }
+      onClose()
+    } catch (error) {
+      console.error('Erro ao excluir mês:', error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    try {
+      if (onDelete) {
+        onDelete(editItem.id)
+      }
+      onClose()
+    } catch (error) {
+      console.error('Erro ao excluir todas:', error)
       setShowError(true)
       setTimeout(() => setShowError(false), 3000)
     }
@@ -367,7 +484,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
               </button>
             </div>
 
-            <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-5">
               <div>
                 <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Nome</label>
                 <input
@@ -462,40 +579,117 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                 </div>
               )}
 
-              {!confirmDeleteMode && (
-                <button
-                  type="submit"
-                  className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
-                >
-                  <Save className="w-4 h-4" />
-                  Salvar {type === 'despesas' ? 'despesa' : 'receita'}
-                </button>
+              {!confirmDeleteMode && !confirmEditAllMode && (
+                <>
+                  {editItem.recurring ? (
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="submit"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleEditThisOccurrence(e)
+                        }}
+                        className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                      >
+                        <Save className="w-4 h-4" />
+                        Editar {type === 'despesas' ? 'despesa' : 'receita'} nesse mês
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmEditAllMode(true)}
+                        className={`w-full ${isDark ? 'bg-gradient-to-r from-purple-800 to-indigo-700 hover:from-purple-700 hover:to-indigo-600' : 'bg-purple-600 hover:bg-purple-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                      >
+                        <Save className="w-4 h-4" />
+                        Editar em todos os meses
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="submit"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleEditAllOccurrences()
+                      }}
+                      className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                    >
+                      <Save className="w-4 h-4" />
+                      Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {confirmEditAllMode && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmEditAllMode(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEditAllOccurrences}
+                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Confirmar Alteração
+                  </button>
+                </div>
               )}
 
               {onDelete && (
                 <>
                   {confirmDeleteMode ? (
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDeleteMode(false)}
-                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
-                      >
-                        <X className="w-4 h-4" />
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onDelete(editItem.id)
-                          onClose()
-                        }}
-                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
-                      >
-                        <Trash className="w-4 h-4" />
-                        Confirmar Exclusão
-                      </button>
-                    </div>
+                    editItem.recurring ? (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteMode(false)}
+                          className="w-full bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDeleteThisMonth}
+                          className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                        >
+                          <Trash className="w-4 h-4" />
+                          Excluir nesse mês
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDeleteAll}
+                          className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                        >
+                          <Trash className="w-4 h-4" />
+                          Excluir em todos os meses
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteMode(false)}
+                          className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDeleteAll}
+                          className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                        >
+                          <Trash className="w-4 h-4" />
+                          Confirmar Exclusão
+                        </button>
+                      </div>
+                    )
                   ) : (
                     <button
                       type="button"

@@ -99,7 +99,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
         <span className="font-medium">
           {selectedDate
             ? selectedDate.split('-').reverse().join('/')
-            : 'Selecionar data'}
+            : new Date().toISOString().slice(0, 10).split('-').reverse().join('/')}
         </span>
 
         <div className="flex items-center gap-2">

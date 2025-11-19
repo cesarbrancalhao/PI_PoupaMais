@@ -4,6 +4,7 @@ import { DespesasService } from './despesas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateDespesaDto } from './dto/create-despesa.dto';
 import { UpdateDespesaDto } from './dto/update-despesa.dto';
+import { CreateDespesaExclusaoDto } from './dto/create-despesa-exclusao.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 
 @ApiTags('despesas')
@@ -36,5 +37,20 @@ export class DespesasController {
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.despesasService.remove(+id, req.user.userId);
+  }
+
+  @Post(':id/exclusoes')
+  createExclusao(@Param('id') id: string, @Request() req, @Body() createExclusaoDto: CreateDespesaExclusaoDto) {
+    return this.despesasService.createExclusao(+id, req.user.userId, createExclusaoDto);
+  }
+
+  @Get('exclusoes/all')
+  findAllExclusoes(@Request() req) {
+    return this.despesasService.findAllExclusoes(req.user.userId);
+  }
+
+  @Delete('exclusoes/:id')
+  removeExclusao(@Param('id') id: string, @Request() req) {
+    return this.despesasService.removeExclusao(+id, req.user.userId);
   }
 }
