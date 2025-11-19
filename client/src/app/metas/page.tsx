@@ -8,8 +8,8 @@ import EditMetaModal from '@/components/editMetaModal'
 import EditContribuicaoModal from '@/components/editContribuicaoModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
-import { Meta, ContribuicaoMeta } from '@/types'
-import { metasService, contribuicaoMetaService, receitasService, despesasService } from '@/services'
+import { Meta, ContribuicaoMeta, DespesaExclusao, ReceitaExclusao, Despesa, Receita } from '@/types'
+import { metasService, contribuicaoMetaService, receitasService, despesasService, despesasExclusaoService, receitasExclusaoService } from '@/services'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency as formatMoney } from '@/app/terminology/currency'
@@ -32,55 +32,115 @@ export default function MetasPage() {
   const [receitaMedia, setReceitaMedia] = useState(0)
   const [despesaMedia, setDespesaMedia] = useState(0)
 
+  const expandirEntradasRecorrentes = <T extends Despesa | Receita>(
+    itens: T[],
+    mesSelecionado: string,
+    exclusoes: (DespesaExclusao | ReceitaExclusao)[]
+  ): T[] => {
+    if (!mesSelecionado) return itens
+
+    const [mes, ano] = mesSelecionado.split('-')
+    const dataAlvo = new Date(parseInt(ano), parseInt(mes) - 1, 1)
+
+    const itensExpandidos: T[] = []
+
+    itens.forEach(item => {
+      const dataInicioItem = new Date(item.data)
+      const anoInicioItem = dataInicioItem.getFullYear()
+      const mesInicioItem = dataInicioItem.getMonth()
+      const inicioMesItem = new Date(anoInicioItem, mesInicioItem, 1)
+
+      if (item.recorrente) {
+        const anoAlvo = dataAlvo.getFullYear()
+        const mesAlvo = dataAlvo.getMonth()
+        const inicioMesAlvo = new Date(anoAlvo, mesAlvo, 1)
+
+        if (inicioMesItem <= inicioMesAlvo) {
+          let dentroPrazo = true
+          if (item.data_vencimento) {
+            const dataFim = new Date(item.data_vencimento)
+            const anoFim = dataFim.getFullYear()
+            const mesFim = dataFim.getMonth()
+            const inicioMesFim = new Date(anoFim, mesFim, 1)
+            dentroPrazo = inicioMesAlvo <= inicioMesFim
+          }
+
+          if (dentroPrazo) {
+            const chaveMes = `${ano}-${mes}-01`
+            const foiExcluido = exclusoes.some(exc => {
+              const ehDespesa = 'despesa_id' in exc
+              const idItem = ehDespesa ? (exc as DespesaExclusao).despesa_id : (exc as ReceitaExclusao).receita_id
+              const dataExc = new Date(exc.data_exclusao)
+              const anoExc = dataExc.getFullYear()
+              const mesExc = String(dataExc.getMonth() + 1).padStart(2, '0')
+              const chaveExc = `${anoExc}-${mesExc}-01`
+
+              return idItem === item.id && chaveExc === chaveMes
+            })
+
+            if (!foiExcluido) {
+              const entradaVirtual = { ...item }
+              itensExpandidos.push(entradaVirtual)
+            }
+          }
+        }
+      } else {
+        const mesItem = String(dataInicioItem.getMonth() + 1).padStart(2, '0')
+        const anoItem = dataInicioItem.getFullYear().toString()
+        if (mesItem === mes && anoItem === ano) {
+          itensExpandidos.push(item)
+        }
+      }
+    })
+
+    return itensExpandidos
+  }
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const [metasResponse, receitasResponse, despesasResponse] = await Promise.all([
+      const [metasResponse, receitasResponse, despesasResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
         metasService.getAll(1, 100),
         receitasService.getAll(1, 100),
-        despesasService.getAll(1, 100)
+        despesasService.getAll(1, 100),
+        despesasExclusaoService.getAll(),
+        receitasExclusaoService.getAll()
       ])
 
       const metasData = Array.isArray(metasResponse)
         ? metasResponse
         : (metasResponse?.data || [])
 
-      const receitasData = Array.isArray(receitasResponse)
+      const receitasDataFetched = Array.isArray(receitasResponse)
         ? receitasResponse
         : (receitasResponse?.data || [])
 
-      const despesasData = Array.isArray(despesasResponse)
+      const despesasDataFetched = Array.isArray(despesasResponse)
         ? despesasResponse
         : (despesasResponse?.data || [])
 
       setMetas(metasData)
 
-      const now = new Date()
-      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+      const agora = new Date()
+      let totalReceitasAcumulado = 0
+      let totalDespesasAcumulado = 0
 
-      const recentReceitas = receitasData.filter((r: { data: string }) => new Date(r.data) >= sixMonthsAgo)
-      const recentDespesas = despesasData.filter((d: { data: string }) => new Date(d.data) >= sixMonthsAgo)
+      for (let i = 11; i >= 0; i--) {
+        const data = new Date(agora.getFullYear(), agora.getMonth() - i, 1)
+        const mes = String(data.getMonth() + 1).padStart(2, '0')
+        const ano = data.getFullYear()
+        const chaveMes = `${mes}-${ano}`
 
-      const totalReceitas = recentReceitas.reduce((sum: number, r: { valor: number }) => sum + (Number(r.valor) || 0), 0)
-      const totalDespesas = recentDespesas.reduce((sum: number, d: { valor: number }) => sum + (Number(d.valor) || 0), 0)
+        const despesasMes = expandirEntradasRecorrentes(despesasDataFetched, chaveMes, despesasExclusoesResponse)
+        const receitasMes = expandirEntradasRecorrentes(receitasDataFetched, chaveMes, receitasExclusoesResponse)
 
-      const ReceitaMonths = new Set(
-        recentReceitas.map((r: { data: string }) => {
-          const date = new Date(r.data)
-          return `${date.getFullYear()}-${date.getMonth()}`
-        })
-      ).size
+        totalReceitasAcumulado += receitasMes.reduce((soma, r) => soma + (Number(r.valor) || 0), 0)
+        totalDespesasAcumulado += despesasMes.reduce((soma, d) => soma + (Number(d.valor) || 0), 0)
+      }
 
-      const DespesaMonths = new Set(
-        recentDespesas.map((d: { data: string }) => {
-          const date = new Date(d.data)
-          return `${date.getFullYear()}-${date.getMonth()}`
-        })
-      ).size
-
-      setReceitaMedia(ReceitaMonths > 0 ? totalReceitas / ReceitaMonths : 0)
-      setDespesaMedia(DespesaMonths > 0 ? totalDespesas / DespesaMonths : 0)
+      setReceitaMedia(totalReceitasAcumulado / 12)
+      setDespesaMedia(totalDespesasAcumulado / 12)
 
       if (metasData.length > 0 && !selectedMeta) {
         setSelectedMeta(metasData[0])
