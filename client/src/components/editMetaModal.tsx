@@ -196,12 +196,8 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
   }
 
   const formatValueWithoutSymbol = useCallback((value: number) => {
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    } else {
-      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    }
-  }, [userCurrency])
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }, [])
 
   const [nome, setNome] = useState(editItem.nome)
   const [descricao, setDescricao] = useState(editItem.descricao || '')
@@ -316,11 +312,7 @@ export default function EditMetaModal({ isOpen, onClose, editItem, onDelete }: E
     }
     
     const float = number / 100
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      setter(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    } else {
-      setter(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    }
+    setter(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

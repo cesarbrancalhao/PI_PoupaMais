@@ -199,12 +199,8 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
   }
 
   const formatValueWithoutSymbol = useCallback((value: number) => {
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    } else {
-      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    }
-  }, [userCurrency])
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }, [])
 
   const [valor, setValor] = useState(formatValueWithoutSymbol(Number(editItem.valor)))
   const [data, setData] = useState(normalizeDateString(editItem.data))
@@ -231,11 +227,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
     }
     
     const float = number / 100
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      setValor(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    } else {
-      setValor(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    }
+    setValor(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

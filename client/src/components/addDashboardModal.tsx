@@ -229,11 +229,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
     }
   
     const float = number / 100;
-    if (userCurrency === "real" || userCurrency === "euro") {
-      setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    } else {
-      setValue(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    }
+    setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

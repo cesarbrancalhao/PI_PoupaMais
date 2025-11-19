@@ -180,10 +180,9 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   const isDark = theme === 'escuro'
 
   const formatValueWithoutSymbol = useCallback((valueString: string) => {
-    const symbol = getCurrencySymbol(moeda)
     const cleanValue = valueString
-      .replace(symbol, '')
-      .replace(/\s*/g, '')
+      .replace(/US\$|R\$|€|\$/g, '')
+      .replace(/\s/g, '')
       .replace(/\./g, '')
       .replace(',', '.')
       .trim()
@@ -191,12 +190,8 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
     const numericValue = parseFloat(cleanValue)
     if (isNaN(numericValue)) return ''
     
-    if (moeda === 'real' || moeda === 'euro') {
-      return numericValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    } else {
-      return numericValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    }
-  }, [moeda])
+    return numericValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }, [])
 
   const [name, setName] = useState(editItem.name)
   const [category, setCategory] = useState(editItem.category)
@@ -286,11 +281,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
     }
   
     const float = number / 100;
-    if (moeda === 'real' || moeda === 'euro') {
-      setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    } else {
-      setValue(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    }
+    setValue(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   };
 
   const handleEditThisOccurrence = async (e: React.FormEvent) => {

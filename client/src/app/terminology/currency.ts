@@ -33,7 +33,7 @@ export function formatCurrency(value: number, moeda?: Moeda) {
   const safeMoeda = moeda ?? "real"; 
   const config = currencyMap[safeMoeda];
 
-  return new Intl.NumberFormat(config.locale, {
+  return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: config.currency,
   }).format(value);

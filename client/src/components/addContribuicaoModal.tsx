@@ -205,11 +205,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
     }
     
     const float = number / 100
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      setValor(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    } else {
-      setValor(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    }
+    setValor(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

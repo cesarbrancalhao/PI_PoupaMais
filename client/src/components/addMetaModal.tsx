@@ -274,11 +274,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
     }
     
     const float = number / 100
-    if (userCurrency === 'real' || userCurrency === 'euro') {
-      setter(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    } else {
-      setter(float.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
-    }
+    setter(float.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
