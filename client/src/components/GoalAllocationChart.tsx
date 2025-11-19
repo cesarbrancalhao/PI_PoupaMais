@@ -1,0 +1,126 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Doughnut } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartOptions
+} from 'chart.js'
+import { useTheme } from '@/contexts/ThemeContext'
+import { formatCurrency } from "@/app/terminology/currency"
+import { Moeda } from "@/types/configs"
+import { Meta } from "@/types"
+
+ChartJS.register(ArcElement, Tooltip, Legend)
+
+interface GoalAllocationChartProps {
+  metas: Meta[]
+  moeda: Moeda
+}
+
+export default function GoalAllocationChart({ metas, moeda }: GoalAllocationChartProps) {
+  const [containerKey, setContainerKey] = useState(0)
+  const { theme } = useTheme()
+  const isDark = theme === 'escuro'
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
+    const handleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(
+        () => setContainerKey(prev => prev + 1),
+        150
+      )
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [])
+
+  const tooltipBg = isDark ? '#2b2b2b' : '#ffffff'
+  const tooltipText = isDark ? '#f5f5f5' : '#111111'
+
+  const colors = [
+    '#5B8FF9',
+    '#F6BD60',
+    '#F28B82',
+    '#81C784',
+    '#BA68C8',
+    '#FFD54F',
+    '#4DD0E1',
+    '#FF8A65'
+  ]
+
+  const chartData = {
+    labels: metas.map(meta => meta.nome),
+    datasets: [
+      {
+        data: metas.map(meta => Number(meta.economia_mensal) || 0),
+        backgroundColor: colors.slice(0, metas.length),
+        borderWidth: 0,
+        cutout: '70%',
+      }
+    ]
+  }
+
+  const options: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+
+      tooltip: {
+        backgroundColor: tooltipBg,
+        titleColor: tooltipText,
+        bodyColor: tooltipText,
+        borderColor: isDark ? '#444' : '#ddd',
+        borderWidth: 1,
+        padding: 12,
+        callbacks: {
+          label(context) {
+            const value = context.parsed
+            return `${context.label}: ${formatCurrency(value, moeda)}/mês`
+          }
+        }
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div
+        key={containerKey}
+        className="flex-1 flex items-center justify-center mb-4"
+      >
+        <div className="w-full max-w-[200px] h-[200px]">
+          <Doughnut data={chartData} options={options} />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 justify-center">
+        {metas.map((meta, index) => (
+          <div key={meta.id} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: colors[index % colors.length] }}
+            />
+            <span
+              className={`text-xs transition-colors ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}
+            >
+              {meta.nome}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
