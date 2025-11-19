@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
@@ -40,6 +40,20 @@ export class CategoriaDespesaService {
   }
 
   async remove(id: number, userId: number) {
+    await this.findOne(id, userId);
+
+    const despesasCheck = await this.databaseService.query(
+      'SELECT COUNT(*) as count FROM despesa WHERE categoria_despesa_id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    const despesaCount = parseInt(despesasCheck.rows[0].count, 10);
+
+    if (despesaCount > 0) {
+      throw new BadRequestException(
+        `Não é possível excluir esta categoria pois ela está sendo utilizada por ${despesaCount} despesa(s). Remova ou altere as despesas antes de excluir a categoria.`,
+      );
+    }
+
     const result = await this.databaseService.query(
       'DELETE FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
       [id, userId],

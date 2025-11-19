@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
@@ -40,6 +40,20 @@ export class FonteReceitaService {
   }
 
   async remove(id: number, userId: number) {
+    await this.findOne(id, userId);
+
+    const receitasCheck = await this.databaseService.query(
+      'SELECT COUNT(*) as count FROM receita WHERE fonte_receita_id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    const receitaCount = parseInt(receitasCheck.rows[0].count, 10);
+
+    if (receitaCount > 0) {
+      throw new BadRequestException(
+        `Não é possível excluir esta fonte pois ela está sendo utilizada por ${receitaCount} receita(s). Remova ou altere as receitas antes de excluir a fonte.`,
+      );
+    }
+
     const result = await this.databaseService.query(
       'DELETE FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
       [id, userId],
