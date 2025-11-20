@@ -7,6 +7,9 @@ import { contribuicaoMetaService } from '@/services/contribuicao-meta.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCurrencySymbol } from '@/app/terminology/currency'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { addContribuicaoModal } from '@/app/terminology/language/modals/addContribuicao'
+import { common } from '@/app/terminology/language/common'
 
 interface AddContribuicaoModalProps {
   isOpen: boolean
@@ -171,11 +174,12 @@ function Calendar({ selectedDate, onDateSelect, isDark }: CalendarProps) {
 }
 
 export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddContribuicaoModalProps) {
+  const { t } = useLanguage()
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
   const { user } = useAuth()
   const userCurrency = user?.moeda || 'real'
-  
+
   const [valor, setValor] = useState('')
   const [data, setData] = useState('')
   const [observacao, setObservacao] = useState('')
@@ -271,7 +275,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(addContribuicaoModal.errorAdding)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -279,7 +283,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-lg font-semibold ${
                 isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-              }`}>Adicionar Contribuição</h2>
+              }`}>{t(addContribuicaoModal.title)}</h2>
               <button onClick={onClose} className={isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>
                 <X className="w-5 h-5" />
               </button>
@@ -289,7 +293,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Valor</label>
+                }`}>{t(addContribuicaoModal.value)}</label>
                 <div className={`
                   flex items-center rounded-lg overflow-hidden
                   ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
@@ -319,7 +323,7 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Data</label>
+                }`}>{t(addContribuicaoModal.date)}</label>
                 <Calendar
                   selectedDate={data}
                   onDateSelect={setData}
@@ -330,9 +334,9 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Observação</label>
+                }`}>{t(addContribuicaoModal.description)}</label>
                 <textarea
-                  placeholder="Adicione uma observação..."
+                  placeholder={t(addContribuicaoModal.descriptionPlaceholder)}
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
                   className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none ${
@@ -347,13 +351,13 @@ export default function AddContribuicaoModal({ isOpen, onClose, metaId }: AddCon
               <button
                 type="submit"
                 className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' 
+                  isDark
+                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
                 <Save className="w-4 h-4" />
-                Salvar contribuição
+                {t(common.save)} {t(addContribuicaoModal.contributionLabel)}
               </button>
             </form>
           </motion.div>

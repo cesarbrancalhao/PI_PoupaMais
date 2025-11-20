@@ -2,6 +2,10 @@ import Cookies from 'js-cookie';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
+interface ApiError extends Error {
+  status: number;
+}
+
 class ApiService {
   private baseURL: string;
 
@@ -33,7 +37,9 @@ class ApiService {
       errorMessage = `Erro ${response.status}: ${response.statusText}`;
     }
 
-    throw new Error(errorMessage);
+    const error = new Error(errorMessage) as ApiError;
+    error.status = response.status;
+    throw error;
   }
 
   async get<T>(endpoint: string): Promise<T> {
@@ -92,3 +98,4 @@ class ApiService {
 }
 
 export const apiService = new ApiService(API_BASE_URL);
+export type { ApiError };

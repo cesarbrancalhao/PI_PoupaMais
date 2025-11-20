@@ -7,6 +7,8 @@ import { metasService } from '@/services/metas.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency, getCurrencySymbol } from '@/app/terminology/currency'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { addMetaModal } from '@/app/terminology/language/modals/addMeta'
 
 interface AddMetaModalProps {
   isOpen: boolean
@@ -21,6 +23,7 @@ interface MonthYearPickerProps {
 }
 
 function MonthYearPicker({ selectedDate, onDateSelect, minDate, isDark }: MonthYearPickerProps) {
+  const { t, language } = useLanguage()
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
 
   useEffect(() => {
@@ -35,10 +38,7 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate, isDark }: MonthY
     }
   }, [selectedDate])
 
-  const months = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ]
+  const months = addMetaModal.months[language]
 
   const navigateYear = (direction: 'prev' | 'next') => {
     setCurrentYear(prev => direction === 'prev' ? prev - 1 : prev + 1)
@@ -69,9 +69,9 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate, isDark }: MonthY
   }
 
   const formatSelectedDate = (dateString: string) => {
-    if (!dateString) return 'Selecione mês/ano'
+    if (!dateString) return t(addMetaModal.selectMonthYear)
     const parts = dateString.split('-')
-    if (parts.length !== 3) return 'Selecione mês/ano'
+    if (parts.length !== 3) return t(addMetaModal.selectMonthYear)
     const [year, month] = parts
     const monthIndex = parseInt(month) - 1
     return `${months[monthIndex]} ${year}`
@@ -162,6 +162,7 @@ function MonthYearPicker({ selectedDate, onDateSelect, minDate, isDark }: MonthY
 }
 
 export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
+  const { t } = useLanguage()
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
   const { user } = useAuth()
@@ -368,7 +369,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(addMetaModal.error)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -376,7 +377,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-lg font-semibold ${
                 isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-              }`}>Adicionar Meta</h2>
+              }`}>{t(addMetaModal.title)}</h2>
               <button onClick={onClose} className={isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>
                 <X className="w-5 h-5" />
               </button>
@@ -386,15 +387,15 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Nome</label>
+                }`}>{t(addMetaModal.name)}</label>
                 <input
                   type="text"
-                  placeholder="Nome da meta"
+                  placeholder={t(addMetaModal.namePlaceholder)}
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none ${
-                    isDark 
-                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400' 
+                    isDark
+                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400'
                       : 'bg-gray-50 text-gray-700 placeholder-gray-500'
                   }`}
                   required
@@ -404,14 +405,14 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Descrição</label>
+                }`}>{t(addMetaModal.description)}</label>
                 <textarea
-                  placeholder="Descrição da meta"
+                  placeholder={t(addMetaModal.descriptionPlaceholder)}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none ${
-                    isDark 
-                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400' 
+                    isDark
+                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400'
                       : 'bg-gray-50 text-gray-700 placeholder-gray-500'
                   }`}
                   rows={3}
@@ -421,7 +422,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Valor total</label>
+                }`}>{t(addMetaModal.totalValue)}</label>
                 <div className={`
                   flex items-center rounded-lg overflow-hidden
                   ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
@@ -451,7 +452,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <div>
                 <label className={`block text-sm font-medium mb-3 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Definir meta por:</label>
+                }`}>{t(addMetaModal.defineGoalBy)}</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -464,7 +465,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                     />
                     <span className={`text-sm ${
                       isDark ? 'text-gray-200' : 'text-gray-700'
-                    }`}>Economia mensal</span>
+                    }`}>{t(addMetaModal.monthlySavings)}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -477,14 +478,16 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                     />
                     <span className={`text-sm ${
                       isDark ? 'text-gray-200' : 'text-gray-700'
-                    }`}>Data final</span>
+                    }`}>{t(addMetaModal.deadline)}</span>
                   </label>
                 </div>
                 {goalType === 'monthly' && (() => {
                   const months = calculateMonthsNeeded()
                   return months !== null ? (
                     <p className="mt-3 text-sm font-bold text-blue-600">
-                      Você precisará de {months} {months === 1 ? 'mês' : 'meses'} para alcançar sua meta.
+                      {t(addMetaModal.monthsNeeded)
+                        .replace('{months}', months.toString())
+                        .replace('{monthLabel}', months === 1 ? t(addMetaModal.monthSingular) : t(addMetaModal.monthPlural))}
                     </p>
                   ) : null
                 })()}
@@ -492,7 +495,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                   const monthlySavings = calculateMonthlySavingsNeeded()
                   return monthlySavings !== null ? (
                     <p className="mt-3 text-sm font-bold text-blue-600">
-                      Você precisará economizar {formatCurrency(monthlySavings, userCurrency)} por mês para alcançar sua meta.
+                      {t(addMetaModal.monthlySavingsNeeded).replace('{amount}', formatCurrency(monthlySavings, userCurrency))}
                     </p>
                   ) : null
                 })()}
@@ -500,7 +503,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                 <div>
                   <label className={`block text-sm font-medium mt-3 mb-1 ${
                     isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                  }`}>Economia mensal</label>
+                  }`}>{t(addMetaModal.monthlySavings)}</label>
                   <div className={`
                     flex items-center rounded-lg overflow-hidden
                     ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
@@ -532,7 +535,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Data de início</label>
+                }`}>{t(addMetaModal.startDate)}</label>
                 <MonthYearPicker
                   selectedDate={dataInicio}
                   onDateSelect={setDataInicio}
@@ -544,7 +547,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                 <div>
                   <label className={`block text-sm font-medium mb-1 ${
                     isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                  }`}>Data final</label>
+                  }`}>{t(addMetaModal.endDate)}</label>
                   <MonthYearPicker
                     selectedDate={dataAlvo}
                     onDateSelect={setDataAlvo}
@@ -557,13 +560,13 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               <button
                 type="submit"
                 className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' 
+                  isDark
+                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
                 <Save className="w-4 h-4" />
-                Salvar meta
+                {t(addMetaModal.saveGoal)}
               </button>
             </form>
           </motion.div>

@@ -5,6 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthLanguage } from "@/app/terminology/useAuthLanguage";
+import { auth } from "@/app/terminology/language/auth";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +16,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+  const { language, setLanguage, t } = useAuthLanguage();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,13 +29,13 @@ export default function AuthPage() {
     setError("");
 
     if (!email || !password) {
-      setError("Por favor, preencha todos os campos");
+      setError(t(auth.emailRequired) + " e " + t(auth.passwordRequired));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Email inválido");
+      setError(t(auth.invalidCredentials));
       return;
     }
 
@@ -41,7 +45,7 @@ export default function AuthPage() {
       await login({ email, password });
     } catch (err) {
       const error = err as Error;
-      setError(error.message || "Erro ao fazer login. Tente novamente");
+      setError(error.message || t(auth.loginError));
     } finally {
       setLoading(false);
     }
@@ -49,11 +53,18 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white">
+      <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white relative">
+        <div className="absolute top-4 right-4">
+          <LanguageSelector
+            currentLanguage={language}
+            onLanguageChange={setLanguage}
+            isDarkMode={false}
+          />
+        </div>
         <div className="w-full max-w-sm space-y-6">
           <div className="flex flex-col items-center">
             <Image src="/logo.svg" alt="Logo" width={90} height={90} />
-            <h1 className="mt-4 text-2xl font-semibold text-gray-800">Login</h1>
+            <h1 className="mt-4 text-2xl font-semibold text-gray-800">{t(auth.loginTitle)}</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,11 +76,11 @@ export default function AuthPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t(auth.email)}
               </label>
               <input
                 type="email"
-                placeholder="exemplo@gmail.com"
+                placeholder={t(auth.emailPlaceholder)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
@@ -80,11 +91,11 @@ export default function AuthPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha
+                {t(auth.password)}
               </label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder={t(auth.passwordPlaceholder)}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -93,7 +104,7 @@ export default function AuthPage() {
               />
               <div className="text-right mt-1">
                 <Link href="/recuperar" className="text-xs text-indigo-500 hover:underline">
-                  Esqueci minha senha
+                  {t(auth.forgotPassword)}
                 </Link>
               </div>
             </div>
@@ -103,13 +114,13 @@ export default function AuthPage() {
               disabled={loading}
               className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? t(auth.loading) || "..." : t(auth.loginButton)}
             </button>
 
             <p className="text-center text-sm text-gray-600">
-              Ainda não possui conta?{" "}
+              {t(auth.noAccount)}{" "}
               <Link href="/cadastro" className="text-indigo-500 hover:underline">
-                Cadastre-se
+                {t(auth.registerHere)}
               </Link>
             </p>
           </form>

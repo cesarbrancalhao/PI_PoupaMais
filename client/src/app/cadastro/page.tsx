@@ -5,6 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthLanguage } from "@/app/terminology/useAuthLanguage";
+import { auth } from "@/app/terminology/language/auth";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function CadastroPage() {
   const [nome, setNome] = useState("");
@@ -15,6 +18,7 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false);
   const { register, isAuthenticated } = useAuth();
   const router = useRouter();
+  const { language, setLanguage, t } = useAuthLanguage();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -27,28 +31,28 @@ export default function CadastroPage() {
     setError("");
 
     if (!nome || !email || !password || !confirmPassword) {
-      setError("Por favor, preencha todos os campos");
+      setError(t(auth.fillAllFields));
       return;
     }
 
     if (nome.trim().length < 2) {
-      setError("Nome deve ter no mínimo 2 caracteres");
+      setError(t(auth.nameMinLength));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Email inválido");
+      setError(t(auth.invalidEmail));
       return;
     }
 
     if (password.length < 6) {
-      setError("A senha deve ter no mínimo 6 caracteres");
+      setError(t(auth.passwordTooShort));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem");
+      setError(t(auth.passwordMismatch));
       return;
     }
 
@@ -58,7 +62,7 @@ export default function CadastroPage() {
       await register({ nome, email, password });
     } catch (err) {
       const error = err as Error;
-      setError(error.message || "Erro ao criar conta. Tente novamente");
+      setError(error.message || t(auth.registerError));
     } finally {
       setLoading(false);
     }
@@ -66,11 +70,18 @@ export default function CadastroPage() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white">
+      <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white relative">
+        <div className="absolute top-4 right-4">
+          <LanguageSelector
+            currentLanguage={language}
+            onLanguageChange={setLanguage}
+            isDarkMode={false}
+          />
+        </div>
         <div className="w-full max-w-sm space-y-6">
           <div className="flex flex-col items-center">
             <Image src="/logo.svg" alt="Logo" width={90} height={90} />
-            <h1 className="mt-4 text-2xl font-semibold text-gray-800">Cadastro</h1>
+            <h1 className="mt-4 text-2xl font-semibold text-gray-800">{t(auth.registerTitle)}</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,11 +93,11 @@ export default function CadastroPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome
+                {t(auth.name)}
               </label>
               <input
                 type="text"
-                placeholder="João Silva"
+                placeholder={t(auth.namePlaceholder)}
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 disabled={loading}
@@ -97,11 +108,11 @@ export default function CadastroPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+                {t(auth.email)}
               </label>
               <input
                 type="email"
-                placeholder="exemplo@gmail.com"
+                placeholder={t(auth.emailPlaceholder)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
@@ -112,11 +123,11 @@ export default function CadastroPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha
+                {t(auth.password)}
               </label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder={t(auth.passwordPlaceholder)}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -124,16 +135,16 @@ export default function CadastroPage() {
                 required
                 minLength={6}
               />
-              <p className="text-xs text-gray-500 mt-1">Mínimo de 6 caracteres</p>
+              <p className="text-xs text-gray-500 mt-1">{t(auth.passwordMinLength)}</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmar Senha
+                {t(auth.confirmPasswordLabel)}
               </label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder={t(auth.passwordPlaceholder)}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={loading}
@@ -147,13 +158,13 @@ export default function CadastroPage() {
               disabled={loading}
               className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Criando conta..." : "Cadastrar"}
+              {loading ? t(auth.registerLoading) : t(auth.registerButton)}
             </button>
 
             <p className="text-center text-sm text-gray-600">
-              Já possui uma conta?{" "}
+              {t(auth.alreadyHaveAccount)}{" "}
               <Link href="/auth" className="text-indigo-500 hover:underline">
-                Entrar
+                {t(auth.loginHere)}
               </Link>
             </p>
           </form>

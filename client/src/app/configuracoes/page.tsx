@@ -8,10 +8,13 @@ import { Settings } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { configsService } from "@/services/configs.service";
 import { Moeda, Tema, Idioma } from "@/types/configs";
+import { useLanguage } from "@/app/terminology/LanguageContext";
+import { configuracoes } from "@/app/terminology/language/configuracoes";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();
   const { setTheme: setGlobalTheme } = useTheme();
+  const { t } = useLanguage();
 
   const [moeda, setMoeda] = useState<Moeda>("real");
   const [tema, setTema] = useState<Tema>("claro");
@@ -95,7 +98,7 @@ const ConfiguracoesPage = () => {
 
       <main className="flex-1 p-4 sm:p-6 md:p-10 md:ml-64 overflow-y-auto">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
-          <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>Configurações</h1>
+          <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>{t(configuracoes.title)}</h1>
         </header>
 
         <div
@@ -103,9 +106,9 @@ const ConfiguracoesPage = () => {
         >
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-8 sm:gap-12 mb-10">
-  
+
             <div className="flex flex-col w-full sm:w-auto">
-              <h2 className={`font-medium mb-3 ${labelColor}`}>Moeda</h2>
+              <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.currency)}</h2>
               <div className="flex">
 
                 <button
@@ -113,7 +116,7 @@ const ConfiguracoesPage = () => {
                   disabled={moeda === "dolar"}
                   onClick={() => moeda !== "dolar" && updateConfigs({ moeda: "dolar" })}
                 >
-                  Dólar $
+                  {t(configuracoes.dollarUSD)}
                 </button>
 
                 <button
@@ -121,7 +124,7 @@ const ConfiguracoesPage = () => {
                   disabled={moeda === "euro"}
                   onClick={() => moeda !== "euro" && updateConfigs({ moeda: "euro" })}
                 >
-                  Euro €
+                  {t(configuracoes.euroEUR)}
                 </button>
 
                 <button
@@ -129,14 +132,14 @@ const ConfiguracoesPage = () => {
                   disabled={moeda === "real"}
                   onClick={() => moeda !== "real" && updateConfigs({ moeda: "real" })}
                 >
-                  Real R$
+                  {t(configuracoes.realBRL)}
                 </button>
 
               </div>
             </div>
 
             <div className="flex flex-col w-full sm:w-auto">
-              <h2 className={`font-medium mb-3 ${labelColor}`}>Tema</h2>
+              <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.theme)}</h2>
               <div className="flex">
 
                 <button
@@ -144,7 +147,7 @@ const ConfiguracoesPage = () => {
                   disabled={tema === "claro"}
                   onClick={() => tema !== "claro" && updateConfigs({ tema: false })}
                 >
-                  Claro
+                  {t(configuracoes.lightTheme)}
                 </button>
 
                 <button
@@ -152,14 +155,14 @@ const ConfiguracoesPage = () => {
                   disabled={tema === "escuro"}
                   onClick={() => tema !== "escuro" && updateConfigs({ tema: true })}
                 >
-                  Escuro
+                  {t(configuracoes.darkTheme)}
                 </button>
 
               </div>
             </div>
 
             <div className="flex flex-col w-full sm:w-auto">
-              <h2 className={`font-medium mb-3 ${labelColor}`}>Idioma</h2>
+              <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.language)}</h2>
               <div className="flex">
 
                 <button
@@ -167,7 +170,7 @@ const ConfiguracoesPage = () => {
                   disabled={idioma === "espanhol"}
                   onClick={() => idioma !== "espanhol" && updateConfigs({ idioma: "espanhol" })}
                 >
-                  Espanhol
+                  {t(configuracoes.spanish)}
                 </button>
 
                 <button
@@ -175,7 +178,7 @@ const ConfiguracoesPage = () => {
                   disabled={idioma === "ingles"}
                   onClick={() => idioma !== "ingles" && updateConfigs({ idioma: "ingles" })}
                 >
-                  Inglês
+                  {t(configuracoes.english)}
                 </button>
 
                 <button
@@ -183,7 +186,7 @@ const ConfiguracoesPage = () => {
                   disabled={idioma === "portugues"}
                   onClick={() => idioma !== "portugues" && updateConfigs({ idioma: "portugues" })}
                 >
-                  Português
+                  {t(configuracoes.portuguese)}
                 </button>
 
               </div>
@@ -195,10 +198,10 @@ const ConfiguracoesPage = () => {
           <div className="flex flex-col gap-6 flex-grow">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col flex-1">
-                <label className={`block font-medium mb-2 ${labelColor}`}>Nome</label>
+                <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.userName)}</label>
                 <input
                   type="text"
-                  value={user?.nome || "Carregando..."}
+                  value={user?.nome || t(configuracoes.loading) || "..."}
                   readOnly
                   className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
                 />
@@ -206,23 +209,23 @@ const ConfiguracoesPage = () => {
 
               <div className="flex flex-col sm:flex-row gap-6">
                 <div className="flex flex-col">
-                  <label className={`block font-medium mb-2 ${labelColor}`}>Email</label>
+                  <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.userEmail)}</label>
                   <input
                     type="email"
-                    value={user?.email || "Carregando..."}
+                    value={user?.email || t(configuracoes.loading) || "..."}
                     readOnly
                     className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
                   />
                 </div>
 
                 <div className="flex flex-col justify-end">
-                  <label className={`block font-medium mb-2 ${labelColor}`}>Senha</label>
+                  <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.password) || "Senha"}</label>
                   <button
                     onClick={() => setPasswordModalOpen(true)}
                     className={`px-4 py-3 rounded ${accentColor} ${accentHover} text-white text-sm font-medium flex items-center justify-center gap-2`}
                   >
                     <Settings size={16} />
-                    Alterar senha
+                    {t(configuracoes.changePassword)}
                   </button>
                 </div>
               </div>

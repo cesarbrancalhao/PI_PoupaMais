@@ -13,6 +13,10 @@ import { receitasExclusaoService } from '@/services/receitas-exclusao.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getCurrencySymbol } from "@/app/terminology/currency";
 import { Moeda } from "@/types/configs";
+import { useLanguage } from '@/app/terminology/LanguageContext';
+import { editDashboardModal } from '@/app/terminology/language/modals/editDashboard';
+import { common } from '@/app/terminology/language/common';
+import { addDashboardModal } from '@/app/terminology/language/modals/addDashboard';
 
 interface EditDashboardModalProps {
   isOpen: boolean
@@ -178,6 +182,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 export default function EditDashboardModal({ isOpen, onClose, type, editItem, onDelete, moeda }: EditDashboardModalProps) {
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
+  const { t } = useLanguage();
 
   const formatValueWithoutSymbol = useCallback((valueString: string) => {
     const cleanValue = valueString
@@ -461,14 +466,14 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(type === 'despesas' ? editDashboardModal.errorUpdating : editDashboardModal.errorUpdating)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
-                {type === 'despesas' ? 'Alterar Despesa' : 'Alterar Receita'}
+                {t(type === 'despesas' ? editDashboardModal.editExpenseTitle : editDashboardModal.editIncomeTitle)}
               </h2>
               <button onClick={onClose} className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'} p-1 rounded`}>
                 <X className="w-5 h-5" />
@@ -477,10 +482,10 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
 
             <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-5">
               <div>
-                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Nome</label>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{t(common.name)}</label>
                 <input
                   type="text"
-                  placeholder="Digite o nome"
+                  placeholder={t(common.name)}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={`w-full ${isDark ? 'bg-[#3C3C3C] text-gray-100 placeholder-gray-400' : 'bg-gray-50 text-gray-700 placeholder-gray-500'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none`}
@@ -490,14 +495,14 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
 
               <div>
                 <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
-                  {type === 'despesas' ? 'Categoria' : 'Fonte'}
+                  {t(type === 'despesas' ? common.category : common.source)}
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className={`w-full ${isDark ? 'bg-[#3C3C3C] text-gray-100' : 'bg-gray-50 text-gray-700'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none`}
                 >
-                  <option value="">{type === 'despesas' ? 'Selecione uma categoria' : 'Selecione uma fonte'}</option>
+                  <option value="">{t(type === 'despesas' ? common.category : common.source)}</option>
                   {type === 'despesas'
                     ? categorias.map((cat) => (
                         <option key={cat.id} value={cat.nome}>
@@ -513,7 +518,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
               </div>
 
               <div>
-                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Valor</label>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{t(common.value)}</label>
                 <div className="flex items-center gap-4">
                   <div className={`
                     w-1/2 flex items-center rounded-lg overflow-hidden
@@ -532,15 +537,15 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                       onChange={handleValueChange}
                       className={`
                         flex-1 px-3 py-2 outline-none transition bg-transparent
-                        ${isDark 
-                          ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400' 
+                        ${isDark
+                          ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400'
                           : 'text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500'}
                       `}
                       required
                     />
                   </div>
                   <label className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Recorrente</span>
+                    <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t(addDashboardModal.isRecurring)}</span>
                     <input
                       type="checkbox"
                       className="w-4 h-4 accent-blue-600"
@@ -552,17 +557,17 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
               </div>
 
               <div>
-                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Data</label>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{t(common.date)}</label>
                 <Calendar
                   selectedDate={date}
                   onDateSelect={setDate}
                 />
-                {dateError && <p className="text-xs text-red-500 mt-1">A data é obrigatória</p>}
+                {dateError && <p className="text-xs text-red-500 mt-1">{t(common.date)}</p>}
               </div>
 
               {recurring && (
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Data de Vencimento</label>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{t(addDashboardModal.endDate)}</label>
                   <Calendar
                     selectedDate={date_vencimento}
                     onDateSelect={setDateVencimento}
@@ -583,7 +588,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
                       >
                         <Save className="w-4 h-4" />
-                        Editar {type === 'despesas' ? 'despesa' : 'receita'} nesse mês
+                        {t(editDashboardModal.editSingle)}
                       </button>
                       <button
                         type="button"
@@ -591,7 +596,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         className={`w-full ${isDark ? 'bg-gradient-to-r from-purple-800 to-indigo-700 hover:from-purple-700 hover:to-indigo-600' : 'bg-purple-600 hover:bg-purple-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
                       >
                         <Save className="w-4 h-4" />
-                        Editar em todos os meses
+                        {t(editDashboardModal.editAll)}
                       </button>
                     </div>
                   ) : (
@@ -604,7 +609,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                       className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
                     >
                       <Save className="w-4 h-4" />
-                      Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                      {t(common.save)} {type === 'despesas' ? t(common.expenses).toLowerCase() : t(common.income).toLowerCase()}
                     </button>
                   )}
                 </>
@@ -618,7 +623,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                     className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
                   >
                     <X className="w-4 h-4" />
-                    Cancelar
+                    {t(common.cancel)}
                   </button>
                   <button
                     type="button"
@@ -626,7 +631,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                     className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
                   >
                     <Save className="w-4 h-4" />
-                    Confirmar Alteração
+                    {t(common.confirm)}
                   </button>
                 </div>
               )}
@@ -642,7 +647,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           className="w-full bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
                         >
                           <X className="w-4 h-4" />
-                          Cancelar
+                          {t(common.cancel)}
                         </button>
                         <button
                           type="button"
@@ -650,7 +655,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
                         >
                           <Trash className="w-4 h-4" />
-                          Excluir nesse mês
+                          {t(editDashboardModal.excludeSingle)}
                         </button>
                         <button
                           type="button"
@@ -658,7 +663,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
                         >
                           <Trash className="w-4 h-4" />
-                          Excluir em todos os meses
+                          {t(editDashboardModal.excludeAll)}
                         </button>
                       </div>
                     ) : (
@@ -669,7 +674,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
                         >
                           <X className="w-4 h-4" />
-                          Cancelar
+                          {t(common.cancel)}
                         </button>
                         <button
                           type="button"
@@ -677,7 +682,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
                         >
                           <Trash className="w-4 h-4" />
-                          Confirmar Exclusão
+                          {t(common.confirm)}
                         </button>
                       </div>
                     )
@@ -688,7 +693,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                       className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2"
                     >
                       <Trash className="w-4 h-4" />
-                      Excluir {type === 'despesas' ? 'despesa' : 'receita'}
+                      {t(common.delete)} {type === 'despesas' ? t(common.expenses).toLowerCase() : t(common.income).toLowerCase()}
                     </button>
                   )}
                 </>

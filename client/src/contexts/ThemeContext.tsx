@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme(): ThemeContextType {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    throw new Error("useTheme must be used within ThemeProvider");
+    throw new Error("Erro ao usar o contexto de tema");
   }
   return ctx;
 }

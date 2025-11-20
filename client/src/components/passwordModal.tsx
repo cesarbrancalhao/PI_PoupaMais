@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/app/terminology/LanguageContext";
+import { passwordModal } from "@/app/terminology/language/modals/password";
 
 interface PasswordModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface PasswordModalProps {
 export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
   const { theme } = useTheme();
   const dark = theme === "escuro";
+  const { t } = useLanguage();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -33,7 +36,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t(passwordModal.passwordMismatch));
       return;
     }
     setSuccess(true);
@@ -64,7 +67,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
             dark ? "text-gray-100" : "text-gray-900"
           }`}
         >
-          Alterar senha
+          {t(passwordModal.title)}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -74,7 +77,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
                 dark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Senha atual
+              {t(passwordModal.currentPassword)}
             </label>
             <input
               type="password"
@@ -96,7 +99,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
                 dark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Nova senha
+              {t(passwordModal.newPassword)}
             </label>
             <input
               type="password"
@@ -118,7 +121,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
                 dark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Repita a nova senha
+              {t(passwordModal.confirmPassword)}
             </label>
             <input
               type="password"
@@ -154,7 +157,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
                 : "bg-indigo-600 hover:bg-indigo-700 text-white"
             }`}
           >
-            Alterar senha
+            {t(passwordModal.title)}
           </button>
         </form>
       </div>
@@ -165,7 +168,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
             dark ? "bg-green-700 text-white" : "bg-green-600 text-white"
           }`}
         >
-          Senha alterada com sucesso!
+          {t(passwordModal.passwordChanged)}
         </div>
       )}
     </div>
