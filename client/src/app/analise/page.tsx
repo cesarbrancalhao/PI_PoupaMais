@@ -12,11 +12,15 @@ import { useAuth } from "@/contexts/AuthContext"
 import YearlyBalanceChart from '@/components/YearlyBalanceChart'
 import MonthlyTrendChart from '@/components/MonthlyTrendChart'
 import GoalAllocationChart from '@/components/GoalAllocationChart'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { analise } from '@/app/terminology/language/analise'
+import { common } from '@/app/terminology/language/common'
 
 export default function AnalisePage() {
   const { theme } = useTheme()
   const isDark = theme === "escuro"
   const { user } = useAuth()
+  const { t } = useLanguage()
 
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [receitas, setReceitas] = useState<Receita[]>([])
@@ -27,43 +31,43 @@ export default function AnalisePage() {
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    const fetchData = async () => {
+      try {
+        setCarregando(true)
+        setErro(null)
+        const [despesasResponse, receitasResponse, metasResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
+          despesasService.getAll(1, 100),
+          receitasService.getAll(1, 100),
+          metasService.getAll(1, 100),
+          despesasExclusaoService.getAll(),
+          receitasExclusaoService.getAll()
+        ])
 
-  const fetchData = async () => {
-    try {
-      setCarregando(true)
-      setErro(null)
-      const [despesasResponse, receitasResponse, metasResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
-        despesasService.getAll(1, 100),
-        receitasService.getAll(1, 100),
-        metasService.getAll(1, 100),
-        despesasExclusaoService.getAll(),
-        receitasExclusaoService.getAll()
-      ])
+        const despesasData = Array.isArray(despesasResponse)
+          ? despesasResponse
+          : (despesasResponse?.data || [])
+        const receitasData = Array.isArray(receitasResponse)
+          ? receitasResponse
+          : (receitasResponse?.data || [])
+        const metasData = Array.isArray(metasResponse)
+          ? metasResponse
+          : (metasResponse?.data || [])
 
-      const despesasData = Array.isArray(despesasResponse)
-        ? despesasResponse
-        : (despesasResponse?.data || [])
-      const receitasData = Array.isArray(receitasResponse)
-        ? receitasResponse
-        : (receitasResponse?.data || [])
-      const metasData = Array.isArray(metasResponse)
-        ? metasResponse
-        : (metasResponse?.data || [])
-
-      setDespesas(despesasData)
-      setReceitas(receitasData)
-      setMetas(metasData)
-      setDespesasExclusoes(despesasExclusoesResponse)
-      setReceitasExclusoes(receitasExclusoesResponse)
-    } catch (err) {
-      console.error('Erro ao buscar dados:', err)
-      setErro('Erro ao carregar dados. Verifique sua conexão.')
-    } finally {
-      setCarregando(false)
+        setDespesas(despesasData)
+        setReceitas(receitasData)
+        setMetas(metasData)
+        setDespesasExclusoes(despesasExclusoesResponse)
+        setReceitasExclusoes(receitasExclusoesResponse)
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err)
+        setErro(t(analise.errorLoadingAnalysis))
+      } finally {
+        setCarregando(false)
+      }
     }
-  }
+
+    fetchData()
+  }, [t])
 
   const formatCurrency = (value: number) => {
     return formatMoney(value, user?.moeda || "real")
@@ -220,7 +224,7 @@ export default function AnalisePage() {
         <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
           <Sidebar />
           <main className={`flex-1 p-4 md:p-8 md:ml-64 flex items-center justify-center ${isDark ? 'text-[var(--text-main)]' : ''}`}>
-            <div className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}`}>Carregando...</div>
+            <div className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}`}>{t(analise.loadingAnalysis)}</div>
           </main>
         </div>
       </ProtectedRoute>
@@ -247,7 +251,7 @@ export default function AnalisePage() {
         <main className={`flex-1 p-4 md:p-8 md:ml-64 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
           <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
             <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>
-              Análise Financeira
+              {t(analise.title)}
             </h1>
           </header>
 
@@ -264,7 +268,7 @@ export default function AnalisePage() {
                   )}
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Balanço Médio (12 meses)</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.averageMonthlyBalance)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'} ${balancoMedio >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(balancoMedio)}
                   </p>
@@ -278,7 +282,7 @@ export default function AnalisePage() {
                   <PieChart className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Taxa de Poupança</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.savingsRate)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>
                     {taxaPoupanca.toFixed(1)}%
                   </p>
@@ -292,7 +296,7 @@ export default function AnalisePage() {
                   <Target className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Alocação em Metas</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.goalAllocation)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>
                     {alocacaoReceitaMetas.toFixed(1)}%
                   </p>
@@ -306,7 +310,7 @@ export default function AnalisePage() {
                   <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Alcance de Metas (6m)</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.goalAchievementRate)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>
                     {taxaAlcanceMetas.toFixed(1)}%
                   </p>
@@ -322,7 +326,7 @@ export default function AnalisePage() {
                   <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Total Receitas (12 meses)</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(common.total)} {t(analise.income)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-xl font-semibold' : 'text-lg md:text-xl font-semibold'}`}>
                     {formatCurrency(totaisAnuais.totalReceitas)}
                   </p>
@@ -336,7 +340,7 @@ export default function AnalisePage() {
                   <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Total Despesas (12 meses)</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(common.total)} {t(analise.expenses)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-xl font-semibold' : 'text-lg md:text-xl font-semibold'}`}>
                     {formatCurrency(totaisAnuais.totalDespesas)}
                   </p>
@@ -350,7 +354,7 @@ export default function AnalisePage() {
                   <Calendar className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Receita Média Mensal</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.income)} {t(analise.monthlyAverage)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-xl font-semibold' : 'text-lg md:text-xl font-semibold'}`}>
                     {formatCurrency(receitaMediaMensal)}
                   </p>
@@ -363,13 +367,13 @@ export default function AnalisePage() {
             <div className="w-full xl:w-2/3 flex flex-col gap-4 md:gap-6">
               <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>
-                  Evolução do Balanço (12 meses)
+                  {t(analise.yearlyBalance)} {t(analise.monthsLabel)}
                 </h2>
                 <div className="w-full h-[300px]">
                   {dadosBalancoAnual.every(item => item.balance === 0) ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                       <TrendingUp className="w-10 h-10 mb-3 text-gray-300" />
-                      <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
+                      <p className="text-sm text-center">{t(analise.noDataAvailable)}</p>
                     </div>
                   ) : (
                     <YearlyBalanceChart data={dadosBalancoAnual} moeda={user?.moeda ?? "real"} />
@@ -379,13 +383,13 @@ export default function AnalisePage() {
 
               <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>
-                  Receitas vs Despesas (12 meses)
+                  {t(analise.income)} vs {t(analise.expenses)} {t(analise.monthsLabel)}
                 </h2>
                 <div className="w-full h-[300px]">
                   {dadosBalancoAnual.every(item => item.receitas === 0 && item.despesas === 0) ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                       <BarChart3 className="w-10 h-10 mb-3 text-gray-300" />
-                      <p className="text-sm text-center">Nenhum dado disponível</p>
+                      <p className="text-sm text-center">{t(analise.noDataAvailable)}</p>
                     </div>
                   ) : (
                     <MonthlyTrendChart data={dadosBalancoAnual} moeda={user?.moeda ?? "real"} />
@@ -397,12 +401,12 @@ export default function AnalisePage() {
             <div className="w-full xl:w-1/3 flex flex-col gap-4 md:gap-6">
               <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm min-h-[300px]`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>
-                  Alocação de Metas
+                  {t(analise.goalAllocation)}
                 </h2>
                 {metas.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                     <Target className="w-12 h-12 mb-4 text-gray-300" />
-                    <p className="text-sm text-center">Nenhuma meta cadastrada</p>
+                    <p className="text-sm text-center">{t(analise.noDataAvailable)}</p>
                   </div>
                 ) : (
                   <GoalAllocationChart metas={metas} moeda={user?.moeda ?? "real"} />
@@ -411,12 +415,12 @@ export default function AnalisePage() {
 
               <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>
-                  Resumo de Metas
+                  {t(analise.goalSummary)}
                 </h2>
                 {metas.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-gray-500">
                     <Target className="w-10 h-10 mb-3 text-gray-300" />
-                    <p className="text-sm text-center">Nenhuma meta cadastrada</p>
+                    <p className="text-sm text-center">{t(analise.noDataAvailable)}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">

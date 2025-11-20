@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '../services/auth.service';
 import { configsService } from '../services/configs.service';
 import { User, LoginRequest, RegisterRequest } from '../types/auth';
+import type { ApiError } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -25,13 +26,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function initAuth() {
+      let baseUser = null;
+      
       try {
         if (!authService.isAuthenticated()) {
           setUser(null);
           return;
         }
 
-        const baseUser = authService.getUser();
+        baseUser = authService.getUser();
         if (!baseUser) {
           setUser(null);
           return;
@@ -48,8 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       } catch (err) {
         console.error("Erro ao inicializar auth:", err);
-        authService.logout();
-        setUser(null);
+        const error = err as ApiError;
+        if (error.status === 401 || error.status === 403) {
+          authService.logout();
+          setUser(null);
+        } else {
+          setUser(baseUser);
+        }
       } finally {
         setLoading(false);
       }
@@ -61,14 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     try {
       const response = await authService.login(data);
-      const configs = await configsService.get();
-
-      setUser({
-        ...response.user!,
-        tema: configs.tema,
-        moeda: configs.moeda,
-        idioma: configs.idioma,
-      });
+      
+      try {
+        const configs = await configsService.get();
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          moeda: configs.moeda,
+          idioma: configs.idioma,
+        });
+      } catch (err) {
+        console.warn("Failed to load configs, using defaults:", err);
+        setUser(response.user!);
+      }
 
       router.push('/dashboard');
     } catch (error) {
@@ -79,14 +92,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterRequest) => {
     try {
       const response = await authService.register(data);
-      const configs = await configsService.get();
-
-      setUser({
-        ...response.user!,
-        tema: configs.tema,
-        moeda: configs.moeda,
-        idioma: configs.idioma,
-      });
+      
+      try {
+        const configs = await configsService.get();
+        setUser({
+          ...response.user!,
+          tema: configs.tema,
+          moeda: configs.moeda,
+          idioma: configs.idioma,
+        });
+      } catch (err) {
+        console.warn("Failed to load configs, using defaults:", err);
+        setUser(response.user!);
+      }
 
       router.push('/dashboard');
     } catch (error) {

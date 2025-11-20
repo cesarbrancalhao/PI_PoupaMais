@@ -13,11 +13,15 @@ import { metasService, contribuicaoMetaService, receitasService, despesasService
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency as formatMoney } from '@/app/terminology/currency'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { metas as metasTerms } from '@/app/terminology/language/metas'
+import { common } from '@/app/terminology/language/common'
 
 export default function MetasPage() {
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [metas, setMetas] = useState<Meta[]>([])
   const [selectedMeta, setSelectedMeta] = useState<Meta | null>(null)
   const [contribuicoes, setContribuicoes] = useState<ContribuicaoMeta[]>([])
@@ -147,11 +151,11 @@ export default function MetasPage() {
       }
     } catch (err) {
       console.error('Erro ao buscar dados:', err)
-      setError('Erro ao carregar dados. Verifique sua conexão.')
+      setError(`${t(metasTerms.errorLoadingGoals)}. ${t(common.checkConnection)}.`)
     } finally {
       setLoading(false)
     }
-  }, [selectedMeta])
+  }, [selectedMeta, t])
 
   const fetchContribuicoes = useCallback(async (metaId: number) => {
     try {
@@ -259,17 +263,17 @@ export default function MetasPage() {
 
   const calculateTimeRemaining = (meta: Meta) => {
     const economiaMensal = Number(meta.economia_mensal) || 0
-    
+
     if (economiaMensal === 0) return '∞'
-    
+
     const valorTotal = Number(meta.valor) || 0
     const valorAtual = Number(meta.valor_atual) || 0
     const remaining = valorTotal - valorAtual
-    
-    if (remaining <= 0) return '0 meses'
-    
+
+    if (remaining <= 0) return `0 ${t(metasTerms.months)}`
+
     const monthsRemaining = Math.ceil(remaining / economiaMensal)
-    return `${monthsRemaining} ${monthsRemaining === 1 ? 'mês' : 'meses'}`
+    return `${monthsRemaining} ${t(metasTerms.months)}`
   }
 
   const percentualAlocado = useMemo(() => {
@@ -288,7 +292,7 @@ export default function MetasPage() {
         <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
           <Sidebar />
           <main className={`flex-1 p-4 md:p-8 md:ml-64 flex items-center justify-center ${isDark ? 'text-[var(--text-main)]' : ''}`}>
-            <div className={isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}>Carregando...</div>
+            <div className={isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}>{t(metasTerms.loadingGoals)}</div>
           </main>
         </div>
       </ProtectedRoute>
@@ -314,13 +318,13 @@ export default function MetasPage() {
         <Sidebar />
         <main className={`flex-1 p-4 md:p-8 md:ml-64 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
           <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4">
-            <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>Metas</h1>
+            <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>{t(metasTerms.title)}</h1>
             <button
               onClick={openAddMetaModal}
               className="bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-auto whitespace-nowrap flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Adicionar meta
+              {t(metasTerms.addGoal)}
             </button>
           </header>
 
@@ -333,7 +337,7 @@ export default function MetasPage() {
                       <Target className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                     </div>
                     <div>
-                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>% da receita alocada</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(metasTerms.allocatedPercentage)}</p>
                       <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{percentualAlocado.toFixed(0)}%</p>
                     </div>
                   </div>
@@ -345,7 +349,7 @@ export default function MetasPage() {
                       <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Total necessário</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(metasTerms.totalRequired)}</p>
                       <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{formatCurrency(valorTotalNecessario)}</p>
                     </div>
                   </div>
@@ -353,13 +357,13 @@ export default function MetasPage() {
               </section>
 
               <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
-                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>Minhas Metas</h2>
+                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>{t(metasTerms.title)}</h2>
 
                 {metas.length === 0 ? (
                   <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     <Target className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p>Nenhuma meta cadastrada ainda.</p>
-                    <p className="text-sm mt-2">Clique em &quot;Adicionar meta&quot; para começar!</p>
+                    <p>{t(metasTerms.noGoalsYet)}</p>
+                    <p className="text-sm mt-2">{t(metasTerms.clickToAddGoal)}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -396,7 +400,7 @@ export default function MetasPage() {
                               </div>
                               <div className="text-right ml-4">
                                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  {formatCurrency(Number(meta.economia_mensal) || 0)}/Mês
+                                  {formatCurrency(Number(meta.economia_mensal) || 0)}/{t(metasTerms.months)}
                                 </p>
                               </div>
                             </div>
@@ -405,15 +409,15 @@ export default function MetasPage() {
                           <div className="ml-7">
                             <div className="grid grid-cols-3 gap-4 text-sm mb-3">
                               <div>
-                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Objetivo</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t(metasTerms.targetValue)}</p>
                                 <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(Number(meta.valor) || 0)}</p>
                               </div>
                               <div>
-                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Progresso</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t(metasTerms.progress)}</p>
                                 <p className="font-medium text-green-600">{formatCurrency(Number(meta.valor_atual) || 0)}</p>
                               </div>
                               <div>
-                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Tempo restante</p>
+                                <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t(metasTerms.remaining)}</p>
                                 <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{timeRemaining}</p>
                               </div>
                             </div>
@@ -438,20 +442,20 @@ export default function MetasPage() {
               {selectedMeta ? (
                 <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>Contribuições</h2>
+                    <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>{t(metasTerms.contributions)}</h2>
                     <button
                       onClick={openAddContribuicaoModal}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-700 transition flex items-center gap-1"
                     >
                       <Plus className="w-3 h-3" />
-                      Adicionar
+                      {t(metasTerms.addContribution)}
                     </button>
                   </div>
 
                   {contribuicoes.length === 0 ? (
                     <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       <Calendar className={`w-10 h-10 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-                      <p className="text-sm">Nenhuma contribuição ainda.</p>
+                      <p className="text-sm">{t(metasTerms.noContributions)}</p>
                     </div>
                   ) : (
                     <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -481,20 +485,20 @@ export default function MetasPage() {
                 <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     <Target className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p>Selecione uma meta para ver as contribuições</p>
+                    <p>{t(metasTerms.selectGoalToSeeContributions)}</p>
                   </div>
                 </section>
               )}
 
               <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
-                <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>Estatísticas</h3>
+                <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{t(metasTerms.statistics)}</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Receita média</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t(metasTerms.averageIncome)}</p>
                     <p className={`text-lg font-semibold ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(receitaMedia)}</p>
                   </div>
                   <div>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Despesa média</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t(metasTerms.averageExpenses)}</p>
                     <p className={`text-lg font-semibold ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{formatCurrency(despesaMedia)}</p>
                   </div>
                 </div>

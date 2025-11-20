@@ -10,6 +10,10 @@ import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { editCategoriaModal } from '@/app/terminology/language/modals/editCategoria'
+import { addCategoriaModal } from '@/app/terminology/language/modals/addCategoria'
+import { common } from '@/app/terminology/language/common'
 
 interface EditCategoriaModalProps {
   isOpen: boolean
@@ -46,6 +50,7 @@ export default function EditCategoriaModal({
 
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
+  const { t } = useLanguage()
 
   useEffect(() => {
     setNome(item.nome)
@@ -116,14 +121,14 @@ export default function EditCategoriaModal({
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(editCategoriaModal.errorUpdating)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-lg font-semibold ${textMain}`}>
-                Alterar {type === 'categorias' ? 'Categoria' : 'Fonte'}
+                {type === 'categorias' ? t(editCategoriaModal.editCategoryTitle) : t(editCategoriaModal.editSourceTitle)}
               </h2>
               <button onClick={onClose} className={`${textSecondary} hover:opacity-80`}>
                 <X className="w-5 h-5" />
@@ -133,7 +138,7 @@ export default function EditCategoriaModal({
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
               
               <div>
-                <label className={`block text-sm font-medium mb-1 ${textMain}`}>Nome</label>
+                <label className={`block text-sm font-medium mb-1 ${textMain}`}>{t(common.name)}</label>
                 <input
                   type="text"
                   value={nome}
@@ -144,7 +149,7 @@ export default function EditCategoriaModal({
               </div>
 
               <div>
-                <label className={`block text-sm font-medium mb-3 ${textMain}`}>Ícone</label>
+                <label className={`block text-sm font-medium mb-3 ${textMain}`}>{t(addCategoriaModal.icon)}</label>
                 <div className="grid grid-cols-4 gap-3">
                   {availableIcons.map(icon => {
                     const IconComponent = icon.component
@@ -177,7 +182,7 @@ export default function EditCategoriaModal({
                   className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
-                  Salvar {type === 'categorias' ? 'categoria' : 'fonte'}
+                  {t(common.save)} {type === 'categorias' ? t(common.category).toLowerCase() : t(common.source).toLowerCase()}
                 </button>
               )}
 
@@ -191,7 +196,7 @@ export default function EditCategoriaModal({
                         className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
                       >
                         <X className="w-4 h-4" />
-                        Cancelar
+                        {t(common.cancel)}
                       </button>
                       <button
                         type="button"
@@ -202,7 +207,7 @@ export default function EditCategoriaModal({
                         className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
                       >
                         <Trash className="w-4 h-4" />
-                        Confirmar Exclusão
+                        {t(common.confirm)} {t(common.delete)}
                       </button>
                     </div>
                   ) : (
@@ -212,7 +217,7 @@ export default function EditCategoriaModal({
                       className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
                     >
                       <Trash className="w-4 h-4" />
-                      Excluir {type === 'categorias' ? 'categoria' : 'fonte'}
+                      {t(common.delete)} {type === 'categorias' ? t(common.category).toLowerCase() : t(common.source).toLowerCase()}
                     </button>
                   )}
                 </>

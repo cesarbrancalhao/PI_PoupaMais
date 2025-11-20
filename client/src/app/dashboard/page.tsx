@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Sidebar from '@/components/sidebar'
 import AddDashboardModal from '@/components/addDashboardModal'
 import EditDashboardModal from '@/components/editDashboardModal'
@@ -18,6 +18,9 @@ import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency as formatMoney } from "@/app/terminology/currency";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from '@/app/terminology/LanguageContext';
+import { dashboard } from '@/app/terminology/language/dashboard';
+import { common } from '@/app/terminology/language/common';
 
 interface TableRow {
   id: string
@@ -35,6 +38,7 @@ interface TableRow {
 export default function DashboardPage() {
   const { theme } = useTheme()
   const isDark = theme === "escuro"
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'despesas' | 'receitas'>('despesas')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -54,28 +58,7 @@ export default function DashboardPage() {
   const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchData()
-    const now = new Date()
-    const currentMonth = `${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
-    setSelectedMonth(currentMonth)
-  }, [])
-
-  const monthOptions = useMemo(() => {
-    const months = []
-    const now = new Date()
-
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const year = date.getFullYear()
-      months.push(`${month}-${year}`)
-    }
-
-    return months
-  }, [])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -103,11 +86,32 @@ export default function DashboardPage() {
       setReceitasExclusoes(receitasExclusoesResponse)
     } catch (err) {
       console.error('Erro ao buscar dados:', err)
-      setError('Erro ao carregar dados. Verifique sua conexão.')
+      setError(`${t(dashboard.errorLoadingData)}. ${t(common.checkConnection)}`)
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    fetchData()
+    const now = new Date()
+    const currentMonth = `${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
+    setSelectedMonth(currentMonth)
+  }, [fetchData])
+
+  const monthOptions = useMemo(() => {
+    const months = []
+    const now = new Date()
+
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      months.push(`${month}-${year}`)
+    }
+
+    return months
+  }, [])
 
   const openModal = () => setIsModalOpen(true)
   const closeModal = () => {
@@ -397,7 +401,7 @@ export default function DashboardPage() {
         <div className={`flex min-h-screen ${isDark ? 'bg-[var(--bg-main)]' : 'bg-gray-50'}`}>
           <Sidebar />
           <main className={`flex-1 p-4 md:p-8 flex items-center justify-center ${isDark ? 'text-[var(--text-main)]' : ''}`}>
-            <div className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}`}>Carregando...</div>
+            <div className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-500'}`}>{t(common.loading)}</div>
           </main>
         </div>
       </ProtectedRoute>
@@ -432,25 +436,31 @@ export default function DashboardPage() {
                 <ArrowLeft className={`w-5 h-5 ${isDark ? 'text-[var(--text-main)]' : 'text-gray-600'}`} />
               </button>
               <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold' : 'text-xl md:text-2xl font-semibold text-gray-800'}`}>
-                Configurar {configTab === 'categorias' ? 'categorias' : 'fontes'}
+                {configTab === 'categorias' ? t(dashboard.configureCategories) : t(dashboard.configureSources)}
               </h1>
             </header>
 
             <div className={`relative flex ${isDark ? 'bg-[var(--bg-card)]' : 'bg-white'} rounded-lg w-fit mb-6 md:mb-8`}>
               <div className={`absolute top-0 h-full bg-blue-600 rounded-lg transition-all duration-200 ease-in-out ${
-                configTab === 'categorias' ? 'left-0 w-4/7' : 'left-3/5 w-2/5'
+                configTab === 'categorias' 
+                  ? language === 'pt' ? 'left-0 w-4/8' 
+                    : language === 'es' ? 'left-0 w-5/11' 
+                    : 'left-0 w-5/9'
+                  : language === 'pt' ? 'left-5/9 w-3/7'
+                    : language === 'es' ? 'left-3/6 w-4/8'
+                    : 'left-5/9 w-4/9'
               }`}></div>
               <button
                 onClick={() => setConfigTab('categorias')}
                 className={`relative z-10 pl-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${configTab === 'categorias' ? (isDark ? 'text-[var(--text-main)]' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-600')}`}
               >
-                Categorias
+                {t(dashboard.expensesTab)}
               </button>
               <button
                 onClick={() => setConfigTab('fontes')}
                 className={`relative z-10 pl-5 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${configTab === 'fontes' ? (isDark ? 'text-[var(--text-main)]' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-600')}`}
               >
-                Fontes
+                {t(dashboard.incomeTab)}
               </button>
             </div>
 
@@ -458,7 +468,7 @@ export default function DashboardPage() {
               <div className="w-full xl:w-4/6">
               <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                   <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>
-                    {configTab === 'categorias' ? 'Categorias' : 'Fontes'}
+                    {configTab === 'categorias' ? t(dashboard.expensesTab) : t(dashboard.incomeTab)}
                   </h2>
 
                   <div className="overflow-x-auto">
@@ -498,7 +508,7 @@ export default function DashboardPage() {
                     onClick={() => openConfigModal()}
                     className={`mt-6 ${isDark ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2`}
                   >
-                    Adicionar {configTab === 'categorias' ? 'categoria' : 'fonte'}
+                    {t(common.add)} {configTab === 'categorias' ? t(common.category).toLowerCase() : t(common.source).toLowerCase()}
                   </button>
                 </section>
               </div>
@@ -510,19 +520,19 @@ export default function DashboardPage() {
                       <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{configTab === 'categorias' ? 'Despesas' : 'Receitas'}</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{configTab === 'categorias' ? t(common.expenses) : t(common.income)}</p>
                       <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{formatCurrency(configTab === 'categorias' ? totalDespesas : totalReceitas)}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
-                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>Balanço Mensal</h2>
+                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>{t(dashboard.monthlyBalance)}</h2>
                   <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
                     {monthlyBalanceData.every(item => item.balance === 0) ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-500">
                         <TrendingUp className="w-10 h-10 mb-3 text-gray-300" />
-                        <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
+                        <p className="text-sm text-center">{t(common.noData)}</p>
                       </div>
                     ) : (
                       <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
@@ -535,8 +545,8 @@ export default function DashboardPage() {
                     despesasChartData.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                         <PieChart className="w-12 h-12 mb-4 text-gray-300" />
-                        <p>Nenhuma despesa por categoria</p>
-                        <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
+                        <p>{t(dashboard.noExpenses)}</p>
+                        <p className="text-sm mt-2">{t(dashboard.addExpense)}</p>
                       </div>
                     ) : (
                       <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
@@ -545,8 +555,8 @@ export default function DashboardPage() {
                     receitasChartData.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                         <PieChart className="w-12 h-12 mb-4 text-gray-300" />
-                        <p>Nenhuma receita por fonte</p>
-                        <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
+                        <p>{t(dashboard.noIncome)}</p>
+                        <p className="text-sm mt-2">{t(dashboard.addIncome)}</p>
                       </div>
                     ) : (
                       <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
@@ -559,7 +569,7 @@ export default function DashboardPage() {
         ) : (
           <>
         <header className={`flex flex-col md:flex-row md:items-center md:justify-between mb-6 md:mb-8 gap-4 ${isDark ? 'text-[var(--text-main)]' : ''}`}>
-        <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>Painel</h1>
+        <h1 className={`${isDark ? 'text-[var(--text-main)] text-xl md:text-2xl font-semibold text-center md:text-left' : 'text-xl md:text-2xl font-semibold text-gray-800 text-center md:text-left'}`}>{t(dashboard.title)}</h1>
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <select
               value={selectedMonth}
@@ -575,7 +585,7 @@ export default function DashboardPage() {
           className={`bg-blue-600 text-white px-4 py-2 font-bold rounded-md text-sm hover:bg-blue-700 transition w-full md:w-48 whitespace-nowrap flex items-center justify-center gap-2`}
             >
               <Plus className="w-4 h-4" />
-              Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}
+              {activeTab === 'despesas' ? t(dashboard.addExpense) : t(dashboard.addIncome)}
             </button>
           </div>
         </header>
@@ -588,13 +598,13 @@ export default function DashboardPage() {
             onClick={() => setActiveTab('despesas')}
             className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${activeTab === 'despesas' ? (isDark ? 'text-[var(--text-main)]' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-600')}`}
           >
-            Despesas
+            {t(dashboard.expensesTab)}
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('receitas')}
             className={`relative z-10 px-6 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${activeTab === 'receitas' ? (isDark ? 'text-[var(--text-main)]' : 'text-white') : (isDark ? 'text-gray-300' : 'text-gray-600')}`}
           >
-            Receitas
+            {t(dashboard.incomeTab)}
           </button>
         </div>
 
@@ -608,7 +618,7 @@ export default function DashboardPage() {
                       <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                     </div>
                     <div>
-                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Despesas</p>
+                      <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(common.expenses)}</p>
                       <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{formatCurrency(totalDespesas)}</p>
                     </div>
                   </div>
@@ -621,7 +631,7 @@ export default function DashboardPage() {
                     <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   </div>
                   <div>
-                <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>Receitas</p>
+                <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(common.income)}</p>
                 <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-2xl font-semibold' : 'text-lg md:text-2xl font-semibold'}`}>{formatCurrency(totalReceitas)}</p>
                   </div>
                 </div>
@@ -638,7 +648,7 @@ export default function DashboardPage() {
             className={`flex items-center gap-2 ${isDark ? 'text-gray-300 hover:text-[var(--text-main)]' : 'text-gray-600 hover:text-gray-800'} transition-colors`}
               >
                 <Settings className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm">Configurar {activeTab === 'despesas' ? 'categorias' : 'fontes'}</span>
+                <span className="text-xs md:text-sm">{activeTab === 'despesas' ? t(dashboard.configureCategories) : t(dashboard.configureSources)}</span>
               </button>
             </div>
 
@@ -649,7 +659,7 @@ export default function DashboardPage() {
                   onClick={() => {/* TODO: Implement "Ver mais" functionality */}}
                   className={`${isDark ? 'text-indigo-400 text-xs md:text-sm hover:text-indigo-300 transition-colors' : 'text-indigo-600 text-xs md:text-sm hover:text-indigo-800 transition-colors'}`}
                 >
-                  Ver mais
+                  {t(common.viewMore)}
                 </button>
               </div>
               
@@ -661,15 +671,15 @@ export default function DashboardPage() {
                     ) : (
                       <CreditCard className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                     )}
-                    <p>Nenhuma {activeTab === 'despesas' ? 'despesa' : 'receita'} cadastrada ainda.</p>
-                    <p className="text-sm mt-2">Clique em &quot;Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}&quot; para começar!</p>
+                    <p>{activeTab === 'despesas' ? t(dashboard.noExpenses) : t(dashboard.noIncome)}</p>
+                    <p className="text-sm mt-2">{activeTab === 'despesas' ? t(dashboard.addExpense) : t(dashboard.addIncome)}</p>
                   </div>
                 ) : (
                   <>
                     <div className={`grid grid-cols-4 gap-2 pb-2 mb-2 border-b ${isDark ? 'border-white/10' : 'border-gray-200'} text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
-                      <div>Data</div>
-                      <div className="col-span-2">Nome</div>
-                      <div className="text-right">Valor</div>
+                      <div>{t(common.date)}</div>
+                      <div className="col-span-2">{t(common.name)}</div>
+                      <div className="text-right">{t(common.value)}</div>
                     </div>
                     
                     <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -706,18 +716,18 @@ export default function DashboardPage() {
                     ) : (
                       <CreditCard className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                     )}
-                    <p>Nenhuma {activeTab === 'despesas' ? 'despesa' : 'receita'} cadastrada ainda.</p>
-                    <p className="text-sm mt-2">Clique em &quot;Adicionar {activeTab === 'despesas' ? 'despesa' : 'receita'}&quot; para começar!</p>
+                    <p>{activeTab === 'despesas' ? t(dashboard.noExpenses) : t(dashboard.noIncome)}</p>
+                    <p className="text-sm mt-2">{activeTab === 'despesas' ? t(dashboard.clickToAddExpense) : t(dashboard.clickToAddIncome)}</p>
                   </div>
                 ) : (
                   <table className="w-full text-xs md:text-sm table-fixed min-w-[500px]">
                     <thead className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       <tr>
-                        <th className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4">Data</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-1/3">Nome</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-24">Valor</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? 'Categoria' : 'Fonte'}</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-24">Total</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4">{t(common.date)}</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-1/3">{t(common.name)}</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-24">{t(common.value)}</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? t(common.category) : t(common.source)}</th>
+                        <th className="py-1 md:py-2 font-medium text-left w-24">{t(common.total)}</th>
                       </tr>
                     </thead>
                     <tbody className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-700'}`}>
@@ -748,12 +758,12 @@ export default function DashboardPage() {
           
           <div className="w-full xl:w-2/6 flex flex-col gap-4 md:gap-6">
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
-              <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>Balanço Mensal</h2>
+              <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-3' : 'text-base md:text-lg font-semibold text-gray-800 mb-3'}`}>{t(dashboard.monthlyBalance)}</h2>
               <div className="w-full h-[180px] sm:h-[220px] md:h-[260px]">
                 {monthlyBalanceData.every(item => item.balance === 0) ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500">
                     <TrendingUp className="w-10 h-10 mb-3 text-gray-300" />
-                    <p className="text-sm text-center">Nenhum dado de balanço disponível</p>
+                    <p className="text-sm text-center">{t(common.noData)}</p>
                   </div>
                 ) : (
                   <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
@@ -765,8 +775,7 @@ export default function DashboardPage() {
                 despesasChartData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                     <PieChart className="w-12 h-12 mb-4 text-gray-300" />
-                    <p>Nenhuma despesa por categoria</p>
-                    <p className="text-sm mt-2">Adicione despesas para ver o gráfico</p>
+                    <p>{t(dashboard.noExpensesChart)}</p>
                   </div>
                 ) : (
                   <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
@@ -775,8 +784,7 @@ export default function DashboardPage() {
                 receitasChartData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
                     <PieChart className="w-12 h-12 mb-4 text-gray-300" />
-                    <p>Nenhuma receita por fonte</p>
-                    <p className="text-sm mt-2">Adicione receitas para ver o gráfico</p>
+                    <p>{t(dashboard.noIncomeChart)}</p>
                   </div>
                 ) : (
                   <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />

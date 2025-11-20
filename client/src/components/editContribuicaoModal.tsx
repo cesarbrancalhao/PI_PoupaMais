@@ -7,6 +7,9 @@ import { contribuicaoMetaService } from '@/services/contribuicao-meta.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { getCurrencySymbol } from '@/app/terminology/currency'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { editContribuicaoModal } from '@/app/terminology/language/modals/editContribuicao'
+import { common } from '@/app/terminology/language/common'
 
 interface EditContribuicaoModalProps {
   isOpen: boolean
@@ -181,6 +184,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
   const isDark = theme === 'escuro'
   const { user } = useAuth()
   const userCurrency = user?.moeda || 'real'
+  const { t } = useLanguage()
   
   const normalizeDateString = (dateString: string): string => {
     if (!dateString) return ''
@@ -292,7 +296,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(editContribuicaoModal.errorUpdating)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -300,7 +304,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-lg font-semibold ${
                 isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-              }`}>Alterar Contribuição</h2>
+              }`}>{t(editContribuicaoModal.title)}</h2>
               <button onClick={onClose} className={isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}>
                 <X className="w-5 h-5" />
               </button>
@@ -310,7 +314,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Valor</label>
+                }`}>{t(common.value)}</label>
                 <div className={`
                   flex items-center rounded-lg overflow-hidden
                   ${isDark ? 'bg-[#3C3C3C]' : 'bg-gray-50'}
@@ -340,7 +344,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Data</label>
+                }`}>{t(common.date)}</label>
                 <Calendar
                   selectedDate={data}
                   onDateSelect={setData}
@@ -351,14 +355,14 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
               <div>
                 <label className={`block text-sm font-medium mb-1 ${
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-                }`}>Observação</label>
+                }`}>{t(common.description)}</label>
                 <textarea
-                  placeholder="Adicione uma observação..."
+                  placeholder={t(common.description)}
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
                   className={`w-full rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none ${
-                    isDark 
-                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400' 
+                    isDark
+                      ? 'bg-[#3C3C3C] text-white placeholder-gray-400'
                       : 'bg-gray-50 text-gray-700 placeholder-gray-500'
                   }`}
                   rows={3}
@@ -369,13 +373,13 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                 <button
                   type="submit"
                   className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                    isDark 
-                      ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' 
+                    isDark
+                      ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
                       : 'bg-blue-600 hover:bg-blue-700'
                   }`}
                 >
                   <Save className="w-4 h-4" />
-                  Salvar contribuição
+                  {t(common.save)} {t(editContribuicaoModal.contributionLabel)}
                 </button>
               )}
 
@@ -391,7 +395,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                         }`}
                       >
                         <X className="w-4 h-4" />
-                        Cancelar
+                        {t(common.cancel)}
                       </button>
                       <button
                         type="button"
@@ -404,7 +408,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                         }`}
                       >
                         <Trash className="w-4 h-4" />
-                        Confirmar Exclusão
+                        {t(common.confirm)} {t(common.delete)}
                       </button>
                     </div>
                   ) : (
@@ -416,7 +420,7 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                       }`}
                     >
                       <Trash className="w-4 h-4" />
-                      Excluir contribuição
+                      {t(common.delete)}
                     </button>
                   )}
                 </>

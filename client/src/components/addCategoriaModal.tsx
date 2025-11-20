@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useLanguage } from '@/app/terminology/LanguageContext'
+import { addCategoriaModal } from '@/app/terminology/language/modals/addCategoria'
+import { common } from '@/app/terminology/language/common'
 
 interface AddCategoriaModalProps {
   isOpen: boolean
@@ -36,6 +39,7 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
 
   const { theme } = useTheme()
   const isDark = theme === "escuro"
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!isOpen) {
@@ -101,17 +105,17 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(addCategoriaModal.errorAdding)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">
-                Adicionar {type === 'categorias' ? 'Categoria' : 'Fonte'}
+                {type === 'categorias' ? t(addCategoriaModal.addCategoryTitle) : t(addCategoriaModal.addSourceTitle)}
               </h2>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className={`transition ${isDark ? "text-gray-300 hover:text-white" : "text-gray-500 hover:text-gray-700"}`}
               >
                 <X className="w-5 h-5" />
@@ -122,17 +126,17 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
               
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Nome
+                  {t(common.name)}
                 </label>
                 <input
                   type="text"
-                  placeholder={"Nome da " + (type === 'categorias' ? 'categoria' : 'fonte')}
+                  placeholder={t(addCategoriaModal.namePlaceholder)}
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   className={`
                     w-full rounded-lg px-3 py-2 outline-none transition
-                    ${isDark 
-                      ? "bg-[#3C3C3C] text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500" 
+                    ${isDark
+                      ? "bg-[#3C3C3C] text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
                       : "bg-gray-50 text-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-blue-500"}
                   `}
                   required
@@ -141,7 +145,7 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
 
               <div>
                 <label className="block text-sm font-medium mb-3">
-                  Ícone
+                  {t(addCategoriaModal.icon)}
                 </label>
                 <div className="grid grid-cols-4 gap-3">
                   {availableIcons.map((icon) => {
@@ -184,14 +188,14 @@ export default function AddCategoriaModal({ isOpen, onClose, type }: AddCategori
                 className={`
                   w-full mt-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition
                   text-white
-                  ${isDark 
+                  ${isDark
                     ? "bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600"
                     : "bg-blue-600 hover:bg-blue-700"
                   }
                 `}
               >
                 <Save className="w-4 h-4" />
-                Salvar {type === 'categorias' ? 'categoria' : 'fonte'}
+                {t(common.save)}
               </button>
             </form>
           </motion.div>

@@ -11,6 +11,9 @@ import { receitasService } from '@/services/receitas.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getCurrencySymbol } from "@/app/terminology/currency";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from '@/app/terminology/LanguageContext';
+import { addDashboardModal } from '@/app/terminology/language/modals/addDashboard';
+import { common } from '@/app/terminology/language/common';
 
 interface AddDashboardModalProps {
   isOpen: boolean
@@ -170,6 +173,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 }
 
 export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboardModalProps) {
+  const { t } = useLanguage();
   const { theme } = useTheme()
   const isDark = theme === 'escuro'
   const [name, setName] = useState('')
@@ -328,14 +332,14 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
                   <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                     <X className="w-4 h-4" />
                   </div>
-                  <span className="font-medium">Algo deu errado. Tente novamente.</span>
+                  <span className="font-medium">{t(addDashboardModal.errorAdding)}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">
-                {type === 'despesas' ? 'Adicionar Despesa' : 'Adicionar Receita'}
+                {type === 'despesas' ? t(addDashboardModal.addExpenseTitle) : t(addDashboardModal.addIncomeTitle)}
               </h2>
               <button
                 className={isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'}
@@ -347,15 +351,15 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
 
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div>
-                <label className="text-sm font-medium">Nome</label>
+                <label className="text-sm font-medium">{t(common.name)}</label>
                 <input
                   type="text"
-                  placeholder="Digite o nome"
+                  placeholder={t(addDashboardModal.namePlaceholder)}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={`
                     w-full rounded-lg px-3 py-2 mt-1 outline-none transition
-                    ${isDark 
+                    ${isDark
                       ? 'bg-[#3C3C3C] text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400'
                       : 'bg-gray-50 text-gray-700 placeholder-gray-600 focus:ring-2 focus:ring-blue-500'}
                   `}
@@ -365,7 +369,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
 
               <div>
                 <label className="text-sm font-medium">
-                  {type === 'despesas' ? 'Categoria' : 'Fonte'}
+                  {type === 'despesas' ? t(addDashboardModal.category) : t(addDashboardModal.source)}
                 </label>
                 <select
                   value={category}
@@ -377,7 +381,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
                       : 'bg-gray-50 text-gray-700 border border-gray-300 focus:ring-blue-500'}
                   `}
                 >
-                  <option value="">Selecione uma {type === 'despesas' ? 'categoria' : 'fonte'}</option>
+                  <option value="">{type === 'despesas' ? t(addDashboardModal.selectCategory) : t(addDashboardModal.selectSource)}</option>
                   {type === 'despesas'
                     ? categorias.map((cat) => (
                         <option key={cat.id} value={cat.nome}>
@@ -393,7 +397,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Valor</label>
+                <label className="block text-sm font-medium">{t(addDashboardModal.value)}</label>
                 <div className="flex items-center gap-4">
                   <div className={`
                     w-1/2 mt-1 flex items-center rounded-lg overflow-hidden
@@ -416,12 +420,12 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
                           ? 'text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400'
                           : 'text-gray-700 placeholder-gray-600 focus:ring-2 focus:ring-blue-500'}
                       `}
-                      required  
+                      required
                     />
                   </div>
                 <label className="ml-4 text-sm flex items-center gap-2">
                   <span className={isDark ? 'text-gray-200' : 'text-gray-700'}>
-                    Recorrente
+                    {t(addDashboardModal.isRecurring)}
                   </span>
                     <input
                       type="checkbox"
@@ -434,17 +438,17 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
               </div>
 
               <div>
-                <label className="text-sm font-medium">Data</label>
+                <label className="text-sm font-medium">{t(addDashboardModal.date)}</label>
                 <Calendar
                   selectedDate={date}
                   onDateSelect={setDate}
                 />
-                {dateError && <p className="text-xs text-red-500 mt-1">A data é obrigatória</p>}
+                {dateError && <p className="text-xs text-red-500 mt-1">{t(addDashboardModal.dateRequired)}</p>}
               </div>
 
               {recurring && (
                 <div>
-                  <label className="text-sm font-medium">Data de Vencimento</label>
+                  <label className="text-sm font-medium">{t(addDashboardModal.endDate)}</label>
                   <Calendar
                     selectedDate={date_vencimento}
                     onDateSelect={setDateVencimento}
@@ -462,7 +466,7 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
                 `}
               >
                 <Save className="w-4 h-4" />
-                Salvar {type === 'despesas' ? 'despesa' : 'receita'}
+                {t(common.save)} {type === 'despesas' ? t(common.expenses).toLowerCase() : t(common.income).toLowerCase()}
               </button>
             </form>
           </motion.div>
