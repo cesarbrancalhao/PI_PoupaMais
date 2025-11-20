@@ -67,8 +67,35 @@ export class AuthService {
 
       const newUser = result.rows[0];
       
-      // Criar configuração para o usuário
       await client.query('INSERT INTO config (usuario_id) VALUES ($1)', [newUser.id]);
+
+      const categorias = [
+        { nome: 'Moradia', icone: 'Home' },
+        { nome: 'Eletrônicos', icone: 'Plug' },
+        { nome: 'Transporte', icone: 'Car' },
+        { nome: 'Alimentação', icone: 'Utensils' },
+        { nome: 'Saúde', icone: 'Heart' },
+        { nome: 'Lazer', icone: 'Gamepad-2' },
+      ];
+      for (const categoria of categorias) {
+        await client.query(
+          'INSERT INTO categoria_despesa (nome, icone, usuario_id) VALUES ($1, $2, $3)',
+          [categoria.nome, categoria.icone, newUser.id],
+        );
+      }
+
+      const fontes = [
+        { nome: 'Salário', icone: 'Briefcase' },
+        { nome: 'Renda Fixa', icone: 'DollarSign' },
+        { nome: 'Renda Variável', icone: 'Apple' },
+        { nome: 'Extra', icone: 'Gift' },
+      ];
+      for (const fonte of fontes) {
+        await client.query(
+          'INSERT INTO fonte_receita (nome, icone, usuario_id) VALUES ($1, $2, $3)',
+          [fonte.nome, fonte.icone, newUser.id],
+        );
+      }
 
       await client.query('COMMIT');
 
