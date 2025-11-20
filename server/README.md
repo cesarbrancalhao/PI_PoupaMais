@@ -63,7 +63,7 @@ API Backend para PoupaMais - Sistema completo de gerenciamento de finanças pess
 cd server
 npm i 
 # Iniciar Banco de Dados
-docker-compose up postgres -d
+docker compose up postgres -d
 # Iniciar app
 npm run start:dev
 ```
@@ -140,7 +140,7 @@ server/
 │   ├── app.module.ts              # Módulo raiz
 │   └── main.ts                    # Bootstrap da aplicação
 ├── data.sql                       # Schema + triggers + índices
-├── docker-compose.yml             # PostgreSQL containerizado
+├── docker compose.yml             # PostgreSQL containerizado
 ├── Dockerfile
 ├── package.json
 └── README.md
@@ -612,10 +612,10 @@ PORT=3001
 
 ```bash
 # Verifique se o Docker está rodando
-docker-compose up postgres -d
+docker compose up postgres -d
 
 # Verifique os logs do PostgreSQL
-docker-compose logs postgres
+docker compose logs postgres
 
 # Teste a conexão manualmente
 docker exec -it poupa_mais_db psql -U postgres -d poupa_mais -c "\l"
@@ -633,10 +633,10 @@ docker exec -it poupa_mais_db psql -U postgres -d poupa_mais -c "\l"
 
 ```bash
 # Para e remove volumes (ATENÇÃO: deleta todos os dados!)
-docker-compose down -v
+docker compose down -v
 
 # Reinicia o banco de dados limpo
-docker-compose up postgres -d
+docker compose up postgres -d
 
 # Aguarde 5-10 segundos para o banco inicializar
 sleep 10
