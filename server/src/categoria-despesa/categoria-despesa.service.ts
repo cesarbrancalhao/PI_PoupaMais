@@ -40,10 +40,18 @@ export class CategoriaDespesaService {
   }
 
   async remove(id: number, userId: number) {
+    await this.findOne(id, userId);
+    
+    await this.databaseService.query(
+      'UPDATE despesa SET categoria_despesa_id = NULL WHERE categoria_despesa_id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    
     const result = await this.databaseService.query(
       'DELETE FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',
       [id, userId],
     );
+    
     if (result.rowCount === 0) throw new NotFoundException('Categoria não encontrada');
     return { message: 'Categoria excluída com sucesso' };
   }

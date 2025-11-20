@@ -40,10 +40,18 @@ export class FonteReceitaService {
   }
 
   async remove(id: number, userId: number) {
+    await this.findOne(id, userId);
+    
+    await this.databaseService.query(
+      'UPDATE receita SET fonte_receita_id = NULL WHERE fonte_receita_id = $1 AND usuario_id = $2',
+      [id, userId],
+    );
+    
     const result = await this.databaseService.query(
       'DELETE FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
       [id, userId],
     );
+    
     if (result.rowCount === 0) throw new NotFoundException('Fonte não encontrada');
     return { message: 'Fonte excluída com sucesso' };
   }
