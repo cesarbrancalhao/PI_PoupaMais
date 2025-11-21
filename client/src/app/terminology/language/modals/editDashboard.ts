@@ -18,19 +18,19 @@ export const editDashboardModal = {
     es: 'Opciones de Edición',
   },
   editSingle: {
-    pt: 'Editar apenas esta',
-    en: 'Edit only this one',
-    es: 'Editar solo esta',
+    pt: 'Editar apenas nesse mês',
+    en: 'Edit only this month',
+    es: 'Editar solo este mes',
   },
   editAll: {
-    pt: 'Editar todas',
+    pt: 'Editar todos os meses',
     en: 'Edit all',
-    es: 'Editar todas',
+    es: 'Editar todos los meses',
   },
   excludeSingle: {
-    pt: 'Excluir apenas esta',
-    en: 'Delete only this one',
-    es: 'Eliminar solo esta',
+    pt: 'Excluir apenas nesse mês',
+    en: 'Delete only this month',
+    es: 'Eliminar solo este mes',
   },
   excludeAll: {
     pt: 'Excluir todas',

@@ -149,10 +149,20 @@ export const dashboard = {
   },
 
   // Tabela de transações recentes
+  lastExpenses: {
+    pt: 'Últimas despesas',
+    en: 'Last expenses',
+    es: 'Últimos gastos',
+  },
+  lastIncome: {
+    pt: 'Últimas receitas',
+    en: 'Last income',
+    es: 'Últimos ingresos',
+  },
   recentTransactions: {
-    pt: 'Transações Recentes',
-    en: 'Recent Transactions',
-    es: 'Transacciones Recientes',
+    pt: 'Transações recentes',
+    en: 'Recent transactions',
+    es: 'Transacciones recientes',
   },
   transactionDate: {
     pt: 'Data',

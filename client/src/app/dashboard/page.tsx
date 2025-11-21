@@ -167,10 +167,23 @@ export default function DashboardPage() {
     fetchData()
   }
 
-  const convertDateForEditModal = (dateStr: string) => {
-    const [day, month] = dateStr.split('/')
-    const year = selectedMonth ? selectedMonth.split('-')[1] : new Date().getFullYear().toString()
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  const convertDateForEditModal = (dateStr: string, monthContext?: string) => {
+    const [day = '01', originalMonth = '01'] = dateStr.split('/')
+    const referenceMonth = monthContext || selectedMonth
+    let targetMonth = originalMonth.padStart(2, '0')
+    let targetYear = new Date().getFullYear().toString()
+
+    if (referenceMonth) {
+      const [contextMonth, contextYear] = referenceMonth.split('-')
+      if (contextMonth) {
+        targetMonth = contextMonth.padStart(2, '0')
+      }
+      if (contextYear) {
+        targetYear = contextYear
+      }
+    }
+
+    return `${targetYear}-${targetMonth}-${day.padStart(2, '0')}`
   }
 
   const formatDate = (dateString: string) => {
@@ -654,7 +667,7 @@ export default function DashboardPage() {
 
             <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex justify-between items-center mb-3 md:mb-4">
-                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>{activeTab === 'despesas' ? 'Últimas despesas' : 'Últimas receitas'}</h2>
+                <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>{activeTab === 'despesas' ? `${t(dashboard.lastExpenses)}` : `${t(dashboard.lastIncome)}`}</h2>
                 <button
                   onClick={() => {/* TODO: Implement "Ver mais" functionality */}}
                   className={`${isDark ? 'text-indigo-400 text-xs md:text-sm hover:text-indigo-300 transition-colors' : 'text-indigo-600 text-xs md:text-sm hover:text-indigo-800 transition-colors'}`}
@@ -810,7 +823,7 @@ export default function DashboardPage() {
             category: selectedItem.category,
             value: selectedItem.value,
             recurring: selectedItem.recurring,
-            date: convertDateForEditModal(selectedItem.date),
+            date: convertDateForEditModal(selectedItem.date, selectedItem.displayMonth),
             originalId: selectedItem.originalId,
             displayMonth: selectedItem.displayMonth
           }}
