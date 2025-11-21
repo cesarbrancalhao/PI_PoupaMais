@@ -186,10 +186,18 @@ export default function DashboardPage() {
     return `${targetYear}-${targetMonth}-${day.padStart(2, '0')}`
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string, monthContext?: string) => {
     const date = new Date(dateString)
     const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
+    let month = String(date.getMonth() + 1).padStart(2, '0')
+
+    if (monthContext) {
+      const [contextMonth] = monthContext.split('-')
+      if (contextMonth) {
+        month = contextMonth.padStart(2, '0')
+      }
+    }
+
     return `${day}/${month}`
   }
 
@@ -303,7 +311,7 @@ export default function DashboardPage() {
     const IconComponent = getIconComponent(categoria?.icone || 'DollarSign')
     return {
       id: despesa?.id?.toString?.() ?? '',
-      date: despesa?.data ? formatDate(despesa.data) : '--/--',
+      date: despesa?.data ? formatDate(despesa.data, despesa?.recorrente ? selectedMonth : undefined) : '--/--',
       name: despesa?.nome ?? '',
       category: categoria?.nome ?? 'Sem categoria',
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
@@ -320,7 +328,7 @@ export default function DashboardPage() {
     const IconComponent = getIconComponent(fonte?.icone || 'DollarSign')
     return {
       id: receita?.id?.toString?.() ?? '',
-      date: receita?.data ? formatDate(receita.data) : '--/--',
+      date: receita?.data ? formatDate(receita.data, receita?.recorrente ? selectedMonth : undefined) : '--/--',
       name: receita?.nome ?? '',
       category: fonte?.nome ?? 'Sem fonte',
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
