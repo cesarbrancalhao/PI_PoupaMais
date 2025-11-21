@@ -63,6 +63,23 @@ export const addDashboardModal = {
     es: 'Seleccione una fuente',
   },
 
+  // Seleção de data
+  calendarSelectedDateLabel: {
+    pt: 'Data selecionada',
+    en: 'Selected date',
+    es: 'Fecha seleccionada',
+  },
+  calendarNoDateSelected: {
+    pt: 'Nenhuma data selecionada',
+    en: 'No date selected',
+    es: 'Ninguna fecha seleccionada',
+  },
+  calendarMonths: {
+    pt: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+    en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+  },
+
   // Opções recorrentes
   isRecurring: {
     pt: 'Recorrente',

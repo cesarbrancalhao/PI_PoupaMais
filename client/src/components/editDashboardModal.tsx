@@ -44,6 +44,7 @@ interface CalendarProps {
 function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const { theme } = useTheme()
+  const { language, t } = useLanguage()
   const isDark = theme === 'escuro'
 
   useEffect(() => {
@@ -118,13 +119,26 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 
   const days = getDaysInMonth(currentMonth)
 
+  const monthNames = editDashboardModal.calendarMonths[language]
+  const currentMonthLabel = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`
+  const infoTextColor = isDark ? 'text-gray-400' : 'text-gray-500'
+  const highlightTextColor = isDark ? 'text-gray-100' : 'text-gray-800'
+  const selectedDateLabel = selectedDate
+    ? formatSelectedDate(selectedDate)
+    : t(editDashboardModal.calendarNoDateSelected)
+
   return (
     <div className={`${isDark ? 'bg-[#2B2B2B] border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'} rounded-lg shadow-lg p-4 border`}>
-      <div className="flex items-center justify-between mb-4">
-        <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'} text-lg font-medium`}>
-          {formatSelectedDate(selectedDate)}
-        </span>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div>
+          <p className={`text-lg font-semibold ${highlightTextColor}`}>
+            {currentMonthLabel}
+          </p>
+          <p className={`text-xs mt-2 ${infoTextColor}`}>
+            {t(editDashboardModal.calendarSelectedDateLabel)}: {selectedDateLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 self-start">
           <button
             type="button"
             onClick={() => navigateMonth('prev')}

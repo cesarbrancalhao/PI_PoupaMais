@@ -31,6 +31,7 @@ interface CalendarProps {
 
 function Calendar({ selectedDate, onDateSelect, isDark }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const { language, t } = useLanguage()
 
   useEffect(() => {
     if (selectedDate) {
@@ -104,19 +105,30 @@ function Calendar({ selectedDate, onDateSelect, isDark }: CalendarProps) {
 
   const days = getDaysInMonth(currentMonth)
 
+  const monthNames = editContribuicaoModal.calendarMonths[language]
+  const currentMonthLabel = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`
+  const infoTextColor = isDark ? 'text-gray-400' : 'text-gray-500'
+  const highlightTextColor = isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
+  const selectedDateLabel = selectedDate
+    ? formatSelectedDate(selectedDate)
+    : t(editContribuicaoModal.calendarNoDateSelected)
+
   return (
     <div className={`rounded-lg shadow-lg p-4 border ${
       isDark 
         ? 'bg-[var(--bg-card)] border-gray-700' 
         : 'bg-white border-gray-200'
     }`}>
-      <div className="flex items-center justify-between mb-4">
-        <span className={`text-lg font-medium ${
-          isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
-        }`}>
-          {formatSelectedDate(selectedDate)}
-        </span>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div>
+          <p className={`text-lg font-semibold ${highlightTextColor}`}>
+            {currentMonthLabel}
+          </p>
+          <p className={`text-xs mt-2 ${infoTextColor}`}>
+            {t(editContribuicaoModal.calendarSelectedDateLabel)}: {selectedDateLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 self-start">
           <button
             type="button"
             onClick={() => navigateMonth('prev')}

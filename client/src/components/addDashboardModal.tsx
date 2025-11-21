@@ -29,6 +29,7 @@ interface CalendarProps {
 function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const { theme } = useTheme()
+  const { language, t } = useLanguage()
   const isDark = theme === 'escuro'
   
   useEffect(() => {
@@ -88,6 +89,22 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   
   const days = getDaysInMonth(currentMonth)
   
+  const monthNames = addDashboardModal.calendarMonths[language]
+  const currentMonthLabel = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`
+  const infoTextColor = isDark ? 'text-gray-400' : 'text-gray-500'
+  const highlightTextColor = isDark ? 'text-gray-100' : 'text-gray-800'
+
+  const formatSelectedDate = (value: string) => {
+    const parts = value.split('-')
+    if (parts.length !== 3) return value
+    const [year, month, day] = parts
+    return `${day}/${month}/${year}`
+  }
+
+  const selectedDateLabel = selectedDate
+    ? formatSelectedDate(selectedDate)
+    : t(addDashboardModal.calendarNoDateSelected)
+
   return (
     <div
       className={`
@@ -98,14 +115,17 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
         }
       `}
     >
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-medium">
-          {selectedDate
-            ? selectedDate.split('-').reverse().join('/')
-            : new Date().toISOString().slice(0, 10).split('-').reverse().join('/')}
-        </span>
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <div>
+          <p className={`text-lg font-semibold ${highlightTextColor}`}>
+            {currentMonthLabel}
+          </p>
+          <p className={`text-xs mt-2 ${infoTextColor}`}>
+            {t(addDashboardModal.calendarSelectedDateLabel)}: {selectedDateLabel}
+          </p>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start">
           <button
             type="button"
             onClick={() => navigateMonth('prev')}
