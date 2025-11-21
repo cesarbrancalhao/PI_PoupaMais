@@ -4,6 +4,56 @@ import * as bcrypt from 'bcrypt';
 import { DatabaseService } from '../database/database.service';
 import { Usuario } from '../common/interfaces/user.interface';
 
+type Idioma = 'portugues' | 'ingles' | 'espanhol';
+
+const defaultCategoriesByLanguage: Record<Idioma, { nome: string; icone: string }[]> = {
+  portugues: [
+    { nome: 'Moradia', icone: 'Home' },
+    { nome: 'Eletrônicos', icone: 'Plug' },
+    { nome: 'Transporte', icone: 'Car' },
+    { nome: 'Alimentação', icone: 'Utensils' },
+    { nome: 'Saúde', icone: 'Heart' },
+    { nome: 'Lazer', icone: 'Gamepad-2' },
+  ],
+  ingles: [
+    { nome: 'Housing', icone: 'Home' },
+    { nome: 'Electronics', icone: 'Plug' },
+    { nome: 'Transportation', icone: 'Car' },
+    { nome: 'Food', icone: 'Utensils' },
+    { nome: 'Health', icone: 'Heart' },
+    { nome: 'Leisure', icone: 'Gamepad-2' },
+  ],
+  espanhol: [
+    { nome: 'Vivienda', icone: 'Home' },
+    { nome: 'Electrónica', icone: 'Plug' },
+    { nome: 'Transporte', icone: 'Car' },
+    { nome: 'Alimentación', icone: 'Utensils' },
+    { nome: 'Salud', icone: 'Heart' },
+    { nome: 'Ocio', icone: 'Gamepad-2' },
+  ],
+};
+
+const defaultSourcesByLanguage: Record<Idioma, { nome: string; icone: string }[]> = {
+  portugues: [
+    { nome: 'Salário', icone: 'Briefcase' },
+    { nome: 'Renda Fixa', icone: 'DollarSign' },
+    { nome: 'Renda Variável', icone: 'Apple' },
+    { nome: 'Extra', icone: 'Gift' },
+  ],
+  ingles: [
+    { nome: 'Salary', icone: 'Briefcase' },
+    { nome: 'Fixed Income', icone: 'DollarSign' },
+    { nome: 'Variable Income', icone: 'Apple' },
+    { nome: 'Extra Income', icone: 'Gift' },
+  ],
+  espanhol: [
+    { nome: 'Salario', icone: 'Briefcase' },
+    { nome: 'Renta Fija', icone: 'DollarSign' },
+    { nome: 'Renta Variable', icone: 'Apple' },
+    { nome: 'Extra', icone: 'Gift' },
+  ],
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -44,7 +94,7 @@ export class AuthService {
     };
   }
 
-  async register(nome: string, email: string, password: string) {
+  async register(nome: string, email: string, password: string, idioma: Idioma = 'portugues') {
     const existingUser = await this.databaseService.query(
       'SELECT id FROM usuario WHERE email = $1',
       [email],
@@ -66,17 +116,10 @@ export class AuthService {
       );
 
       const newUser = result.rows[0];
-      
-      await client.query('INSERT INTO config (usuario_id) VALUES ($1)', [newUser.id]);
 
-      const categorias = [
-        { nome: 'Moradia', icone: 'Home' },
-        { nome: 'Eletrônicos', icone: 'Plug' },
-        { nome: 'Transporte', icone: 'Car' },
-        { nome: 'Alimentação', icone: 'Utensils' },
-        { nome: 'Saúde', icone: 'Heart' },
-        { nome: 'Lazer', icone: 'Gamepad-2' },
-      ];
+      await client.query('INSERT INTO config (usuario_id, idioma) VALUES ($1, $2)', [newUser.id, idioma]);
+
+      const categorias = defaultCategoriesByLanguage[idioma] || defaultCategoriesByLanguage.portugues;
       for (const categoria of categorias) {
         await client.query(
           'INSERT INTO categoria_despesa (nome, icone, usuario_id) VALUES ($1, $2, $3)',
@@ -84,12 +127,7 @@ export class AuthService {
         );
       }
 
-      const fontes = [
-        { nome: 'Salário', icone: 'Briefcase' },
-        { nome: 'Renda Fixa', icone: 'DollarSign' },
-        { nome: 'Renda Variável', icone: 'Apple' },
-        { nome: 'Extra', icone: 'Gift' },
-      ];
+      const fontes = defaultSourcesByLanguage[idioma] || defaultSourcesByLanguage.portugues;
       for (const fonte of fontes) {
         await client.query(
           'INSERT INTO fonte_receita (nome, icone, usuario_id) VALUES ($1, $2, $3)',

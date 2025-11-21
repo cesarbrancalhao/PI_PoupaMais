@@ -8,6 +8,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAuthLanguage } from "@/app/terminology/useAuthLanguage";
 import { auth } from "@/app/terminology/language/auth";
 import LanguageSelector from "@/components/LanguageSelector";
+import type { Idioma } from "@/types/configs";
+import type { Language } from "@/app/terminology/language/types";
+
+const languageToIdiomaMap: Record<Language, Idioma> = {
+  pt: "portugues",
+  en: "ingles",
+  es: "espanhol",
+};
 
 export default function CadastroPage() {
   const [nome, setNome] = useState("");
@@ -59,7 +67,7 @@ export default function CadastroPage() {
     setLoading(true);
 
     try {
-      await register({ nome, email, password });
+      await register({ nome, email, password, idioma: languageToIdiomaMap[language] });
     } catch (err) {
       const error = err as Error;
       setError(error.message || t(auth.registerError));

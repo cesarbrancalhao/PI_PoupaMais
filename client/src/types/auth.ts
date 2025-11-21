@@ -1,3 +1,5 @@
+import type { Idioma } from './configs';
+
 export interface User {
   id: number;
   nome: string;
@@ -17,6 +19,7 @@ export interface RegisterRequest {
   nome: string;
   email: string;
   password: string;
+  idioma?: Idioma;
 }
 
 export interface AuthResponse {
