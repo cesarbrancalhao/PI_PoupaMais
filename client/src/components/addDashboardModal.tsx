@@ -246,14 +246,8 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
 
     try {
       const cleaned = value.replace(/[^\d.,]/g, "");
-
-      let numericValue = 0;
-
-      if (userCurrency === "real" || userCurrency === "euro") {
-        numericValue = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
-      } else {
-        numericValue = parseFloat(cleaned.replace(/,/g, ""));
-      }
+      const normalized = cleaned.replace(/\./g, "").replace(",", ".");
+      const numericValue = parseFloat(normalized);
 
       if (isNaN(numericValue)) {
         setShowError(true);
