@@ -255,7 +255,7 @@ export default function AnalisePage() {
             </h1>
           </header>
 
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+          <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-6">
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
                 <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
@@ -319,7 +319,7 @@ export default function AnalisePage() {
             </div>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
                 <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
