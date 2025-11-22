@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/app/terminology/LanguageContext";
 import { passwordModal } from "@/app/terminology/language/modals/password";
+import { usersService } from "@/services/users.service";
 
 interface PasswordModalProps {
   isOpen: boolean;
@@ -32,17 +33,33 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
     onClose();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (newPassword.length < 8) {
+      setError(t(passwordModal.passwordTooShort || "A senha deve ter no mínimo 8 caracteres"));
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError(t(passwordModal.passwordMismatch));
       return;
     }
-    setSuccess(true);
-    setTimeout(() => {
-      handleClose();
-    }, 1500);
+
+    try {
+      await usersService.changePassword(currentPassword, newPassword);
+      setSuccess(true);
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erro ao alterar a senha.");
+      }
+    }
   };
 
   const handleModalClick = (e: React.MouseEvent) => {
@@ -112,6 +129,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
                   : "bg-gray-100 text-gray-800 placeholder-gray-500"
               }`}
               required
+              minLength={8}
             />
           </div>
 

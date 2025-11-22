@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -38,6 +39,33 @@ export class UsersService {
     }
 
     return result.rows[0];
+  }
+
+  async changePassword(userId: number, currentPassword: string, newPassword: string) {
+    const result = await this.databaseService.query(
+      'SELECT senha FROM usuario WHERE id = $1',
+      [userId],
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const user = result.rows[0];
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.senha);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Senha atual incorreta');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.databaseService.query(
+      'UPDATE usuario SET senha = $1 WHERE id = $2',
+      [hashedPassword, userId],
+    );
+
+    return { message: 'Senha alterada com sucesso' };
   }
 
   async deleteAccount(userId: number) {
