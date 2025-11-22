@@ -258,7 +258,7 @@ export default function AnalisePage() {
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   {tendenciaBalanco === 'up' ? (
                     <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                   ) : tendenciaBalanco === 'down' ? (
@@ -278,7 +278,7 @@ export default function AnalisePage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-purple-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-purple-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <PieChart className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export default function AnalisePage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-yellow-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-yellow-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <Target className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                 </div>
                 <div>
@@ -306,7 +306,7 @@ export default function AnalisePage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-green-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-green-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
                 <div>
@@ -322,7 +322,7 @@ export default function AnalisePage() {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 </div>
                 <div>
@@ -336,7 +336,7 @@ export default function AnalisePage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-orange-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-orange-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
                 </div>
                 <div>
@@ -350,7 +350,7 @@ export default function AnalisePage() {
 
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-green-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center'}`}>
+                <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-green-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>
                   <Calendar className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
                 <div>
