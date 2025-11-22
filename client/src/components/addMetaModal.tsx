@@ -559,10 +559,10 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
 
               <button
                 type="submit"
-                className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                className={`w-full mt-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
                   isDark
-                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
                 <Save className="w-4 h-4" />

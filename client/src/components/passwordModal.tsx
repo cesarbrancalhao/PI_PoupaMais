@@ -153,7 +153,7 @@ export default function PasswordModal({ isOpen, onClose }: PasswordModalProps) {
             type="submit"
             className={`w-full mt-4 py-2.5 rounded-xl font-medium transition-all ${
               dark
-                ? "bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600 text-white"
+                ? "bg-transparent border-2 border-gray-300 text-gray-300 hover:border-blue-500 hover:text-blue-500"
                 : "bg-indigo-600 hover:bg-indigo-700 text-white"
             }`}
           >

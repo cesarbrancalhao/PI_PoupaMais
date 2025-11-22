@@ -473,10 +473,10 @@ export default function AddDashboardModal({ isOpen, onClose, type }: AddDashboar
               <button
                 type="submit"
                 className={`
-                  w-full py-2 mt-4 rounded-lg font-medium flex items-center justify-center gap-2 transition text-white
+                  w-full py-2 mt-4 rounded-lg font-medium flex items-center justify-center gap-2 transition
                   ${isDark
-                    ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
-                    : 'bg-blue-600 hover:bg-blue-700'}
+                    ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'}
                 `}
               >
                 <Save className="w-4 h-4" />

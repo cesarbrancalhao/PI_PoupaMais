@@ -179,7 +179,11 @@ export default function EditCategoriaModal({
               {!confirmDeleteMode && (
                 <button
                   type="submit"
-                  className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  className={`w-full mt-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                    isDark
+                      ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
                 >
                   <Save className="w-4 h-4" />
                   {t(common.save)} {type === 'categorias' ? t(common.category).toLowerCase() : t(common.source).toLowerCase()}
@@ -193,7 +197,9 @@ export default function EditCategoriaModal({
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteMode(false)}
-                        className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                        className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10' : 'bg-gray-500 text-white hover:bg-gray-600'
+                        }`}
                       >
                         <X className="w-4 h-4" />
                         {t(common.cancel)}
@@ -204,7 +210,9 @@ export default function EditCategoriaModal({
                           onDelete(item.id)
                           onClose()
                         }}
-                        className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                        className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                        }`}
                       >
                         <Trash className="w-4 h-4" />
                         {t(common.confirm)} {t(common.delete)}
@@ -214,7 +222,9 @@ export default function EditCategoriaModal({
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteMode(true)}
-                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                      className={`w-full mt-2 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                        isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-red-600 text-white hover:bg-red-700'
+                      }`}
                     >
                       <Trash className="w-4 h-4" />
                       {t(common.delete)} {type === 'categorias' ? t(common.category).toLowerCase() : t(common.source).toLowerCase()}

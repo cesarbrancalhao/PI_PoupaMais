@@ -384,10 +384,10 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
               {!confirmDeleteMode && (
                 <button
                   type="submit"
-                  className={`w-full mt-4 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                  className={`w-full mt-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
                     isDark
-                      ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600'
-                      : 'bg-blue-600 hover:bg-blue-700'
+                      ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
                   <Save className="w-4 h-4" />
@@ -402,8 +402,8 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteMode(false)}
-                        className={`flex-1 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                          isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-500 hover:bg-gray-600'
+                        className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10' : 'bg-gray-500 hover:bg-gray-600 text-white'
                         }`}
                       >
                         <X className="w-4 h-4" />
@@ -415,8 +415,8 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                           onDelete(editItem.id)
                           onClose()
                         }}
-                        className={`flex-1 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                          isDark ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'
+                        className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-yellow-500 hover:bg-yellow-600 text-white'
                         }`}
                       >
                         <Trash className="w-4 h-4" />
@@ -427,8 +427,8 @@ export default function EditContribuicaoModal({ isOpen, onClose, editItem, onDel
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteMode(true)}
-                      className={`w-full mt-2 text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
-                        isDark ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600 hover:bg-red-700'
+                      className={`w-full mt-2 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                        isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-red-600 hover:bg-red-700 text-white'
                       }`}
                     >
                       <Trash className="w-4 h-4" />

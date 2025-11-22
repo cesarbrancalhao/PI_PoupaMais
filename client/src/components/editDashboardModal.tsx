@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { X, ChevronLeft, ChevronRight, Save, Trash } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, Trash, Pencil } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CategoriaDespesa, FonteReceita } from '@/types'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -599,15 +599,15 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                           e.preventDefault()
                           handleEditThisOccurrence(e)
                         }}
-                        className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                        className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                       >
-                        <Save className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                         {t(editDashboardModal.editSingle)}
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmEditAllMode(true)}
-                        className={`w-full ${isDark ? 'bg-gradient-to-r from-purple-800 to-indigo-700 hover:from-purple-700 hover:to-indigo-600' : 'bg-purple-600 hover:bg-purple-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                        className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-purple-500 text-purple-400 hover:border-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
                       >
                         <Save className="w-4 h-4" />
                         {t(editDashboardModal.editAll)}
@@ -620,7 +620,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         e.preventDefault()
                         handleEditAllOccurrences()
                       }}
-                      className={`w-full ${isDark ? 'bg-gradient-to-r from-blue-800 to-indigo-700 hover:from-blue-700 hover:to-indigo-600' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 rounded-lg font-medium transition flex items-center justify-center gap-2`}
+                      className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                     >
                       <Save className="w-4 h-4" />
                       {t(common.save)} {type === 'despesas' ? t(common.expenses).toLowerCase() : t(common.income).toLowerCase()}
@@ -634,7 +634,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                   <button
                     type="button"
                     onClick={() => setConfirmEditAllMode(false)}
-                    className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                    className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10' : 'bg-gray-500 text-white hover:bg-gray-600'}`}
                   >
                     <X className="w-4 h-4" />
                     {t(common.cancel)}
@@ -642,7 +642,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                   <button
                     type="button"
                     onClick={handleEditAllOccurrences}
-                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                    className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-blue-500 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                   >
                     <Save className="w-4 h-4" />
                     {t(common.confirm)}
@@ -658,7 +658,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteMode(false)}
-                          className="w-full bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                          className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10' : 'bg-gray-500 text-white hover:bg-gray-600'}`}
                         >
                           <X className="w-4 h-4" />
                           {t(common.cancel)}
@@ -666,7 +666,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         <button
                           type="button"
                           onClick={handleDeleteThisMonth}
-                          className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                          className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-orange-500 text-orange-400 hover:border-orange-400 hover:text-orange-300 hover:bg-orange-500/10' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
                         >
                           <Trash className="w-4 h-4" />
                           {t(editDashboardModal.excludeSingle)}
@@ -674,7 +674,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         <button
                           type="button"
                           onClick={handleDeleteAll}
-                          className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2"
+                          className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-red-600 text-white hover:bg-red-700'}`}
                         >
                           <Trash className="w-4 h-4" />
                           {t(editDashboardModal.excludeAll)}
@@ -685,7 +685,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteMode(false)}
-                          className="flex-1 bg-gray-500 text-white py-2 rounded-lg font-medium hover:bg-gray-600 transition flex items-center justify-center gap-2"
+                          className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10' : 'bg-gray-500 text-white hover:bg-gray-600'}`}
                         >
                           <X className="w-4 h-4" />
                           {t(common.cancel)}
@@ -693,7 +693,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                         <button
                           type="button"
                           onClick={handleDeleteAll}
-                          className="flex-1 bg-yellow-500 text-white py-2 rounded-lg font-medium hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+                          className={`flex-1 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-yellow-500 text-white hover:bg-yellow-600'}`}
                         >
                           <Trash className="w-4 h-4" />
                           {t(common.confirm)}
@@ -704,7 +704,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteMode(true)}
-                      className="w-full mt-2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2"
+                      className={`w-full mt-2 py-2 rounded-lg transition flex items-center justify-center gap-2 ${isDark ? 'bg-transparent border-2 border-red-500 text-red-400 hover:border-red-400 hover:text-red-300 hover:bg-red-500/10' : 'bg-red-600 text-white hover:bg-red-700'}`}
                     >
                       <Trash className="w-4 h-4" />
                       {t(common.delete)} {type === 'despesas' ? t(common.expenses).toLowerCase() : t(common.income).toLowerCase()}
