@@ -63,14 +63,14 @@ export const auth = {
     es: 'Confirmar Contraseña',
   },
   passwordMinLength: {
-    pt: 'Mínimo de 6 caracteres',
-    en: 'Minimum 6 characters',
-    es: 'Mínimo 6 caracteres',
+    pt: 'Mínimo de 8 caracteres',
+    en: 'Minimum 8 characters',
+    es: 'Mínimo 8 caracteres',
   },
   passwordTooShort: {
-    pt: 'A senha deve ter no mínimo 6 caracteres',
-    en: 'Password must be at least 6 characters',
-    es: 'La contraseña debe tener al menos 6 caracteres',
+    pt: 'A senha deve ter no mínimo 8 caracteres',
+    en: 'Password must be at least 8 characters',
+    es: 'La contraseña debe tener al menos 8 caracteres',
   },
   passwordMismatch: {
     pt: 'As senhas não coincidem',

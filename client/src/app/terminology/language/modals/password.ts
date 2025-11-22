@@ -67,9 +67,9 @@ export const passwordModal = {
     es: 'Las contraseñas no coinciden',
   },
   passwordTooShort: {
-    pt: 'A senha deve ter pelo menos 6 caracteres',
-    en: 'Password must be at least 6 characters',
-    es: 'La contraseña debe tener al menos 6 caracteres',
+    pt: 'A senha deve ter pelo menos 8 caracteres',
+    en: 'Password must be at least 8 characters',
+    es: 'La contraseña debe tener al menos 8 caracteres',
   },
   incorrectPassword: {
     pt: 'Senha atual incorreta',

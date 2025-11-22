@@ -12,9 +12,9 @@ export class RegisterDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'senha123', minLength: 6 })
+  @ApiProperty({ example: 'senha123', minLength: 8 })
   @IsString()
-  @MinLength(6)
+  @MinLength(8, { message: 'A senha deve ter no mínimo 8 caracteres' })
   password: string;
 
   @ApiProperty({

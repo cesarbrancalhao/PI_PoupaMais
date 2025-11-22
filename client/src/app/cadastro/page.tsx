@@ -54,7 +54,7 @@ export default function CadastroPage() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(t(auth.passwordTooShort));
       return;
     }
@@ -141,7 +141,7 @@ export default function CadastroPage() {
                 disabled={loading}
                 className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0 disabled:opacity-50"
                 required
-                minLength={6}
+                minLength={8}
               />
               <p className="text-xs text-gray-500 mt-1">{t(auth.passwordMinLength)}</p>
             </div>
