@@ -9,7 +9,7 @@ import EditContribuicaoModal from '@/components/editContribuicaoModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
 import { Meta, ContribuicaoMeta, DespesaExclusao, ReceitaExclusao, Despesa, Receita } from '@/types'
-import { metasService, contribuicaoMetaService, receitasService, despesasService, despesasExclusaoService, receitasExclusaoService } from '@/services'
+import { metasService, contribuicaoMetaService, receitasService, despesasService, despesasExclusaoService, receitasExclusaoService, ApiError } from '@/services'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency as formatMoney } from '@/app/terminology/currency'
@@ -101,6 +101,8 @@ export default function MetasPage() {
   }
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true)
       setError(null)
@@ -145,17 +147,18 @@ export default function MetasPage() {
 
       setReceitaMedia(totalReceitasAcumulado / 12)
       setDespesaMedia(totalDespesasAcumulado / 12)
-
-      if (metasData.length > 0 && !selectedMeta) {
-        setSelectedMeta(metasData[0])
-      }
     } catch (err) {
+      const error = err as ApiError;
+      if (error && (error.status === 401 || error.status === 403)) {
+        setLoading(false);
+        return;
+      }
       console.error('Erro ao buscar dados:', err)
       setError(`${t(metasTerms.errorLoadingGoals)}. ${t(common.checkConnection)}.`)
     } finally {
       setLoading(false)
     }
-  }, [selectedMeta, t])
+  }, [t, user])
 
   const fetchContribuicoes = useCallback(async (metaId: number) => {
     try {
@@ -172,6 +175,12 @@ export default function MetasPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    if (metas.length > 0 && !selectedMeta) {
+      setSelectedMeta(metas[0])
+    }
+  }, [metas, selectedMeta])
 
   useEffect(() => {
     if (selectedMeta) {

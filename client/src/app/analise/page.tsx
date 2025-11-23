@@ -5,7 +5,7 @@ import Sidebar from '@/components/sidebar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { TrendingUp, TrendingDown, Target, DollarSign, PieChart, BarChart3, Calendar, Activity } from 'lucide-react'
 import { Despesa, Receita, Meta, DespesaExclusao, ReceitaExclusao } from '@/types'
-import { despesasService, receitasService, metasService, despesasExclusaoService, receitasExclusaoService } from '@/services'
+import { despesasService, receitasService, metasService, despesasExclusaoService, receitasExclusaoService, ApiError } from '@/services'
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency as formatMoney } from "@/app/terminology/currency"
 import { useAuth } from "@/contexts/AuthContext"
@@ -32,6 +32,8 @@ export default function AnalisePage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
+      
       try {
         setCarregando(true)
         setErro(null)
@@ -59,6 +61,11 @@ export default function AnalisePage() {
         setDespesasExclusoes(despesasExclusoesResponse)
         setReceitasExclusoes(receitasExclusoesResponse)
       } catch (err) {
+        const error = err as ApiError;
+        if (error && (error.status === 401 || error.status === 403)) {
+          setCarregando(false);
+          return;
+        }
         console.error('Erro ao buscar dados:', err)
         setErro(t(analise.errorLoadingAnalysis))
       } finally {
@@ -67,7 +74,7 @@ export default function AnalisePage() {
     }
 
     fetchData()
-  }, [t])
+  }, [t, user])
 
   const formatCurrency = (value: number) => {
     return formatMoney(value, user?.moeda || "real")

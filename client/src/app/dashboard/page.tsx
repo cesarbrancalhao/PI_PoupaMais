@@ -12,7 +12,7 @@ import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
 import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus, TrendingUp, PieChart } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita, DespesaExclusao, ReceitaExclusao } from '@/types'
-import { despesasService, receitasService, despesasExclusaoService, receitasExclusaoService } from '@/services'
+import { despesasService, receitasService, despesasExclusaoService, receitasExclusaoService, ApiError } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
 import { fontesReceitaService } from '@/services/fontes.service'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -59,6 +59,8 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true)
       setError(null)
@@ -85,12 +87,17 @@ export default function DashboardPage() {
       setDespesasExclusoes(despesasExclusoesResponse)
       setReceitasExclusoes(receitasExclusoesResponse)
     } catch (err) {
+      const error = err as ApiError;
+      if (error && (error.status === 401 || error.status === 403)) {
+        setLoading(false);
+        return;
+      }
       console.error('Erro ao buscar dados:', err)
       setError(`${t(dashboard.errorLoadingData)}. ${t(common.checkConnection)}`)
     } finally {
       setLoading(false)
     }
-  }, [t])
+  }, [t, user])
 
   useEffect(() => {
     fetchData()

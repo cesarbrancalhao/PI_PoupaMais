@@ -25,45 +25,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+    
     async function initAuth() {
       let baseUser = null;
       
       try {
         if (!authService.isAuthenticated()) {
-          setUser(null);
+          if (isMounted) setUser(null);
           return;
         }
 
         baseUser = authService.getUser();
         if (!baseUser) {
-          setUser(null);
+          if (isMounted) setUser(null);
           return;
         }
 
         const configs = await configsService.get();
 
-        setUser({
-          ...baseUser,
-          tema: configs.tema,
-          moeda: configs.moeda,
-          idioma: configs.idioma,
-        });
+        if (isMounted && !abortController.signal.aborted) {
+          setUser({
+            ...baseUser,
+            tema: configs.tema,
+            moeda: configs.moeda,
+            idioma: configs.idioma,
+          });
+        }
 
       } catch (err) {
-        console.error("Erro ao inicializar auth:", err);
+        if (!isMounted || abortController.signal.aborted) return;
+        
         const error = err as ApiError;
-        if (error.status === 401 || error.status === 403) {
+        if (error && (error.status === 401 || error.status === 403)) {
           authService.logout();
           setUser(null);
         } else {
+          console.error("Erro ao inicializar auth:", err);
           setUser(baseUser);
         }
       } finally {
-        setLoading(false);
+        if (isMounted && !abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
 
     initAuth();
+    
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   const login = async (data: LoginRequest) => {
