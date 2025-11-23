@@ -4,12 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
-import { Settings } from "lucide-react";
+import { Settings, Check } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { configsService } from "@/services/configs.service";
+import { usersService } from "@/services/users.service";
 import { Moeda, Tema, Idioma } from "@/types/configs";
 import { useLanguage } from "@/app/terminology/LanguageContext";
 import { configuracoes } from "@/app/terminology/language/configuracoes";
+import { common } from "@/app/terminology/language/common";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();
@@ -20,6 +22,8 @@ const ConfiguracoesPage = () => {
   const [tema, setTema] = useState<Tema>("claro");
   const [idioma, setIdioma] = useState<Idioma>("portugues");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [isNameChanged, setIsNameChanged] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +32,24 @@ const ConfiguracoesPage = () => {
     setTema(user.tema ? "escuro" : "claro");
     setIdioma((user.idioma ?? "portugues") as Idioma);
     setGlobalTheme(user.tema ? "escuro" : "claro");
+    setEditedName(user.nome);
   }, [user, setGlobalTheme]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedName(e.target.value);
+    setIsNameChanged(e.target.value !== user?.nome);
+  };
+
+  const updateName = async () => {
+    if (!user || !editedName.trim()) return;
+    try {
+      const updatedUser = await usersService.updateProfile(editedName, user.email);
+      setUser({ ...user, nome: updatedUser.nome });
+      setIsNameChanged(false);
+    } catch (err) {
+      console.error("Erro ao atualizar nome:", err);
+    }
+  };
 
   const updateConfigs = async (newData: Partial<{ tema: boolean; moeda: Moeda; idioma: Idioma }>) => {
     try {
@@ -74,6 +95,7 @@ const ConfiguracoesPage = () => {
   const containerBg = isDark ? "bg-[#2B2B2B]" : "bg-white";
   const textColor = isDark ? "text-gray-100" : "text-gray-900";
   const inputBg = isDark ? "bg-[#3C3C3C]" : "bg-gray-100";
+  const inputDisabledBg = isDark ? "bg-[#3C3C3C]/50 text-gray-400" : "bg-gray-300/80 text-gray-600";
   const labelColor = isDark ? "text-gray-300" : "text-gray-700";
 
   const btnClass = (isActive: boolean, position?: "left" | "right") => {
@@ -199,12 +221,24 @@ const ConfiguracoesPage = () => {
             <div className="flex flex-col gap-6">
               <div className="flex flex-col flex-1">
                 <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.userName)}</label>
-                <input
-                  type="text"
-                  value={user?.nome || t(configuracoes.loading) || "..."}
-                  readOnly
-                  className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={handleNameChange}
+                    placeholder={t(configuracoes.loading) || "..."}
+                    className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all`}
+                  />
+                  {isNameChanged && (
+                    <button
+                      onClick={updateName}
+                      className={`p-3 rounded-lg ${accentColor} ${accentHover} text-white shadow-sm transition-all hover:scale-105 active:scale-95`}
+                      title={t(common.save)}
+                    >
+                      <Check size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6">
@@ -214,7 +248,8 @@ const ConfiguracoesPage = () => {
                     type="email"
                     value={user?.email || t(configuracoes.loading) || "..."}
                     readOnly
-                    className={`w-fit ${inputBg} rounded-lg px-3 py-3 text-sm`}
+                    disabled={true}
+                    className={`w-fit ${inputDisabledBg} rounded-lg px-3 py-3 text-sm`}
                   />
                 </div>
 
