@@ -91,22 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: RegisterRequest) => {
     try {
-      const response = await authService.register(data);
+      await authService.register(data);
       
-      try {
-        const configs = await configsService.get();
-        setUser({
-          ...response.user!,
-          tema: configs.tema,
-          moeda: configs.moeda,
-          idioma: configs.idioma,
-        });
-      } catch (err) {
-        console.warn("Failed to load configs, using defaults:", err);
-        setUser(response.user!);
-      }
-
-      router.push('/dashboard');
     } catch (error) {
       throw error;
     }

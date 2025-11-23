@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthLanguage } from "@/app/terminology/useAuthLanguage";
 import { auth } from "@/app/terminology/language/auth";
+import { verificationModal as verificationModalText } from "@/app/terminology/language/modals/verification";
+import { authService } from "@/services/auth.service";
+import { verificationService } from "@/services/verification.service";
+import { configsService } from "@/services/configs.service";
 import LanguageSelector from "@/components/LanguageSelector";
+import VerificationModal from "@/components/verificationModal";
 import type { Idioma } from "@/types/configs";
 import type { Language } from "@/app/terminology/language/types";
 
@@ -24,7 +29,10 @@ export default function CadastroPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register, isAuthenticated } = useAuth();
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingData, setPendingData] = useState<{ nome: string; email: string; password: string; idioma: Idioma } | null>(null);
+  const { register, isAuthenticated, setUser } = useAuth();
   const router = useRouter();
   const { language, setLanguage, t } = useAuthLanguage();
 
@@ -67,7 +75,13 @@ export default function CadastroPage() {
     setLoading(true);
 
     try {
-      await register({ nome, email, password, idioma: languageToIdiomaMap[language] });
+      const registerData = { nome, email, password, idioma: languageToIdiomaMap[language] };
+      await register(registerData);
+
+      // Store data for potential resend
+      setPendingData(registerData);
+      setPendingEmail(email);
+      setShowVerificationModal(true);
     } catch (err) {
       const error = err as Error;
       setError(error.message || t(auth.registerError));
@@ -76,16 +90,67 @@ export default function CadastroPage() {
     }
   };
 
+  const handleVerifyCode = async (code: string) => {
+    try {
+      const response = await verificationService.verifyCode(pendingEmail, code);
+
+      // Set auth data
+      authService.setAuthDataFromVerification(response.access_token, response.user);
+
+      // Load configs and set user
+      try {
+        const configs = await configsService.get();
+        setUser({
+          ...response.user,
+          tema: configs.tema,
+          moeda: configs.moeda,
+          idioma: configs.idioma,
+        });
+      } catch (err) {
+        console.warn("Failed to load configs, using defaults:", err);
+        setUser(response.user);
+      }
+
+      // Navigate to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      const error = err as Error;
+      throw new Error(error.message || t(verificationModalText.invalidCode));
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!pendingData) {
+      throw new Error("Nenhum registro pendente");
+    }
+
+    try {
+      await register(pendingData);
+    } catch (err) {
+      const error = err as Error;
+      throw new Error(error.message || "Erro ao reenviar código");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen">
-      <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white relative">
-        <div className="absolute top-4 right-4">
-          <LanguageSelector
-            currentLanguage={language}
-            onLanguageChange={setLanguage}
-            isDarkMode={false}
-          />
-        </div>
+    <>
+      <VerificationModal
+        isOpen={showVerificationModal}
+        email={pendingEmail}
+        language={language}
+        onVerify={handleVerifyCode}
+        onResend={handleResendCode}
+      />
+
+      <div className="flex min-h-screen">
+        <div className="w-full lg:basis-[30%] flex flex-col justify-center items-center px-8 bg-white relative">
+          <div className="absolute top-4 right-4">
+            <LanguageSelector
+              currentLanguage={language}
+              onLanguageChange={setLanguage}
+              isDarkMode={false}
+            />
+          </div>
         <div className="w-full max-w-sm space-y-6">
           <div className="flex flex-col items-center">
             <Image src="/logo.svg" alt="Logo" width={90} height={90} />
@@ -179,15 +244,16 @@ export default function CadastroPage() {
         </div>
       </div>
 
-      <div className="hidden lg:flex lg:basis-[70%] bg-gray-50 justify-center items-center">
-        <Image
-          src="/illustration.svg"
-          alt="Illustration"
-          width={500}
-          height={500}
-          priority
-        />
+        <div className="hidden lg:flex lg:basis-[70%] bg-gray-50 justify-center items-center">
+          <Image
+            src="/illustration.svg"
+            alt="Illustration"
+            width={500}
+            height={500}
+            priority
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

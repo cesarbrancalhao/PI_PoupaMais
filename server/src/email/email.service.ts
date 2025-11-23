@@ -1,0 +1,100 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
+
+@Injectable()
+export class EmailService {
+  private transporter: Transporter;
+
+  constructor(private configService: ConfigService) {
+    const smtpPort = this.configService.get<number>('SMTP_PORT');
+    const smtpSecure = this.configService.get<string>('SMTP_SECURE') === 'true';
+
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get<string>('SMTP_HOST'),
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: this.configService.get<string>('SMTP_USER'),
+        pass: this.configService.get<string>('SMTP_PASS'),
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+  }
+
+  async sendVerificationEmail(email: string, code: string, nome: string, idioma: 'portugues' | 'ingles' | 'espanhol'): Promise<void> {
+    const translations = {
+      portugues: {
+        subject: 'Código de Verificação - PoupaMais',
+        greeting: 'Olá',
+        message: 'Seu código de verificação é:',
+        expires: 'Este código expira em 15 minutos.',
+        ignore: 'Se você não solicitou este código, ignore este email.',
+        thanks: 'Obrigado por usar PoupaMais!',
+      },
+      ingles: {
+        subject: 'Verification Code - PoupaMais',
+        greeting: 'Hello',
+        message: 'Your verification code is:',
+        expires: 'This code expires in 15 minutes.',
+        ignore: 'If you did not request this code, please ignore this email.',
+        thanks: 'Thank you for using PoupaMais!',
+      },
+      espanhol: {
+        subject: 'Código de Verificación - PoupaMais',
+        greeting: 'Hola',
+        message: 'Su código de verificación es:',
+        expires: 'Este código expira en 15 minutos.',
+        ignore: 'Si no solicitó este código, ignore este correo electrónico.',
+        thanks: '¡Gracias por usar PoupaMais!',
+      },
+    };
+
+    const t = translations[idioma] || translations.portugues;
+
+    const mailOptions = {
+      from: this.configService.get<string>('SMTP_FROM'),
+      to: email,
+      subject: t.subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .code-box { background-color: #f4f4f4; border: 2px dashed #4F46E5; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+            .code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4F46E5; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color: #4F46E5;">PoupaMais</h1>
+            </div>
+            <p>${t.greeting} <strong>${nome}</strong>,</p>
+            <p>${t.message}</p>
+            <div class="code-box">
+              <div class="code">${code}</div>
+            </div>
+            <p><small>${t.expires}</small></p>
+            <p><small>${t.ignore}</small></p>
+            <div class="footer">
+              <p>${t.thanks}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
+}

@@ -6,20 +6,22 @@ const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 
 class AuthService {
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  async register(data: RegisterRequest): Promise<{ message: string }> {
     try {
       this.validateEmail(data.email);
       this.validatePassword(data.password);
       this.validateName(data.nome);
 
-      const response = await apiService.post<AuthResponse>('/auth/register', data);
-
-      this.setAuthData(response.access_token, response.user);
+      const response = await apiService.post<{ message: string }>('/auth/register', data);
 
       return response;
     } catch (error) {
       throw this.handleAuthError(error);
     }
+  }
+
+  setAuthDataFromVerification(token: string, user: AuthResponse['user']): void {
+    this.setAuthData(token, user);
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {

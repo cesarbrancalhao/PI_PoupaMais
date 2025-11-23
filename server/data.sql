@@ -11,6 +11,18 @@ CREATE TABLE usuario (
 CREATE TYPE idioma_enum AS ENUM ('portugues', 'ingles', 'espanhol');
 CREATE TYPE moeda_enum AS ENUM ('real', 'dolar', 'euro');
 
+CREATE TABLE verificacao (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    idioma idioma_enum NOT NULL DEFAULT 'portugues',
+    codigo VARCHAR(6) NOT NULL,
+    expira_em TIMESTAMP NOT NULL,
+    tentativas INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE config (
     id SERIAL PRIMARY KEY,
     tema BOOLEAN NOT NULL DEFAULT FALSE,
@@ -99,6 +111,7 @@ CREATE TABLE contribuicao_meta (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_verificacao_email ON verificacao(email);
 CREATE INDEX idx_config_usuario_id ON config(usuario_id);
 CREATE INDEX idx_categoria_despesa_usuario_id ON categoria_despesa(usuario_id);
 CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);

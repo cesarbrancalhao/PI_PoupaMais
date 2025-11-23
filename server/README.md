@@ -173,7 +173,7 @@ JWT_SECRET=sua-chave-secreta-jwt-mude-em-producao
 JWT_EXPIRATION=7d
 
 # CORS
-CORS_ORIGIN=http://localhost:3001
+CORS_ORIGIN=http://localhost:3000
 ```
 
 **⚠️ IMPORTANTE**: As variáveis `JWT_SECRET`, `DB_HOST` e `DB_PASSWORD` são obrigatórias. A aplicação não iniciará sem elas.
