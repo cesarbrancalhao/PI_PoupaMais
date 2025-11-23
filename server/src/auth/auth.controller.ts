@@ -3,9 +3,13 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { VerificationService } from './verification.service';
+import { PasswordResetService } from './password-reset.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
+import { VerifyPasswordResetDto } from './dto/verify-password-reset.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @ApiTags('auth')
@@ -14,6 +18,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private verificationService: VerificationService,
+    private passwordResetService: PasswordResetService,
   ) {}
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -52,5 +57,42 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   async login(@Body() loginDto: LoginDto, @Request() req) {
     return this.authService.login(req.user);
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Post('request-password-reset')
+  @ApiOperation({ summary: 'Solicitar recuperação de senha - envia código por email' })
+  @ApiResponse({ status: 201, description: 'Código de recuperação enviado' })
+  @ApiResponse({ status: 400, description: 'Email não encontrado' })
+  async requestPasswordReset(@Body() requestPasswordResetDto: RequestPasswordResetDto) {
+    await this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
+    return { message: 'Código de recuperação enviado para o email' };
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('verify-reset-code')
+  @ApiOperation({ summary: 'Verificar código de recuperação de senha' })
+  @ApiResponse({ status: 200, description: 'Código válido' })
+  @ApiResponse({ status: 400, description: 'Código inválido ou expirado' })
+  async verifyResetCode(@Body() verifyPasswordResetDto: VerifyPasswordResetDto) {
+    await this.passwordResetService.verifyResetCode(
+      verifyPasswordResetDto.email,
+      verifyPasswordResetDto.code,
+    );
+    return { message: 'Código válido' };
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Redefinir senha com código de verificação' })
+  @ApiResponse({ status: 200, description: 'Senha redefinida com sucesso' })
+  @ApiResponse({ status: 400, description: 'Código inválido ou expirado' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    await this.passwordResetService.resetPassword(
+      resetPasswordDto.email,
+      resetPasswordDto.code,
+      resetPasswordDto.newPassword,
+    );
+    return { message: 'Senha redefinida com sucesso' };
   }
 }

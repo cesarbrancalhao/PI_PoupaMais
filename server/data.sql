@@ -23,6 +23,16 @@ CREATE TABLE verificacao (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE recuperacao_senha (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    codigo VARCHAR(6) NOT NULL,
+    expira_em TIMESTAMP NOT NULL,
+    tentativas INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
+);
+
 CREATE TABLE config (
     id SERIAL PRIMARY KEY,
     tema BOOLEAN NOT NULL DEFAULT FALSE,
@@ -112,6 +122,7 @@ CREATE TABLE contribuicao_meta (
 );
 
 CREATE INDEX idx_verificacao_email ON verificacao(email);
+CREATE INDEX idx_recuperacao_senha_email ON recuperacao_senha(email);
 CREATE INDEX idx_config_usuario_id ON config(usuario_id);
 CREATE INDEX idx_categoria_despesa_usuario_id ON categoria_despesa(usuario_id);
 CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);

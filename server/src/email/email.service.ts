@@ -97,4 +97,84 @@ export class EmailService {
 
     await this.transporter.sendMail(mailOptions);
   }
+
+  async sendPasswordResetEmail(email: string, code: string, nome: string, idioma: 'portugues' | 'ingles' | 'espanhol'): Promise<void> {
+    const translations = {
+      portugues: {
+        subject: 'Recuperação de Senha - PoupaMais',
+        greeting: 'Olá',
+        message: 'Você solicitou a recuperação de senha. Use o código abaixo para redefinir sua senha:',
+        expires: 'Este código expira em 15 minutos.',
+        ignore: 'Se você não solicitou a recuperação de senha, ignore este email e sua senha permanecerá inalterada.',
+        thanks: 'Obrigado por usar PoupaMais!',
+        security: 'Por segurança, nunca compartilhe este código com ninguém.',
+      },
+      ingles: {
+        subject: 'Password Recovery - PoupaMais',
+        greeting: 'Hello',
+        message: 'You requested a password recovery. Use the code below to reset your password:',
+        expires: 'This code expires in 15 minutes.',
+        ignore: 'If you did not request a password recovery, please ignore this email and your password will remain unchanged.',
+        thanks: 'Thank you for using PoupaMais!',
+        security: 'For security, never share this code with anyone.',
+      },
+      espanhol: {
+        subject: 'Recuperación de Contraseña - PoupaMais',
+        greeting: 'Hola',
+        message: 'Solicitó la recuperación de contraseña. Use el código a continuación para restablecer su contraseña:',
+        expires: 'Este código expira en 15 minutos.',
+        ignore: 'Si no solicitó la recuperación de contraseña, ignore este correo electrónico y su contraseña permanecerá sin cambios.',
+        thanks: '¡Gracias por usar PoupaMais!',
+        security: 'Por seguridad, nunca comparta este código con nadie.',
+      },
+    };
+
+    const t = translations[idioma] || translations.portugues;
+
+    const mailOptions = {
+      from: this.configService.get<string>('SMTP_FROM'),
+      to: email,
+      subject: t.subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .code-box { background-color: #f4f4f4; border: 2px dashed #4F46E5; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+            .code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4F46E5; }
+            .warning { background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px; margin: 20px 0; border-radius: 4px; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color: #4F46E5;">PoupaMais</h1>
+            </div>
+            <p>${t.greeting} <strong>${nome}</strong>,</p>
+            <p>${t.message}</p>
+            <div class="code-box">
+              <div class="code">${code}</div>
+            </div>
+            <p><small>${t.expires}</small></p>
+            <div class="warning">
+              <p style="margin: 0;"><strong>${t.security}</strong></p>
+            </div>
+            <p><small>${t.ignore}</small></p>
+            <div class="footer">
+              <p>${t.thanks}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
 }
