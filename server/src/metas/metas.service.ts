@@ -46,7 +46,7 @@ export class MetasService {
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {
-    const maxLimit = Math.min(limit, 100);
+    const maxLimit = Math.min(limit, 2000);
     const offset = (page - 1) * maxLimit;
 
     const [dataResult, countResult] = await Promise.all([

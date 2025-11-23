@@ -38,9 +38,9 @@ export default function AnalisePage() {
         setCarregando(true)
         setErro(null)
         const [despesasResponse, receitasResponse, metasResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
-          despesasService.getAll(1, 100),
-          receitasService.getAll(1, 100),
-          metasService.getAll(1, 100),
+          despesasService.getAll(1, 2000),
+          receitasService.getAll(1, 2000),
+          metasService.getAll(1, 2000),
           despesasExclusaoService.getAll(),
           receitasExclusaoService.getAll()
         ])

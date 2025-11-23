@@ -152,6 +152,23 @@ export const common = {
     en: 'No',
     es: 'No',
   },
+
+  // Paginação
+  previous: {
+    pt: 'Anterior',
+    en: 'Previous',
+    es: 'Anterior',
+  },
+  next: {
+    pt: 'Próxima',
+    en: 'Next',
+    es: 'Siguiente',
+  },
+  of: {
+    pt: 'de',
+    en: 'of',
+    es: 'de',
+  },
 } as const;
 
 export type CommonKey = keyof typeof common;

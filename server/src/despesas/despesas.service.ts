@@ -49,7 +49,7 @@ export class DespesasService {
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {
-    const maxLimit = Math.min(limit, 100);
+    const maxLimit = Math.min(limit, 2000);
     const offset = (page - 1) * maxLimit;
 
     const [dataResult, countResult] = await Promise.all([
@@ -92,7 +92,6 @@ export class DespesasService {
     try {
       await client.query('BEGIN');
 
-      // Only validate categoria if it's provided and not null
       if (updateDespesaDto.categoria_despesa_id !== undefined && updateDespesaDto.categoria_despesa_id !== null) {
         const categoryExists = await client.query(
           'SELECT * FROM categoria_despesa WHERE id = $1 AND usuario_id = $2',

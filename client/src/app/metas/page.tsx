@@ -36,6 +36,18 @@ export default function MetasPage() {
   const [receitaMedia, setReceitaMedia] = useState(0)
   const [despesaMedia, setDespesaMedia] = useState(0)
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 4
+
+  const totalPages = Math.ceil(metas.length / ITEMS_PER_PAGE)
+  const paginatedMetas = metas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
   const expandirEntradasRecorrentes = <T extends Despesa | Receita>(
     itens: T[],
     mesSelecionado: string,
@@ -107,9 +119,9 @@ export default function MetasPage() {
       setLoading(true)
       setError(null)
       const [metasResponse, receitasResponse, despesasResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
-        metasService.getAll(1, 100),
-        receitasService.getAll(1, 100),
-        despesasService.getAll(1, 100),
+        metasService.getAll(1, 2000),
+        receitasService.getAll(1, 2000),
+        despesasService.getAll(1, 2000),
         despesasExclusaoService.getAll(),
         receitasExclusaoService.getAll()
       ])
@@ -162,7 +174,7 @@ export default function MetasPage() {
 
   const fetchContribuicoes = useCallback(async (metaId: number) => {
     try {
-      const response = await contribuicaoMetaService.getAllByMeta(metaId, 1, 100)
+      const response = await contribuicaoMetaService.getAllByMeta(metaId, 1, 2000)
       const contribuicoesData = Array.isArray(response)
         ? response
         : (response?.data || [])
@@ -376,7 +388,7 @@ export default function MetasPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {metas.map((meta) => {
+                    {paginatedMetas.map((meta) => {
                       const progress = calculateProgress(meta)
                       const timeRemaining = calculateTimeRemaining(meta)
 
@@ -442,6 +454,36 @@ export default function MetasPage() {
                         </div>
                       )
                     })}
+
+                    {totalPages > 1 && (
+                      <div className="flex justify-center items-center gap-2 mt-4 pt-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); goToPage(currentPage - 1); }}
+                          disabled={currentPage === 1}
+                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            isDark
+                              ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                          }`}
+                        >
+                          {t(common.previous)}
+                        </button>
+                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {currentPage} {t(common.of)} {totalPages}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); goToPage(currentPage + 1); }}
+                          disabled={currentPage === totalPages}
+                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            isDark
+                              ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                          }`}
+                        >
+                          {t(common.next)}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>

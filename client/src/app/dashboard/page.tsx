@@ -58,6 +58,13 @@ export default function DashboardPage() {
   const [selectedConfigItem, setSelectedConfigItem] = useState<CategoriaDespesa | FonteReceita | null>(null)
   const { user } = useAuth();
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     
@@ -65,8 +72,8 @@ export default function DashboardPage() {
       setLoading(true)
       setError(null)
       const [despesasResponse, receitasResponse, categoriasResponse, fontesResponse, despesasExclusoesResponse, receitasExclusoesResponse] = await Promise.all([
-        despesasService.getAll(1, 100),
-        receitasService.getAll(1, 100),
+        despesasService.getAll(1, 2000),
+        receitasService.getAll(1, 2000),
         categoriasDespesaService.getAll(),
         fontesReceitaService.getAll(),
         despesasExclusaoService.getAll(),
@@ -346,6 +353,16 @@ export default function DashboardPage() {
       displayMonth: selectedMonth
     }
   })
+
+  const allRows = activeTab === 'despesas' ? despesasRows : receitasRows
+  const totalPages = Math.ceil(allRows.length / ITEMS_PER_PAGE)
+  const paginatedRows = allRows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
 
   const totalReceitas = (filteredReceitas ?? []).reduce((sum, r) => sum + (Number(r.valor) || 0), 0)
   const totalDespesas = (filteredDespesas ?? []).reduce((sum, d) => sum + (Number(d.valor) || 0), 0)
@@ -711,7 +728,7 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {(activeTab === 'despesas' ? despesasRows : receitasRows).slice(0, 10).map((row) => (
+                      {paginatedRows.map((row) => (
                         <div
                           key={row.id}
                           className={`${isDark ? 'bg-[var(--bg-main)] rounded-lg p-3 border border-white/10 hover:bg-white/10' : 'bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100'} transition-colors cursor-pointer grid grid-cols-4 gap-2 items-center`}
@@ -731,6 +748,35 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       ))}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-4 pt-2 border-t border-gray-100/10">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); goToPage(currentPage - 1); }}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                              isDark
+                                ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                            }`}
+                          >
+                            {t(common.previous)}
+                          </button>
+                          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {currentPage} {t(common.of)} {totalPages}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); goToPage(currentPage + 1); }}
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                              isDark
+                                ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                            }`}
+                          >
+                            {t(common.next)}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -748,6 +794,7 @@ export default function DashboardPage() {
                     <p className="text-sm mt-2">{activeTab === 'despesas' ? t(dashboard.clickToAddExpense) : t(dashboard.clickToAddIncome)}</p>
                   </div>
                 ) : (
+                  <>
                   <table className="w-full text-xs md:text-sm table-fixed min-w-[500px]">
                     <thead className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       <tr>
@@ -759,7 +806,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody className={`${isDark ? 'text-[var(--text-main)]' : 'text-gray-700'}`}>
-                      {(activeTab === 'despesas' ? despesasRows : receitasRows).map((row) => (
+                      {paginatedRows.map((row) => (
                         <tr
                           key={row.id}
                           className={`${isDark ? 'odd:bg-[var(--bg-main)] hover:bg-white/10 cursor-pointer transition-colors' : 'odd:bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors'}`}
@@ -779,6 +826,36 @@ export default function DashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4 pt-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); goToPage(currentPage - 1); }}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                          isDark
+                            ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                        }`}
+                      >
+                        {t(common.previous)}
+                      </button>
+                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {currentPage} {t(common.of)} {totalPages}
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); goToPage(currentPage + 1); }}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                          isDark
+                            ? 'bg-white/10 text-gray-200 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                        }`}
+                      >
+                        {t(common.next)}
+                      </button>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             </section>

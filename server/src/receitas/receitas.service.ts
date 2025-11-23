@@ -49,7 +49,7 @@ export class ReceitasService {
   }
 
   async findAll(userId: number, page: number = 1, limit: number = 20): Promise<PaginationResponse<any>> {
-    const maxLimit = Math.min(limit, 100);
+    const maxLimit = Math.min(limit, 2000);
     const offset = (page - 1) * maxLimit;
 
     const [dataResult, countResult] = await Promise.all([
@@ -90,7 +90,6 @@ export class ReceitasService {
     try {
       await client.query('BEGIN');
 
-      // Only validate fonte if it's provided and not null
       if (data.fonte_receita_id !== undefined && data.fonte_receita_id !== null) {
         const fonteExists = await client.query(
           'SELECT * FROM fonte_receita WHERE id = $1 AND usuario_id = $2',
