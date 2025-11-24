@@ -85,6 +85,7 @@ CREATE TABLE receita (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
+-- RF22 - O sistema deverá manter automaticamente registros de Exclusões para Despesas, que armazenam a despesa, data de exclusão e usuário.
 CREATE TABLE despesa_exclusao (
     id SERIAL PRIMARY KEY,
     despesa_id INT NOT NULL REFERENCES despesa(id) ON DELETE CASCADE,
@@ -93,6 +94,7 @@ CREATE TABLE despesa_exclusao (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
+-- RF23 - O sistema deverá manter automaticamente registros de Exclusões para Receitas, que armazenam a receita, data de exclusão e usuário.
 CREATE TABLE receita_exclusao (
     id SERIAL PRIMARY KEY,
     receita_id INT NOT NULL REFERENCES receita(id) ON DELETE CASCADE,
