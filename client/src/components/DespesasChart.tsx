@@ -12,6 +12,8 @@ import {
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency } from "@/app/terminology/currency"
 import { Moeda } from "@/types/configs"
+import { dashboard } from '@/app/terminology/language/dashboard'
+import { useLanguage } from '@/app/terminology/LanguageContext'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -29,6 +31,7 @@ interface DespesasChartProps {
 export default function DespesasChart({ data, moeda }: DespesasChartProps) {
   const [containerKey, setContainerKey] = useState(0)
   const { theme } = useTheme()
+  const { t } = useLanguage()
   const isDark = theme === 'escuro'
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function DespesasChart({ data, moeda }: DespesasChartProps) {
           isDark ? 'text-gray-100' : 'text-gray-800'
         }`}
       >
-        Despesas por Categoria
+        {t(dashboard.expensesByCategory)}
       </h2>
 
       <div

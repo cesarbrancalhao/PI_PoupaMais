@@ -6,6 +6,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from 'cha
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency } from "@/app/terminology/currency"
 import { Moeda } from "@/types/configs"
+import { dashboard } from '@/app/terminology/language/dashboard'
+import { useLanguage } from '@/app/terminology/LanguageContext'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -23,6 +25,7 @@ interface ReceitasChartProps {
 export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
   const [containerKey, setContainerKey] = useState(0)
   const { theme } = useTheme()
+  const { t } = useLanguage()
   const dark = theme === 'escuro'
 
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
           dark ? 'text-gray-100' : 'text-gray-800'
         }`}
       >
-        Receitas por Fonte
+        {t(dashboard.incomeBySource)}
       </h2>
 
       <div key={containerKey} className="flex-1 flex items-center justify-center mb-4">
