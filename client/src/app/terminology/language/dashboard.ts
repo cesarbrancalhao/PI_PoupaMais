@@ -116,9 +116,9 @@ export const dashboard = {
     es: 'Total de Ingresos',
   },
   monthlyBalance: {
-    pt: 'Saldo do Mês',
+    pt: 'Saldo Mensal',
     en: 'Monthly Balance',
-    es: 'Saldo del Mes',
+    es: 'Saldo Mensual',
   },
   clickToAddExpense: {
     pt: 'Clique em Adicionar Despesa para começar!',

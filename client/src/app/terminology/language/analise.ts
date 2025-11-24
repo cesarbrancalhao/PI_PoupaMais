@@ -40,12 +40,17 @@ export const analise = {
     es: 'Asignación de Metas',
   },
   goalSummary: {
-    pt: 'Resumo de Metas',
-    en: 'Goal Summary',
-    es: 'Resumen de Metas',
+    pt: 'Resumo das Metas',
+    en: 'Goals Summary',
+    es: 'Resumen de las Metas',
   },
 
   // Métricas principais
+  incomeMonthlyAverage: {
+    pt: 'Receita Média Mensal',
+    en: 'Average Monthly Income',
+    es: 'Ingreso Promedio Mensual',
+  },
   metrics: {
     pt: 'Métricas Principais',
     en: 'Key Metrics',
@@ -62,9 +67,9 @@ export const analise = {
     es: 'Tasa de Ahorro',
   },
   goalAchievementRate: {
-    pt: 'Taxa de Conclusão de Metas',
+    pt: 'Porcentagem de Conclusão de Metas',
     en: 'Goal Achievement Rate',
-    es: 'Tasa de Logro de Metas',
+    es: 'Porcentaje de Logro de Metas',
   },
   averageMonthlyBalance: {
     pt: 'Saldo Médio Mensal',

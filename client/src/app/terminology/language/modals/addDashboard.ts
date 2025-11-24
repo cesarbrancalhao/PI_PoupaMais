@@ -87,14 +87,14 @@ export const addDashboardModal = {
     es: 'Recurrente',
   },
   endDate: {
-    pt: 'Data de Término',
+    pt: 'Data Final',
     en: 'End Date',
-    es: 'Fecha de Finalización',
+    es: 'Fecha Final',
   },
   noEndDate: {
-    pt: 'Sem data de término',
+    pt: 'Sem data Final',
     en: 'No end date',
-    es: 'Sin fecha de finalización',
+    es: 'Sin fecha Final',
   },
 
   // Botões
