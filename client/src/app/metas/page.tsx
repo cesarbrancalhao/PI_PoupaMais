@@ -474,6 +474,7 @@ export default function MetasPage() {
               <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>{t(metasTerms.title)}</h2>
 
+                {/* RF16 - O sistema deverá ter na tela de Metas, filtros de: ordem de listagem, busca por nome e busca por valor mínimo e máximo. */}
                 <div className={`mb-4 p-4 rounded-lg ${isDark ? 'bg-[var(--bg-main)] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     <div className="relative">
@@ -616,6 +617,7 @@ export default function MetasPage() {
                                 <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t(metasTerms.progress)}</p>
                                 <p className="font-medium text-green-600">{formatCurrency(Number(meta.valor_atual) || 0)}</p>
                               </div>
+                              {/* RF19 - O sistema deve calcular e exibir automaticamente o percentual de conclusão de uma meta baseado no valor atual vs valor alvo da meta. Esse percentual será usado para calcular o tempo restante necessário para a conclusão da meta. */}
                               <div>
                                 <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t(metasTerms.remaining)}</p>
                                 <p className={`font-medium ${isDark ? 'text-[var(--text-main)]' : 'text-gray-800'}`}>{timeRemaining}</p>

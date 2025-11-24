@@ -74,6 +74,7 @@ export default function AuthPage() {
               </div>
             )}
 
+            {/* RF02 - O sistema deve permitir ao usuário fazer login com o email e senha cadastrados. */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t(auth.email)}

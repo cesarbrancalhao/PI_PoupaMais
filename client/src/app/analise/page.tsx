@@ -263,6 +263,7 @@ export default function AnalisePage() {
           </header>
 
           <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-6">
+            {/* RF14 - A tela de Análise deverá exibir dados dos últimos 12 meses de: Saldo médio mensal, taxa de economia, alocação de metas, porcentagem de conclusão de metas, total de receitas, total de despesas, receita média mensal, evolução do saldo, receitas e despesas (comparação), alocação de metas (gráfico de pizza) e resumo das metas (lista). */}
             <div className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex items-center gap-2 md:gap-3 mb-2">
                 <div className={`${isDark ? 'w-8 h-8 md:w-10 md:h-10 bg-blue-900/10 rounded-full flex items-center justify-center' : 'w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center'} flex-shrink-0`}>

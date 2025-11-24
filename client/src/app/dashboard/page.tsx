@@ -675,6 +675,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-center">{t(common.noData)}</p>
                       </div>
                     ) : (
+                      /* RF09 - A tela de Painel deve exibir ao usuário gráficos de Saldo mensal e Despesas por Categoria ou Receitas por Fonte. */
                       <BalanceChart data={monthlyBalanceData} moeda={user?.moeda ?? "real"} />
                     )}
                   </div>
@@ -689,6 +690,7 @@ export default function DashboardPage() {
                         <p className="text-sm mt-2">{t(dashboard.addExpense)}</p>
                       </div>
                     ) : (
+                      /* RF09 - A tela de Painel deve exibir ao usuário gráficos de Saldo mensal e Despesas por Categoria ou Receitas por Fonte. */
                       <DespesasChart data={despesasChartData} moeda={user?.moeda ?? "real"} />
                     )
                   ) : (
@@ -699,6 +701,7 @@ export default function DashboardPage() {
                         <p className="text-sm mt-2">{t(dashboard.addIncome)}</p>
                       </div>
                     ) : (
+                      /* RF09 - A tela de Painel deve exibir ao usuário gráficos de Saldo mensal e Despesas por Categoria ou Receitas por Fonte. */
                       <ReceitasChart data={receitasChartData} moeda={user?.moeda ?? "real"} />
                     )
                   )}
@@ -792,6 +795,7 @@ export default function DashboardPage() {
               </button>
             </div>
 
+            {/* RF15 - O sistema deverá ter na tela de Painel, filtros de: ordem de listagem, busca por nome, busca por valor mínimo e máximo, seleção de categoria ou fonte. */}
             <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>{activeTab === 'despesas' ? `${t(dashboard.lastExpenses)}` : `${t(dashboard.lastIncome)}`}</h2>

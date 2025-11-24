@@ -383,6 +383,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
               </button>
             </div>
 
+            {/* RF06 - O sistema deve permitir ao usuário manter Metas, podendo definir os campos: nome, valor, Economia mensal (opcional), data de início (opcional) e data final (opcional). */}
             <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div>
                 <label className={`block text-sm font-medium mb-1 ${

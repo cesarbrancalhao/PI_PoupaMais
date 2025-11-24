@@ -153,6 +153,7 @@ export default function CadastroPage() {
             <h1 className="mt-4 text-2xl font-semibold text-gray-800">{t(auth.registerTitle)}</h1>
           </div>
 
+          {/* RF01 - O sistema deve permitir ao usuário fazer o cadastro com: nome, email e senha. */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3 rounded-lg bg-red-50 border border-red-200">

@@ -11,6 +11,7 @@ CREATE TABLE usuario (
 CREATE TYPE idioma_enum AS ENUM ('portugues', 'ingles', 'espanhol');
 CREATE TYPE moeda_enum AS ENUM ('real', 'dolar', 'euro');
 
+-- RF20 - O sistema deverá manter automaticamente registros de Verificação, que armazenam temporariamente: dados do usuário que ainda não validou seu email (nome, email, senha, idioma), código para verificação, tempo restante para validação, tentativas de validação.
 CREATE TABLE verificacao (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
@@ -23,6 +24,8 @@ CREATE TABLE verificacao (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- RF21 - O sistema deverá manter automaticamente registros de Recuperação de Senha, que armazenam o usuário, email, código para verificação, tempo restante para validação e tentativas de validação.
 CREATE TABLE recuperacao_senha (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
@@ -103,7 +106,7 @@ CREATE TABLE meta (
     nome VARCHAR(70) NOT NULL,
     descricao TEXT,
     valor DECIMAL(11,2) NOT NULL CHECK (valor > 0),
-    valor_atual DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0), -- valor_atual é a soma de todas as contribuicao_meta
+    valor_atual DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0), -- RN17 - valor_atual é a soma de todas as contribuicao_meta
     economia_mensal DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (economia_mensal >= 0),
     data_inicio DATE NOT NULL DEFAULT CURRENT_DATE,
     data_alvo DATE,

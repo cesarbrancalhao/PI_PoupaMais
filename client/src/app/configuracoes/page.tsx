@@ -133,6 +133,7 @@ const ConfiguracoesPage = () => {
               <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.currency)}</h2>
               <div className="flex">
 
+                {/* RF11 - O sistema permite ao usuário escolher a moeda de exibição (Real, Euro ou Dólar) na tela de Configurações. */}
                 <button
                   className={btnClass(moeda === "dolar", "left")}
                   disabled={moeda === "dolar"}
@@ -164,6 +165,7 @@ const ConfiguracoesPage = () => {
               <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.theme)}</h2>
               <div className="flex">
 
+                {/* RF12 - O sistema permite ao usuário escolher o tema (Claro ou Escuro) na tela de Configurações. */}
                 <button
                   className={btnClass(tema === "claro", "left")}
                   disabled={tema === "claro"}
@@ -187,6 +189,7 @@ const ConfiguracoesPage = () => {
               <h2 className={`font-medium mb-3 ${labelColor}`}>{t(configuracoes.language)}</h2>
               <div className="flex">
 
+                {/* RF10 - O sistema deve permitir ao usuário escolher o idioma do aplicativo (Português, Inglês ou Espanhol) na tela de Configurações. */}
                 <button
                   className={btnClass(idioma === "espanhol", "left")}
                   disabled={idioma === "espanhol"}
@@ -220,6 +223,7 @@ const ConfiguracoesPage = () => {
           <div className="flex flex-col gap-6 flex-grow">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col flex-1">
+                  {/* RF13 - O sistema permite ao usuário alterar seu Nome e Senha na tela de Configurações. */}
                 <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.userName)}</label>
                 <div className="flex items-center gap-3">
                   <input
@@ -254,7 +258,8 @@ const ConfiguracoesPage = () => {
                 </div>
 
                 <div className="flex flex-col justify-end">
-                  <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.password) || "Senha"}</label>
+                  {/* RF13 - O sistema permite ao usuário alterar seu Nome e Senha na tela de Configurações. */}
+                  <label className={`block font-medium mb-2 ${labelColor}`}>{t(configuracoes.password)}</label>
                   <button
                     onClick={() => setPasswordModalOpen(true)}
                     className={`px-4 py-3 rounded ${accentColor} ${accentHover} text-white text-sm font-medium flex items-center justify-center gap-2`}
