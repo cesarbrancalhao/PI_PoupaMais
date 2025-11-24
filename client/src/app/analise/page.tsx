@@ -361,7 +361,7 @@ export default function AnalisePage() {
                   <Calendar className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.income)} {t(analise.monthlyAverage)}</p>
+                  <p className={`${isDark ? 'text-gray-400 text-xs md:text-sm' : 'text-gray-500 text-xs md:text-sm'}`}>{t(analise.incomeMonthlyAverage)}</p>
                   <p className={`${isDark ? 'text-[var(--text-main)] text-lg md:text-xl font-semibold' : 'text-lg md:text-xl font-semibold'}`}>
                     {formatCurrency(receitaMediaMensal)}
                   </p>

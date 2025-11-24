@@ -78,7 +78,6 @@ export default function CadastroPage() {
       const registerData = { nome, email, password, idioma: languageToIdiomaMap[language] };
       await register(registerData);
 
-      // Store data for potential resend
       setPendingData(registerData);
       setPendingEmail(email);
       setShowVerificationModal(true);
@@ -94,10 +93,8 @@ export default function CadastroPage() {
     try {
       const response = await verificationService.verifyCode(pendingEmail, code);
 
-      // Set auth data
       authService.setAuthDataFromVerification(response.access_token, response.user);
 
-      // Load configs and set user
       try {
         const configs = await configsService.get();
         setUser({
@@ -111,7 +108,6 @@ export default function CadastroPage() {
         setUser(response.user);
       }
 
-      // Navigate to dashboard
       router.push('/dashboard');
     } catch (err) {
       const error = err as Error;
