@@ -7,7 +7,7 @@ import AddContribuicaoModal from '@/components/addContribuicaoModal'
 import EditMetaModal from '@/components/editMetaModal'
 import EditContribuicaoModal from '@/components/editContribuicaoModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { Plus, Target, Calendar, DollarSign } from 'lucide-react'
+import { Plus, Target, Calendar, DollarSign, Search, ArrowUp, ArrowDown } from 'lucide-react'
 import { Meta, ContribuicaoMeta, DespesaExclusao, ReceitaExclusao, Despesa, Receita } from '@/types'
 import { metasService, contribuicaoMetaService, receitasService, despesasService, despesasExclusaoService, receitasExclusaoService, ApiError } from '@/services'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -38,13 +38,107 @@ export default function MetasPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 4
+  const [searchTerm, setSearchTerm] = useState('')
+  const [minValue, setMinValue] = useState('')
+  const [maxValue, setMaxValue] = useState('')
+  const [sortColumn, setSortColumn] = useState<'target' | 'progress' | 'remaining'>('target')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  const totalPages = Math.ceil(metas.length / ITEMS_PER_PAGE)
-  const paginatedMetas = metas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+  const filteredMetas = useMemo(() => {
+    return metas.filter((meta) => {
+      if (searchTerm && !meta.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false
+      }
+      
+      const targetValue = Number(meta.valor) || 0
+      
+      if (minValue) {
+        const min = parseFloat(minValue) || 0
+        if (targetValue < min) {
+          return false
+        }
+      }
+      
+      if (maxValue) {
+        const max = parseFloat(maxValue) || 0
+        if (targetValue > max) {
+          return false
+        }
+      }
+      
+      return true
+    })
+  }, [metas, searchTerm, minValue, maxValue])
+
+  const sortedMetas = useMemo(() => {
+    const sorted = [...filteredMetas]
+    sorted.sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortColumn) {
+        case 'target': {
+          comparison = (Number(a.valor) || 0) - (Number(b.valor) || 0)
+          break
+        }
+        case 'progress': {
+          const valorA = Number(a.valor) || 0
+          const valorB = Number(b.valor) || 0
+          const valorAtualA = Number(a.valor_atual) || 0
+          const valorAtualB = Number(b.valor_atual) || 0
+          const progressA = valorA > 0 ? (valorAtualA / valorA) * 100 : 0
+          const progressB = valorB > 0 ? (valorAtualB / valorB) * 100 : 0
+          comparison = progressA - progressB
+          break
+        }
+        case 'remaining': {
+          const economiaMensalA = Number(a.economia_mensal) || 0
+          const economiaMensalB = Number(b.economia_mensal) || 0
+          const valorA = Number(a.valor) || 0
+          const valorB = Number(b.valor) || 0
+          const valorAtualA = Number(a.valor_atual) || 0
+          const valorAtualB = Number(b.valor_atual) || 0
+          const remainingA = valorA - valorAtualA
+          const remainingB = valorB - valorAtualB
+          
+          let monthsA = Infinity
+          let monthsB = Infinity
+          
+          if (economiaMensalA > 0) {
+            monthsA = Math.ceil(remainingA / economiaMensalA)
+          }
+          if (economiaMensalB > 0) {
+            monthsB = Math.ceil(remainingB / economiaMensalB)
+          }
+          
+          comparison = monthsA - monthsB
+          break
+        }
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+    return sorted
+  }, [filteredMetas, sortColumn, sortDirection])
+
+  const totalPages = Math.ceil(sortedMetas.length / ITEMS_PER_PAGE)
+  const paginatedMetas = sortedMetas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, minValue, maxValue, sortColumn, sortDirection])
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
+    }
+  }
+
+  const handleSort = (column: 'target' | 'progress' | 'remaining') => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
     }
   }
 
@@ -380,14 +474,99 @@ export default function MetasPage() {
               <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold mb-4' : 'text-base md:text-lg font-semibold text-gray-800 mb-4'}`}>{t(metasTerms.title)}</h2>
 
-                {metas.length === 0 ? (
+                <div className={`mb-4 p-4 rounded-lg ${isDark ? 'bg-[var(--bg-main)] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    <div className="relative">
+                      <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <input
+                        type="text"
+                        placeholder={t(common.search)}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`w-full pl-10 pr-3 py-2 text-sm rounded-md border ${
+                          isDark 
+                            ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                            : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        } focus:outline-none`}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder={t(common.minValue)}
+                        value={minValue}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d,.-]/g, '')
+                          setMinValue(value)
+                        }}
+                        min="0"
+                        step="0.01"
+                        className={`w-full px-3 py-2 text-sm rounded-md border ${
+                          isDark 
+                            ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                            : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        } focus:outline-none`}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder={t(common.maxValue)}
+                        value={maxValue}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d,.-]/g, '')
+                          setMaxValue(value)
+                        }}
+                        min="0"
+                        step="0.01"
+                        className={`w-full px-3 py-2 text-sm rounded-md border ${
+                          isDark 
+                            ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                            : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        } focus:outline-none`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {sortedMetas.length === 0 ? (
                   <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     <Target className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
                     <p>{t(metasTerms.noGoalsYet)}</p>
                     <p className="text-sm mt-2">{t(metasTerms.clickToAddGoal)}</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <>
+                    <div className={`grid grid-cols-3 gap-4 text-sm mb-3 pb-2 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                      <div 
+                        className={`cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'} font-medium`}
+                        onClick={(e) => { e.stopPropagation(); handleSort('target'); }}
+                      >
+                        {t(metasTerms.targetValue)}
+                        {sortColumn === 'target' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
+                      <div 
+                        className={`cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'} font-medium`}
+                        onClick={(e) => { e.stopPropagation(); handleSort('progress'); }}
+                      >
+                        {t(metasTerms.progress)}
+                        {sortColumn === 'progress' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
+                      <div 
+                        className={`cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'} font-medium`}
+                        onClick={(e) => { e.stopPropagation(); handleSort('remaining'); }}
+                      >
+                        {t(metasTerms.remaining)}
+                        {sortColumn === 'remaining' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
                     {paginatedMetas.map((meta) => {
                       const progress = calculateProgress(meta)
                       const timeRemaining = calculateTimeRemaining(meta)
@@ -485,6 +664,7 @@ export default function MetasPage() {
                       </div>
                     )}
                   </div>
+                  </>
                 )}
               </section>
             </div>

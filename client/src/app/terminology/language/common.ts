@@ -169,6 +169,33 @@ export const common = {
     en: 'of',
     es: 'de',
   },
+
+  // Filtros
+  search: {
+    pt: 'Buscar...',
+    en: 'Search...',
+    es: 'Buscar...',
+  },
+  minValue: {
+    pt: 'Valor mínimo',
+    en: 'Min value',
+    es: 'Valor mínimo',
+  },
+  maxValue: {
+    pt: 'Valor máximo',
+    en: 'Max value',
+    es: 'Valor máximo',
+  },
+  allCategories: {
+    pt: 'Todas as categorias',
+    en: 'All categories',
+    es: 'Todas las categorías',
+  },
+  allSources: {
+    pt: 'Todas as fontes',
+    en: 'All sources',
+    es: 'Todas las fuentes',
+  },
 } as const;
 
 export type CommonKey = keyof typeof common;

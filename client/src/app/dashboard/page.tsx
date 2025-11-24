@@ -10,7 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import BalanceChart from '@/components/BalanceChart'
 import DespesasChart from '@/components/DespesasChart'
 import ReceitasChart from '@/components/ReceitasChart'
-import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus, TrendingUp, PieChart } from 'lucide-react'
+import { Home, Plug, Shirt, DollarSign, ShoppingCart, CreditCard, Settings, ArrowLeft, Utensils, Car, Heart, BookOpen, Briefcase, Gift, Apple, Gamepad2, Plus, TrendingUp, PieChart, ArrowUp, ArrowDown, Search } from 'lucide-react'
 import { Despesa, Receita, CategoriaDespesa, FonteReceita, DespesaExclusao, ReceitaExclusao } from '@/types'
 import { despesasService, receitasService, despesasExclusaoService, receitasExclusaoService, ApiError } from '@/services'
 import { categoriasDespesaService } from '@/services/categorias.service'
@@ -27,6 +27,7 @@ interface TableRow {
   date: string
   name: string
   category: string
+  categoryId: number | undefined
   value: string
   saldo: string
   recurring: boolean
@@ -60,10 +61,24 @@ export default function DashboardPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
+  const [sortColumn, setSortColumn] = useState<'date' | 'name' | 'value' | 'category'>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [minValue, setMinValue] = useState('')
+  const [maxValue, setMaxValue] = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
 
   useEffect(() => {
     setCurrentPage(1)
+    setSearchTerm('')
+    setMinValue('')
+    setMaxValue('')
+    setFilterCategory('all')
   }, [activeTab])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [sortColumn, sortDirection, searchTerm, minValue, maxValue, filterCategory])
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -328,6 +343,7 @@ export default function DashboardPage() {
       date: despesa?.data ? formatDate(despesa.data, despesa?.recorrente ? selectedMonth : undefined) : '--/--',
       name: despesa?.nome ?? '',
       category: categoria?.nome ?? 'Sem categoria',
+      categoryId: categoria?.id,
       value: despesa?.valor != null ? formatCurrency(despesa.valor) : 'R$ 0,00',
       saldo: formatCurrency(Math.abs(calculateSaldo(filteredDespesas ?? [], index, false))),
       recurring: despesa?.recorrente ?? false,
@@ -345,6 +361,7 @@ export default function DashboardPage() {
       date: receita?.data ? formatDate(receita.data, receita?.recorrente ? selectedMonth : undefined) : '--/--',
       name: receita?.nome ?? '',
       category: fonte?.nome ?? 'Sem fonte',
+      categoryId: fonte?.id,
       value: receita?.valor != null ? formatCurrency(receita.valor) : 'R$ 0,00',
       saldo: formatCurrency(calculateSaldo(filteredReceitas ?? [], index, true)),
       recurring: receita?.recorrente ?? false,
@@ -355,12 +372,90 @@ export default function DashboardPage() {
   })
 
   const allRows = activeTab === 'despesas' ? despesasRows : receitasRows
-  const totalPages = Math.ceil(allRows.length / ITEMS_PER_PAGE)
-  const paginatedRows = allRows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+  
+  const filteredRows = useMemo(() => {
+    return allRows.filter((row) => {
+      if (searchTerm && !row.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false
+      }
+      
+      const cleanValue = row.value.replace(/[^\d,.-]/g, '').trim()
+      const numericValue = parseFloat(cleanValue.replace(/\./g, '').replace(',', '.')) || 0
+      
+      if (minValue) {
+        const min = parseFloat(minValue.replace(/\./g, '').replace(',', '.')) || 0
+        if (numericValue < min) {
+          return false
+        }
+      }
+      
+      if (maxValue) {
+        const max = parseFloat(maxValue.replace(/\./g, '').replace(',', '.')) || 0
+        if (numericValue > max) {
+          return false
+        }
+      }
+      
+      if (filterCategory !== 'all') {
+        const categoryId = parseInt(filterCategory)
+        if (row.categoryId !== categoryId) {
+          return false
+        }
+      }
+      
+      return true
+    })
+  }, [allRows, searchTerm, minValue, maxValue, filterCategory])
+  
+  const sortedRows = useMemo(() => {
+    const sorted = [...filteredRows]
+    sorted.sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortColumn) {
+        case 'date':
+          const [dayA] = a.date.split('/').map(Number)
+          const [dayB] = b.date.split('/').map(Number)
+          const [contextMonth, contextYear] = a.displayMonth.split('-').map(Number)
+          const dateA = new Date(contextYear, contextMonth - 1, dayA)
+          const dateB = new Date(contextYear, contextMonth - 1, dayB)
+          comparison = dateA.getTime() - dateB.getTime()
+          break
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'value':
+          const cleanValueA = a.value.replace(/[^\d,.-]/g, '').trim()
+          const cleanValueB = b.value.replace(/[^\d,.-]/g, '').trim()
+          const valueA = parseFloat(cleanValueA.replace(/\./g, '').replace(',', '.')) || 0
+          const valueB = parseFloat(cleanValueB.replace(/\./g, '').replace(',', '.')) || 0
+          comparison = valueA - valueB
+          break
+        case 'category':
+          comparison = a.category.localeCompare(b.category)
+          break
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+    return sorted
+  }, [filteredRows, sortColumn, sortDirection])
+  
+  const totalPages = Math.ceil(sortedRows.length / ITEMS_PER_PAGE)
+  const paginatedRows = sortedRows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
+    }
+  }
+
+  const handleSort = (column: 'date' | 'name' | 'value' | 'category') => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
     }
   }
 
@@ -700,16 +795,82 @@ export default function DashboardPage() {
             <section className={`${isDark ? 'bg-[var(--bg-card)] text-[var(--text-main)]' : 'bg-white text-gray-800'} p-4 md:p-6 rounded-xl shadow-sm`}>
               <div className="flex justify-between items-center mb-3 md:mb-4">
                 <h2 className={`${isDark ? 'text-[var(--text-main)] text-base md:text-lg font-semibold' : 'text-base md:text-lg font-semibold text-gray-800'}`}>{activeTab === 'despesas' ? `${t(dashboard.lastExpenses)}` : `${t(dashboard.lastIncome)}`}</h2>
-                <button
-                  onClick={() => {/* TODO: Implement "Ver mais" functionality */}}
-                  className={`${isDark ? 'text-indigo-400 text-xs md:text-sm hover:text-indigo-300 transition-colors' : 'text-indigo-600 text-xs md:text-sm hover:text-indigo-800 transition-colors'}`}
-                >
-                  {t(common.viewMore)}
-                </button>
+              </div>
+              
+              <div className={`mb-4 p-4 rounded-lg ${isDark ? 'bg-[var(--bg-main)] border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                  <div className="relative">
+                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <input
+                      type="text"
+                      placeholder={t(common.search)}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={`w-full pl-10 pr-3 py-2 text-sm rounded-md border ${
+                        isDark 
+                          ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                          : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                      } focus:outline-none`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={t(common.minValue)}
+                      value={minValue}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d,.-]/g, '')
+                        setMinValue(value)
+                      }}
+                      className={`w-full px-3 py-2 text-sm rounded-md border ${
+                        isDark 
+                          ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                          : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                      } focus:outline-none`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={t(common.maxValue)}
+                      value={maxValue}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d,.-]/g, '')
+                        setMaxValue(value)
+                      }}
+                      className={`w-full px-3 py-2 text-sm rounded-md border ${
+                        isDark 
+                          ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                          : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                      } focus:outline-none`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <select
+                      value={filterCategory}
+                      onChange={(e) => setFilterCategory(e.target.value)}
+                      className={`w-full px-3 py-2 text-sm rounded-md border ${
+                        isDark 
+                          ? 'bg-[var(--bg-card)] border-white/10 text-[var(--text-main)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500' 
+                          : 'bg-white border-gray-300 text-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                      } focus:outline-none`}
+                    >
+                      <option value="all">{activeTab === 'despesas' ? t(common.allCategories) : t(common.allSources)}</option>
+                      {(activeTab === 'despesas' ? categorias : fontes).map((item) => (
+                        <option key={item.id} value={item.id.toString()}>
+                          {item.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
               
               <div className="md:hidden">
-                {(activeTab === 'despesas' ? despesasRows : receitasRows).length === 0 ? (
+                {filteredRows.length === 0 ? (
                   <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     {activeTab === 'despesas' ? (
                       <ShoppingCart className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
@@ -722,9 +883,33 @@ export default function DashboardPage() {
                 ) : (
                   <>
                     <div className={`grid grid-cols-4 gap-2 pb-2 mb-2 border-b ${isDark ? 'border-white/10' : 'border-gray-200'} text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
-                      <div>{t(common.date)}</div>
-                      <div className="col-span-2">{t(common.name)}</div>
-                      <div className="text-right">{t(common.value)}</div>
+                      <div 
+                        className="cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-1"
+                        onClick={(e) => { e.stopPropagation(); handleSort('date'); }}
+                      >
+                        {t(common.date)}
+                        {sortColumn === 'date' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
+                      <div 
+                        className="col-span-2 cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-1"
+                        onClick={(e) => { e.stopPropagation(); handleSort('name'); }}
+                      >
+                        {t(common.name)}
+                        {sortColumn === 'name' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
+                      <div 
+                        className="text-right cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center justify-end gap-1"
+                        onClick={(e) => { e.stopPropagation(); handleSort('value'); }}
+                      >
+                        {t(common.value)}
+                        {sortColumn === 'value' && (
+                          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -783,7 +968,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="hidden md:block overflow-x-auto">
-                {(activeTab === 'despesas' ? despesasRows : receitasRows).length === 0 ? (
+                {filteredRows.length === 0 ? (
                   <div className={`text-center py-12 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     {activeTab === 'despesas' ? (
                       <ShoppingCart className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} />
@@ -798,10 +983,50 @@ export default function DashboardPage() {
                   <table className="w-full text-xs md:text-sm table-fixed min-w-[500px]">
                     <thead className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       <tr>
-                        <th className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4">{t(common.date)}</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-1/3">{t(common.name)}</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-24">{t(common.value)}</th>
-                        <th className="py-1 md:py-2 font-medium text-left w-1/4">{activeTab === 'despesas' ? t(common.category) : t(common.source)}</th>
+                        <th 
+                          className="py-1 md:py-2 font-medium text-left w-16 pl-3 md:pl-4 cursor-pointer hover:opacity-80 transition-opacity select-none"
+                          onClick={(e) => { e.stopPropagation(); handleSort('date'); }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {t(common.date)}
+                            {sortColumn === 'date' && (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="py-1 md:py-2 font-medium text-left w-1/3 cursor-pointer hover:opacity-80 transition-opacity select-none"
+                          onClick={(e) => { e.stopPropagation(); handleSort('name'); }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {t(common.name)}
+                            {sortColumn === 'name' && (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="py-1 md:py-2 font-medium text-left w-24 cursor-pointer hover:opacity-80 transition-opacity select-none"
+                          onClick={(e) => { e.stopPropagation(); handleSort('value'); }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {t(common.value)}
+                            {sortColumn === 'value' && (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="py-1 md:py-2 font-medium text-left w-1/4 cursor-pointer hover:opacity-80 transition-opacity select-none"
+                          onClick={(e) => { e.stopPropagation(); handleSort('category'); }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {activeTab === 'despesas' ? t(common.category) : t(common.source)}
+                            {sortColumn === 'category' && (
+                              sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                            )}
+                          </div>
+                        </th>
                         <th className="py-1 md:py-2 font-medium text-left w-24">{t(common.total)}</th>
                       </tr>
                     </thead>
