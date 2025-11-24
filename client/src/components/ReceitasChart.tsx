@@ -14,7 +14,6 @@ ChartJS.register(ArcElement, Tooltip, Legend)
 interface SourceData {
   source: string
   value: number
-  color: string
 }
 
 interface ReceitasChartProps {
@@ -27,6 +26,24 @@ export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
   const { theme } = useTheme()
   const { t } = useLanguage()
   const dark = theme === 'escuro'
+
+  const colors = [
+    '#5B8FF9',
+    '#F6BD60',
+    '#F28B82',
+    '#81C784',
+    '#BA68C8',
+    '#FFD54F',
+    '#4DD0E1',
+    '#FF8A65',
+    '#6EC6FF',
+    '#A1887F',
+    '#B39DDB',
+    '#FFB74D',
+    '#C5E1A5',
+    '#90A4AE',
+    '#DCE775',
+  ]
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -50,7 +67,7 @@ export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
     datasets: [
       {
         data: data.map(item => item.value),
-        backgroundColor: data.map(item => item.color),
+        backgroundColor: colors.slice(0, data.length),
         borderWidth: 0,
         cutout: '75%',
       }
@@ -94,7 +111,7 @@ export default function ReceitasChart({ data, moeda }: ReceitasChartProps) {
           <div key={index} className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: item.color }}
+              style={{ backgroundColor: colors[index % colors.length] }}
             />
             <span className={`text-xs ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
               {item.source}

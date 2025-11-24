@@ -55,7 +55,14 @@ export default function GoalAllocationChart({ metas, moeda }: GoalAllocationChar
     '#BA68C8',
     '#FFD54F',
     '#4DD0E1',
-    '#FF8A65'
+    '#FF8A65',
+    '#6EC6FF',
+    '#A1887F',
+    '#B39DDB',
+    '#FFB74D',
+    '#C5E1A5',
+    '#90A4AE',
+    '#DCE775',
   ]
 
   const chartData = {
