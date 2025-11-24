@@ -132,8 +132,6 @@ export default function RecuperarPage() {
 
       <NewPasswordModal
         isOpen={showNewPasswordModal}
-        email={email}
-        code={verifiedCode}
         language={language}
         onResetPassword={handleResetPassword}
       />
