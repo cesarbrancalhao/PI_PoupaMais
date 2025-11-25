@@ -151,7 +151,8 @@ server/
 Crie um arquivo `.env` na raiz do projeto server:
 
 ```bash
-touch .env
+
+cp .env.local .env
 ```
 
 Adicione as seguintes variáveis de ambiente:
@@ -174,6 +175,14 @@ JWT_EXPIRATION=7d
 
 # CORS
 CORS_ORIGIN=http://localhost:3000
+
+# Email (utilize seu serviço SMTP de preferência)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=yourgmail@gmail.com
+SMTP_PASS=YOUR_APP_PASSWORD
+SMTP_FROM=yourgmail@gmail.com
 ```
 
 **⚠️ IMPORTANTE**: As variáveis `JWT_SECRET`, `DB_HOST` e `DB_PASSWORD` são obrigatórias. A aplicação não iniciará sem elas.
