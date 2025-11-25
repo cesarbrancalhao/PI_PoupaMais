@@ -152,7 +152,7 @@ Crie um arquivo `.env` na raiz do projeto server:
 
 ```bash
 
-cp .env.local .env
+cp .env.example .env
 ```
 
 Adicione as seguintes variáveis de ambiente:
