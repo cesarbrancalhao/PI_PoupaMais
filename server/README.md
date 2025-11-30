@@ -70,34 +70,6 @@ npm run start:dev
 
 Pronto! Sua API está rodando em `http://localhost:3001`
 
-## ✨ O Que Há de Novo
-
-Desde a primeira versão, o servidor foi significativamente expandido:
-
-### Novos Recursos
-- **Sistema de Exclusões**: Exclua ocorrências específicas de despesas/receitas recorrentes
-- **Sistema de Metas**: Crie metas financeiras com tracking automático
-- **Contribuições**: Registre contribuições para suas metas com atualização automática do progresso
-- **Ícones Personalizados**: Categorias e fontes agora suportam ícones customizados
-- **Paginação**: Todos os endpoints de listagem suportam paginação
-- **Rate Limiting**: Proteção contra abuso com throttling de requisições
-- **Datas de Vencimento**: Despesas e receitas agora suportam data_vencimento
-- **Validação Aprimorada**: Validação de variáveis de ambiente obrigatórias no startup
-- **Tratamento de Erros**: Filtro global de exceções para respostas consistentes
-- **Deleção Inteligente**: Ao deletar categorias/fontes, as referências são automaticamente removidas
-
-### Melhorias no Banco de Dados
-- **Triggers SQL**: Atualização automática de `valor_atual` nas metas
-- **Novas Tabelas**: `despesa_exclusao`, `receita_exclusao`, `contribuicao_meta`
-- **Índices Otimizados**: Performance melhorada em queries por usuário
-- **Constraints Robustos**: Validações a nível de banco de dados
-
-### Melhorias de Segurança
-- Rate limiting (Throttler)
-- Validação rigorosa de environment variables
-- Filtro global de exceções
-- Validação de tipos com class-transformer
-
 ## Estrutura do Projeto
 
 ```
@@ -185,7 +157,7 @@ SMTP_PASS=YOUR_APP_PASSWORD
 SMTP_FROM=yourgmail@gmail.com
 ```
 
-**⚠️ IMPORTANTE**: As variáveis `JWT_SECRET`, `DB_HOST` e `DB_PASSWORD` são obrigatórias. A aplicação não iniciará sem elas.
+**IMPORTANTE**: As variáveis `JWT_SECRET`, `DB_HOST` e `DB_PASSWORD` são obrigatórias. A aplicação não iniciará sem elas.
 
 ## Documentação da API
 

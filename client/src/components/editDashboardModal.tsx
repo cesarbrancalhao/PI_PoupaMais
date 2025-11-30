@@ -31,6 +31,7 @@ interface EditDashboardModalProps {
     date: string
     originalId?: number
     displayMonth?: string
+    categoryId?: number
   }
   onDelete?: (id: string) => void
   moeda: Moeda
@@ -213,7 +214,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   }, [])
 
   const [name, setName] = useState(editItem.name)
-  const [category, setCategory] = useState(editItem.category)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | string>(editItem.categoryId ?? '')
   const [value, setValue] = useState(formatValueWithoutSymbol(editItem.value))
   const [recurring, setRecurring] = useState(editItem.recurring)
   const [date, setDate] = useState(editItem.date)
@@ -229,7 +230,7 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
   useEffect(() => {
     if (isOpen) {
       setName(editItem.name)
-      setCategory(editItem.category)
+      setSelectedCategoryId(editItem.categoryId ?? '')
       setValue(formatValueWithoutSymbol(editItem.value))
       setRecurring(editItem.recurring)
       setDate(editItem.date)
@@ -248,15 +249,9 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
         if (type === 'despesas') {
           const data = await categoriasDespesaService.getAll()
           setCategorias(data)
-          if (editItem.category && editItem.category !== 'Sem categoria') {
-            setCategory(editItem.category)
-          }
         } else {
           const data = await fontesReceitaService.getAll()
           setFontes(data)
-          if (editItem.category && editItem.category !== 'Sem fonte') {
-            setCategory(editItem.category)
-          }
         }
       } catch (error) {
         console.error('Erro ao buscar opções:', error)
@@ -333,25 +328,25 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
         
         if (type === 'despesas') {
           await despesasExclusaoService.create(editItem.originalId, exclusionDate)
-          const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
+          const categoryId = selectedCategoryId === '' ? null : Number(selectedCategoryId)
           await despesasService.create({
             nome: name,
             valor: numericValue,
             recorrente: false,
             data: date,
             data_vencimento: undefined,
-            categoria_despesa_id: categoryId
+            categoria_despesa_id: categoryId as number
           })
         } else {
           await receitasExclusaoService.create(editItem.originalId, exclusionDate)
-          const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
+          const fonteId = selectedCategoryId === '' ? null : Number(selectedCategoryId)
           await receitasService.create({
             nome: name,
             valor: numericValue,
             recorrente: false,
             data: date,
             data_vencimento: undefined,
-            fonte_receita_id: fonteId
+            fonte_receita_id: fonteId as number
           })
         }
       }
@@ -387,24 +382,24 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
       }
 
       if (type === 'despesas') {
-        const categoryId = category ? categorias.find((cat) => cat.nome === category)?.id : undefined
+        const categoryId = selectedCategoryId === '' ? null : Number(selectedCategoryId)
         await despesasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
           recorrente: recurring,
           data: date,
           data_vencimento: date_vencimento || undefined,
-          categoria_despesa_id: categoryId
+          categoria_despesa_id: categoryId as unknown as number
         })
       } else {
-        const fonteId = category ? fontes.find((fonte) => fonte.nome === category)?.id : undefined
+        const fonteId = selectedCategoryId === '' ? null : Number(selectedCategoryId)
         await receitasService.update(Number(editItem.id), {
           nome: name,
           valor: numericValue,
           recorrente: recurring,
           data: date,
           data_vencimento: date_vencimento || undefined,
-          fonte_receita_id: fonteId
+          fonte_receita_id: fonteId as unknown as number
         })
       }
 
@@ -514,19 +509,19 @@ export default function EditDashboardModal({ isOpen, onClose, type, editItem, on
                   {t(type === 'despesas' ? common.category : common.source)}
                 </label>
                 <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
                   className={`w-full ${isDark ? 'bg-[#3C3C3C] text-gray-100' : 'bg-gray-50 text-gray-700'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none`}
                 >
-                  <option value="">{t(type === 'despesas' ? common.category : common.source)}</option>
+                  <option value="">{t(type === 'despesas' ? common.noCategory : common.noSource)}</option>
                   {type === 'despesas'
                     ? categorias.map((cat) => (
-                        <option key={cat.id} value={cat.nome}>
+                        <option key={cat.id} value={cat.id}>
                           {cat.nome}
                         </option>
                       ))
                     : fontes.map((fonte) => (
-                        <option key={fonte.id} value={fonte.nome}>
+                        <option key={fonte.id} value={fonte.id}>
                           {fonte.nome}
                         </option>
                       ))}

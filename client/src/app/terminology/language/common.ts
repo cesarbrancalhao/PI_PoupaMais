@@ -196,6 +196,16 @@ export const common = {
     en: 'All sources',
     es: 'Todas las fuentes',
   },
+  noCategory: {
+    pt: 'Sem categoria',
+    en: 'No category',
+    es: 'Sin categoría',
+  },
+  noSource: {
+    pt: 'Sem fonte',
+    en: 'No source',
+    es: 'Sin fuente',
+  },
 } as const;
 
 export type CommonKey = keyof typeof common;
