@@ -98,26 +98,47 @@ export class ReceitasService {
         if (fonteExists.rows.length === 0) throw new NotFoundException('Fonte de receita não encontrada');
       }
 
-      const result = await client.query(
-        `UPDATE receita
-         SET nome = COALESCE($1, nome),
-             valor = COALESCE($2, valor),
-             recorrente = COALESCE($3, recorrente),
-             data = COALESCE($4, data),
-             data_vencimento = COALESCE($5, data_vencimento),
-             fonte_receita_id = COALESCE($6, fonte_receita_id)
-         WHERE id = $7 AND usuario_id = $8 RETURNING *`,
-        [
-          data.nome,
-          data.valor,
-          data.recorrente,
-          data.data,
-          data.data_vencimento,
-          data.fonte_receita_id,
-          id,
-          userId,
-        ],
-      );
+      const fields: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
+
+      if (data.nome !== undefined) {
+        fields.push(`nome = $${paramIndex++}`);
+        values.push(data.nome);
+      }
+      if (data.valor !== undefined) {
+        fields.push(`valor = $${paramIndex++}`);
+        values.push(data.valor);
+      }
+      if (data.recorrente !== undefined) {
+        fields.push(`recorrente = $${paramIndex++}`);
+        values.push(data.recorrente);
+      }
+      if (data.data !== undefined) {
+        fields.push(`data = $${paramIndex++}`);
+        values.push(data.data);
+      }
+      if (data.data_vencimento !== undefined) {
+        fields.push(`data_vencimento = $${paramIndex++}`);
+        values.push(data.data_vencimento);
+      }
+      if (data.fonte_receita_id !== undefined) {
+        fields.push(`fonte_receita_id = $${paramIndex++}`);
+        values.push(data.fonte_receita_id);
+      }
+
+      if (fields.length === 0) {
+        const existing = await client.query('SELECT * FROM receita WHERE id = $1 AND usuario_id = $2', [id, userId]);
+        if (existing.rows.length === 0) throw new NotFoundException('Receita não encontrada');
+        await client.query('COMMIT');
+        return existing.rows[0];
+      }
+
+      values.push(id, userId);
+      const query = `UPDATE receita SET ${fields.join(', ')} WHERE id = $${paramIndex++} AND usuario_id = $${paramIndex++} RETURNING *`;
+
+      const result = await client.query(query, values);
+
       if (result.rows.length === 0) throw new NotFoundException('Receita não encontrada');
 
       await client.query('COMMIT');

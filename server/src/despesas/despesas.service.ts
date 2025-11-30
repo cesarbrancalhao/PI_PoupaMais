@@ -100,26 +100,46 @@ export class DespesasService {
         if (categoryExists.rows.length === 0) throw new NotFoundException('Categoria não encontrada');
       }
 
-      const result = await client.query(
-        `UPDATE despesa
-         SET nome = COALESCE($1, nome),
-             valor = COALESCE($2, valor),
-             recorrente = COALESCE($3, recorrente),
-             data = COALESCE($4, data),
-             data_vencimento = COALESCE($5, data_vencimento),
-             categoria_despesa_id = COALESCE($6, categoria_despesa_id)
-         WHERE id = $7 AND usuario_id = $8 RETURNING *`,
-        [
-          updateDespesaDto.nome,
-          updateDespesaDto.valor,
-          updateDespesaDto.recorrente,
-          updateDespesaDto.data,
-          updateDespesaDto.data_vencimento,
-          updateDespesaDto.categoria_despesa_id,
-          id,
-          userId,
-        ],
-      );
+      const fields: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
+
+      if (updateDespesaDto.nome !== undefined) {
+        fields.push(`nome = $${paramIndex++}`);
+        values.push(updateDespesaDto.nome);
+      }
+      if (updateDespesaDto.valor !== undefined) {
+        fields.push(`valor = $${paramIndex++}`);
+        values.push(updateDespesaDto.valor);
+      }
+      if (updateDespesaDto.recorrente !== undefined) {
+        fields.push(`recorrente = $${paramIndex++}`);
+        values.push(updateDespesaDto.recorrente);
+      }
+      if (updateDespesaDto.data !== undefined) {
+        fields.push(`data = $${paramIndex++}`);
+        values.push(updateDespesaDto.data);
+      }
+      if (updateDespesaDto.data_vencimento !== undefined) {
+        fields.push(`data_vencimento = $${paramIndex++}`);
+        values.push(updateDespesaDto.data_vencimento);
+      }
+      if (updateDespesaDto.categoria_despesa_id !== undefined) {
+        fields.push(`categoria_despesa_id = $${paramIndex++}`);
+        values.push(updateDespesaDto.categoria_despesa_id);
+      }
+
+      if (fields.length === 0) {
+        const existing = await client.query('SELECT * FROM despesa WHERE id = $1 AND usuario_id = $2', [id, userId]);
+        if (existing.rows.length === 0) throw new NotFoundException('Despesa não encontrada');
+        await client.query('COMMIT');
+        return existing.rows[0];
+      }
+
+      values.push(id, userId);
+      const query = `UPDATE despesa SET ${fields.join(', ')} WHERE id = $${paramIndex++} AND usuario_id = $${paramIndex++} RETURNING *`;
+
+      const result = await client.query(query, values);
 
       if (result.rows.length === 0) throw new NotFoundException('Despesa não encontrada');
 
