@@ -5,7 +5,7 @@ import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from 'chart.js'
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency } from "@/app/terminology/currency"
-import { Moeda } from "@/types/configs"
+import { Moeda } from "@/types/auth"
 import { dashboard } from '@/app/terminology/language/dashboard'
 import { useLanguage } from '@/app/terminology/LanguageContext'
 

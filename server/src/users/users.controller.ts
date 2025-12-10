@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -29,6 +30,18 @@ export class UsersController {
       req.user.userId,
       updateProfileDto.nome,
       updateProfileDto.email,
+    );
+  }
+
+  @Put('settings')
+  @ApiOperation({ summary: 'Atualizar configurações do usuário' })
+  @ApiResponse({ status: 200, description: 'Configurações atualizadas com sucesso' })
+  async updateSettings(@Request() req, @Body() updateSettingsDto: UpdateSettingsDto) {
+    return this.usersService.updateSettings(
+      req.user.userId,
+      updateSettingsDto.tema,
+      updateSettingsDto.idioma,
+      updateSettingsDto.moeda,
     );
   }
 

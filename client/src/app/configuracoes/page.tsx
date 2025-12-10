@@ -6,12 +6,13 @@ import Sidebar from "@/components/sidebar";
 import PasswordModal from "@/components/passwordModal";
 import { Settings, Check } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { configsService } from "@/services/configs.service";
 import { usersService } from "@/services/users.service";
-import { Moeda, Tema, Idioma } from "@/types/configs";
+import { Moeda, Idioma } from "@/types/auth";
 import { useLanguage } from "@/app/terminology/LanguageContext";
 import { configuracoes } from "@/app/terminology/language/configuracoes";
 import { common } from "@/app/terminology/language/common";
+
+type Tema = "claro" | "escuro";
 
 const ConfiguracoesPage = () => {
   const { user, setUser } = useAuth();
@@ -54,35 +55,31 @@ const ConfiguracoesPage = () => {
 
   const updateConfigs = async (newData: Partial<{ tema: boolean; moeda: Moeda; idioma: Idioma }>) => {
     try {
-      const updated = await configsService.update({
-        tema: newData.tema ?? (tema === "escuro"),
-        moeda: newData.moeda ?? moeda,
-        idioma: newData.idioma ?? idioma,
-      });
+      const currentTemaBoolean = tema === "escuro";
+      const newTemaBoolean = newData.tema ?? currentTemaBoolean;
+      const newMoeda = newData.moeda ?? moeda;
+      const newIdioma = newData.idioma ?? idioma;
+
+      const updatedUser = await usersService.updateSettings(
+        newTemaBoolean,
+        newIdioma,
+        newMoeda
+      );
 
       if ("tema" in newData) {
-        setTema(updated.tema ? "escuro" : "claro");
-        setGlobalTheme(updated.tema ? "escuro" : "claro");
+        setTema(updatedUser.tema ? "escuro" : "claro");
+        setGlobalTheme(updatedUser.tema ? "escuro" : "claro");
       }
 
       if ("moeda" in newData) {
-        setMoeda(updated.moeda);
+        setMoeda(updatedUser.moeda);
       }
 
       if ("idioma" in newData) {
-        setIdioma(updated.idioma);
+        setIdioma(updatedUser.idioma);
       }
 
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              tema: updated.tema,
-              moeda: updated.moeda,
-              idioma: updated.idioma,
-            }
-          : prev
-      );
+      setUser(updatedUser);
     } catch (err) {
       console.error("Erro ao atualizar configs:", err);
     }

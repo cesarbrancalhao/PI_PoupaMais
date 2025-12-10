@@ -15,7 +15,7 @@ import {
 } from 'chart.js'
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatCurrency } from "@/app/terminology/currency"
-import { Moeda } from "@/types/configs"
+import { Moeda } from "@/types/auth"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 

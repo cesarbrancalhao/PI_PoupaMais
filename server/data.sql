@@ -1,15 +1,18 @@
 -- Esquema do Banco de Dados PoupaMais para PostgreSQL
 
+CREATE TYPE idioma_enum AS ENUM ('portugues', 'ingles', 'espanhol');
+CREATE TYPE moeda_enum AS ENUM ('real', 'dolar', 'euro');
+
 CREATE TABLE usuario (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
+    tema BOOLEAN NOT NULL DEFAULT FALSE, -- RN11 - O modo de visualização padrão será o “Claro”, podendo ser alterado nas configurações.
+    idioma idioma_enum NOT NULL DEFAULT 'portugues', -- RN10 - O idioma padrão será Português, podendo ser alterado nas configurações.
+    moeda moeda_enum NOT NULL DEFAULT 'real', -- RN09 - A moeda padrão do aplicativo será o Real (BRL), podendo ser alterada nas configurações.
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TYPE idioma_enum AS ENUM ('portugues', 'ingles', 'espanhol');
-CREATE TYPE moeda_enum AS ENUM ('real', 'dolar', 'euro');
 
 -- RF20 - O sistema deverá manter automaticamente registros de Verificação, que armazenam temporariamente: dados do usuário que ainda não validou seu email (nome, email, senha, idioma), código para verificação, tempo restante para validação, tentativas de validação.
 CREATE TABLE verificacao (
@@ -36,14 +39,7 @@ CREATE TABLE recuperacao_senha (
     usuario_id INT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE
 );
 
-CREATE TABLE config (
-    id SERIAL PRIMARY KEY,
-    tema BOOLEAN NOT NULL DEFAULT FALSE, -- RN11 - O modo de visualização padrão será o “Claro”, podendo ser alterado nas configurações.
-    idioma idioma_enum NOT NULL DEFAULT 'portugues', -- RN10 - O idioma padrão será Português, podendo ser alterado nas configurações.
-    moeda moeda_enum NOT NULL DEFAULT 'real', -- RN09 - A moeda padrão do aplicativo será o Real (BRL), podendo ser alterada nas configurações.
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    usuario_id INT NOT NULL UNIQUE REFERENCES usuario(id) ON DELETE CASCADE
-);
+
 
 CREATE TABLE categoria_despesa (
     id SERIAL PRIMARY KEY,
@@ -128,7 +124,6 @@ CREATE TABLE contribuicao_meta (
 
 CREATE INDEX idx_verificacao_email ON verificacao(email);
 CREATE INDEX idx_recuperacao_senha_email ON recuperacao_senha(email);
-CREATE INDEX idx_config_usuario_id ON config(usuario_id);
 CREATE INDEX idx_categoria_despesa_usuario_id ON categoria_despesa(usuario_id);
 CREATE INDEX idx_fonte_receita_usuario_id ON fonte_receita(usuario_id);
 CREATE INDEX idx_despesa_usuario_id ON despesa(usuario_id);

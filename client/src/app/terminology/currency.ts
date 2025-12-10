@@ -1,4 +1,4 @@
-import { Moeda } from "@/types/configs";
+import { Moeda } from "@/types/auth";
 
 interface CurrencyInfo {
     locale: string;

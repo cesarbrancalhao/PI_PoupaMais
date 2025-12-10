@@ -3,16 +3,10 @@ export interface Usuario {
   nome: string;
   email: string;
   senha: string;
-  created_at: Date;
-}
-
-export interface Config {
-  id: number;
   tema: boolean;
   idioma: 'portugues' | 'ingles' | 'espanhol';
   moeda: 'real' | 'dolar' | 'euro';
   created_at: Date;
-  usuario_id: number;
 }
 
 export interface CategoriaDespesa {

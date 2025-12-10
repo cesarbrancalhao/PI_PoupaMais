@@ -8,4 +8,3 @@ export * from './fontes.service';
 export * from './metas.service';
 export * from './contribuicao-meta.service';
 export * from './auth.service';
-export * from './configs.service';

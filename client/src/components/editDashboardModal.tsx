@@ -12,7 +12,7 @@ import { despesasExclusaoService } from '@/services/despesas-exclusao.service'
 import { receitasExclusaoService } from '@/services/receitas-exclusao.service'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getCurrencySymbol } from "@/app/terminology/currency";
-import { Moeda } from "@/types/configs";
+import { Moeda } from "@/types/auth";
 import { useLanguage } from '@/app/terminology/LanguageContext';
 import { editDashboardModal } from '@/app/terminology/language/modals/editDashboard';
 import { common } from '@/app/terminology/language/common';

@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { User } from '@/types/auth';
 
 interface VerifyCodeRequest {
   email: string;
@@ -7,12 +8,7 @@ interface VerifyCodeRequest {
 
 interface VerifyCodeResponse {
   access_token: string;
-  user: {
-    id: number;
-    nome: string;
-    email: string;
-    created_at?: string;
-  };
+  user: User;
 }
 
 class VerificationService {

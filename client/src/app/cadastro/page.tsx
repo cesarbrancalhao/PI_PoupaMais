@@ -10,10 +10,9 @@ import { auth } from "@/app/terminology/language/auth";
 import { verificationModal as verificationModalText } from "@/app/terminology/language/modals/verification";
 import { authService } from "@/services/auth.service";
 import { verificationService } from "@/services/verification.service";
-import { configsService } from "@/services/configs.service";
 import LanguageSelector from "@/components/LanguageSelector";
 import VerificationModal from "@/components/verificationModal";
-import type { Idioma } from "@/types/configs";
+import type { Idioma } from "@/types/auth";
 import type { Language } from "@/app/terminology/language/types";
 
 const languageToIdiomaMap: Record<Language, Idioma> = {
@@ -94,19 +93,7 @@ export default function CadastroPage() {
       const response = await verificationService.verifyCode(pendingEmail, code);
 
       authService.setAuthDataFromVerification(response.access_token, response.user);
-
-      try {
-        const configs = await configsService.get();
-        setUser({
-          ...response.user,
-          tema: configs.tema,
-          moeda: configs.moeda,
-          idioma: configs.idioma,
-        });
-      } catch (err) {
-        console.warn("Failed to load configs, using defaults:", err);
-        setUser(response.user);
-      }
+      setUser(response.user);
 
       router.push('/dashboard');
     } catch (err) {

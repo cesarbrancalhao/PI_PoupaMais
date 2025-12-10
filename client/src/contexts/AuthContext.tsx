@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '../services/auth.service';
-import { configsService } from '../services/configs.service';
+import { usersService } from '../services/users.service';
 import { User, LoginRequest, RegisterRequest } from '../types/auth';
 import type { ApiError } from '../services/api';
 
@@ -43,15 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const configs = await configsService.get();
+        const profile = await usersService.getProfile();
 
         if (isMounted && !abortController.signal.aborted) {
-          setUser({
-            ...baseUser,
-            tema: configs.tema,
-            moeda: configs.moeda,
-            idioma: configs.idioma,
-          });
+          setUser(profile);
         }
 
       } catch (err) {
@@ -83,20 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginRequest) => {
     try {
       const response = await authService.login(data);
-      
-      try {
-        const configs = await configsService.get();
-        setUser({
-          ...response.user!,
-          tema: configs.tema,
-          moeda: configs.moeda,
-          idioma: configs.idioma,
-        });
-      } catch (err) {
-        console.warn("Failed to load configs, using defaults:", err);
-        setUser(response.user!);
-      }
-
+      setUser(response.user);
       router.push('/dashboard');
     } catch (error) {
       throw error;

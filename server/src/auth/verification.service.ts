@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/
 import * as bcrypt from 'bcrypt';
 import { DatabaseService } from '../database/database.service';
 import { EmailService } from '../email/email.service';
+import { Usuario } from '../common/interfaces/user.interface';
 
 @Injectable()
 export class VerificationService {
@@ -49,7 +50,7 @@ export class VerificationService {
     await this.emailService.sendVerificationEmail(email, code, nome, idioma);
   }
 
-  async verifyCode(email: string, code: string): Promise<{ id: number; nome: string; email: string; created_at: Date }> {
+  async verifyCode(email: string, code: string): Promise<Omit<Usuario, 'senha'>> {
     const result = await this.databaseService.query(
       'SELECT * FROM verificacao WHERE email = $1',
       [email],
@@ -86,13 +87,11 @@ export class VerificationService {
       await client.query('BEGIN');
 
       const userResult = await client.query(
-        'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
-        [verification.nome, verification.email, verification.senha],
+        'INSERT INTO usuario (nome, email, senha, idioma) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, tema, idioma, moeda, created_at',
+        [verification.nome, verification.email, verification.senha, verification.idioma],
       );
 
       const newUser = userResult.rows[0];
-
-      await client.query('INSERT INTO config (usuario_id, idioma) VALUES ($1, $2)', [newUser.id, verification.idioma]);
 
       // RN07 - No momento do cadastro do usuário, o sistema deverá cadastrar as seguintes categorias de despesas: Moradia, Eletrônicos, Transporte, Alimentação, Saúde, Lazer.
       const defaultCategoriesByLanguage = {
@@ -164,7 +163,7 @@ export class VerificationService {
 
       await client.query('COMMIT');
 
-      return newUser;
+      return newUser as Omit<Usuario, 'senha'>;
     } catch (error) {
       await client.query('ROLLBACK');
       throw new BadRequestException('Erro ao criar usuário');

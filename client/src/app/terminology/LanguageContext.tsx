@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Language, LanguageContextType } from './language/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { configsService } from '@/services/configs.service';
-import { Idioma } from '@/types/configs';
+import { usersService } from '@/services/users.service';
+import { Idioma } from '@/types/auth';
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
@@ -42,18 +42,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       const idiomaValue = languageToIdioma[newLanguage];
 
       // RN13 - A alteração do idioma mudará as frases e palavras na interface das telas.
-      await configsService.update({
-        tema: user.tema || false,
-        moeda: user.moeda || 'real',
-        idioma: idiomaValue,
-      });
+      const updatedUser = await usersService.updateSettings(
+        user.tema || false,
+        idiomaValue,
+        user.moeda || 'real'
+      );
 
       setLanguageState(newLanguage);
 
-      setUser({
-        ...user,
-        idioma: idiomaValue,
-      });
+      setUser(updatedUser);
     } catch (error) {
       console.error('Erro ao atualizar o idioma:', error);
     }

@@ -1,13 +1,14 @@
-import type { Idioma } from './configs';
+export type Moeda = "real" | "dolar" | "euro";
+export type Idioma = "portugues" | "ingles" | "espanhol";
 
 export interface User {
   id: number;
   nome: string;
   email: string;
   created_at?: string;
-  tema?: boolean;  
-  idioma?: "portugues" | "ingles" | "espanhol";
-  moeda?: "real" | "dolar" | "euro";
+  tema: boolean;  
+  idioma: Idioma;
+  moeda: Moeda;
 }
 
 export interface LoginRequest {

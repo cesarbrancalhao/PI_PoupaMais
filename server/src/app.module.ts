@@ -5,7 +5,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { ConfigsModule } from './configs/configs.module';
 import { CategoriaDespesaModule } from './categoria-despesa/categoria-despesa.module';
 import { FonteReceitaModule } from './fonte-receita/fonte-receita.module';
 import { DespesasModule } from './despesas/despesas.module';
@@ -28,7 +27,6 @@ import { ContribuicaoMetaModule } from './contribuicao-meta/contribuicao-meta.mo
     DatabaseModule,
     AuthModule,
     UsersModule,
-    ConfigsModule,
     CategoriaDespesaModule,
     FonteReceitaModule,
     DespesasModule,

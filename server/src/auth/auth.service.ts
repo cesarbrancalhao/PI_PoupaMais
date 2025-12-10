@@ -90,6 +90,9 @@ export class AuthService {
         id: user.id,
         nome: user.nome,
         email: user.email,
+        tema: user.tema,
+        idioma: user.idioma,
+        moeda: user.moeda,
       },
     };
   }
@@ -111,13 +114,11 @@ export class AuthService {
       await client.query('BEGIN');
 
       const result = await client.query(
-        'INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email, created_at',
-        [nome, email, hashedPassword],
+        'INSERT INTO usuario (nome, email, senha, idioma) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, tema, idioma, moeda, created_at',
+        [nome, email, hashedPassword, idioma],
       );
 
       const newUser = result.rows[0];
-
-      await client.query('INSERT INTO config (usuario_id, idioma) VALUES ($1, $2)', [newUser.id, idioma]);
 
       const categorias = defaultCategoriesByLanguage[idioma] || defaultCategoriesByLanguage.portugues;
       for (const categoria of categorias) {

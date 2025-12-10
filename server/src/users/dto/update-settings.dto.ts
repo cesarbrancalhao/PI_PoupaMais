@@ -1,7 +1,7 @@
 import { IsBoolean, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateConfigDto {
+export class UpdateSettingsDto {
   @ApiProperty({ example: false })
   @IsBoolean()
   tema: boolean;
