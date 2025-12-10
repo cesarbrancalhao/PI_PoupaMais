@@ -44,6 +44,7 @@ const ConfiguracoesPage = () => {
     if (!user || !editedName.trim()) return;
     try {
       const updatedUser = await usersService.updateProfile(editedName, user.email);
+      // RN14 - A alteração do nome mudará o nome de exibição do usuário.
       setUser({ ...user, nome: updatedUser.nome });
       setIsNameChanged(false);
     } catch (err) {

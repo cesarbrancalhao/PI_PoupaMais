@@ -268,6 +268,7 @@ export default function DashboardPage() {
     return saldo
   }
 
+  // RN18 - O sistema armazenará Despesas e Receitas recorrentes como um único registro no banco, e usará uma função de expansão para exibir os registros mensais.
   const expandRecurringEntries = <T extends Despesa | Receita>(
     items: T[],
     selectedMonth: string,
@@ -287,6 +288,7 @@ export default function DashboardPage() {
       const startOfItemMonth = new Date(itemStartYear, itemStartMonth, 1)
 
       if (item.recorrente) {
+        // RN20 - Receitas e Despesas recorrentes sem uma data de vencimento definida são exibidas indefinidamente mês a mês.
         const targetYear = targetDate.getFullYear()
         const targetMonth = targetDate.getMonth()
         const targetMonthStart = new Date(targetYear, targetMonth, 1)
@@ -303,6 +305,7 @@ export default function DashboardPage() {
 
           if (isWithinEndDate) {
             const monthKey = `${year}-${month}-01`
+            // RN19 - A expansão de Despesas e Receitas recorrentes utilizará as tabelas de Exclusão de Receita e Exclusão de Despesa para remover registros de cálculos, exibições, gráficos e Análise.
             const isExcluded = exclusoes.some(exc => {
               const isDespesa = 'despesa_id' in exc
               const itemId = isDespesa ? (exc as DespesaExclusao).despesa_id : (exc as ReceitaExclusao).receita_id
@@ -441,8 +444,13 @@ export default function DashboardPage() {
     return sorted
   }, [filteredRows, sortColumn, sortDirection])
   
+  // RN25 - O sistema deverá conter paginação dos registros nas telas de Metas, Receitas e Despesas.
   const totalPages = Math.ceil(sortedRows.length / ITEMS_PER_PAGE)
   const paginatedRows = sortedRows.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [sortColumn, sortDirection, searchTerm, minValue, maxValue, filterCategory])
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {

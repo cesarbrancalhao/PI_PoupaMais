@@ -203,7 +203,7 @@ export default function CadastroPage() {
                 disabled={loading}
                 className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0 disabled:opacity-50"
                 required
-                minLength={8}
+                minLength={8} // RN22 - Senhas devem ter um mínimo de 8 caracteres.
               />
               <p className="text-xs text-gray-500 mt-1">{t(auth.passwordMinLength)}</p>
             </div>
@@ -220,6 +220,7 @@ export default function CadastroPage() {
                 disabled={loading}
                 className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 border-0 disabled:opacity-50"
                 required
+                minLength={8}
               />
             </div>
 

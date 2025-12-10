@@ -455,6 +455,7 @@ export default function AddMetaModal({ isOpen, onClose }: AddMetaModalProps) {
                   isDark ? 'text-[var(--text-main)]' : 'text-gray-800'
                 }`}>{t(addMetaModal.defineGoalBy)}</label>
                 <div className="flex gap-4">
+                  {/* RN16 - O sistema deve permitir ao usuário definir a meta por Economia mensal (ele escolhe o valor-alvo de economia mensal) ou Data final (ele escolhe a data em que pretende alcançar o objetivo e o sistema calcula quanto será o valor-alvo necessário para alcançar a Meta nesse intervalo). */}
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"

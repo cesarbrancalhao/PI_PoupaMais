@@ -41,6 +41,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     try {
       const idiomaValue = languageToIdioma[newLanguage];
 
+      // RN13 - A alteração do idioma mudará as frases e palavras na interface das telas.
       await configsService.update({
         tema: user.tema || false,
         moeda: user.moeda || 'real',

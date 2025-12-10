@@ -22,6 +22,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [user, loading]);
 
   useEffect(() => {
+    // RN12 - A alteração de tema mudará as cores da interface das telas.
     document.documentElement.classList.remove("claro", "escuro");
     document.documentElement.classList.add(theme);
   }, [theme]);

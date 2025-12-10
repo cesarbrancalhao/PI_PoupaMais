@@ -38,9 +38,9 @@ CREATE TABLE recuperacao_senha (
 
 CREATE TABLE config (
     id SERIAL PRIMARY KEY,
-    tema BOOLEAN NOT NULL DEFAULT FALSE,
-    idioma idioma_enum NOT NULL DEFAULT 'portugues',
-    moeda moeda_enum NOT NULL DEFAULT 'real',
+    tema BOOLEAN NOT NULL DEFAULT FALSE, -- RN11 - O modo de visualização padrão será o “Claro”, podendo ser alterado nas configurações.
+    idioma idioma_enum NOT NULL DEFAULT 'portugues', -- RN10 - O idioma padrão será Português, podendo ser alterado nas configurações.
+    moeda moeda_enum NOT NULL DEFAULT 'real', -- RN09 - A moeda padrão do aplicativo será o Real (BRL), podendo ser alterada nas configurações.
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_id INT NOT NULL UNIQUE REFERENCES usuario(id) ON DELETE CASCADE
 );
@@ -64,7 +64,7 @@ CREATE TABLE fonte_receita (
 CREATE TABLE despesa (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(70) NOT NULL,
-    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0),
+    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0), -- RN06 - O valor de Despesas, Receitas e Metas deve ser positivo e maior que 0.
     recorrente BOOLEAN NOT NULL DEFAULT FALSE,
     data DATE NOT NULL,
     data_vencimento DATE DEFAULT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE despesa (
 CREATE TABLE receita (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(70) NOT NULL,
-    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0),
+    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0), -- RN06 - O valor de Despesas, Receitas e Metas deve ser positivo e maior que 0.
     recorrente BOOLEAN NOT NULL DEFAULT FALSE,
     data DATE NOT NULL,
     data_vencimento DATE DEFAULT NULL,
@@ -107,8 +107,8 @@ CREATE TABLE meta (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(70) NOT NULL,
     descricao TEXT,
-    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0),
-    valor_atual DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0), -- RN17 - valor_atual é a soma de todas as contribuicao_meta
+    valor DECIMAL(11,2) NOT NULL CHECK (valor > 0), -- RN06 - O valor de Despesas, Receitas e Metas deve ser positivo e maior que 0.
+    valor_atual DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (valor_atual >= 0), -- RN17 - O valor atual de uma meta será calculado automaticamente pelo sistema como a soma de todas as contribuições vinculadas.
     economia_mensal DECIMAL(11,2) NOT NULL DEFAULT 0 CHECK (economia_mensal >= 0),
     data_inicio DATE NOT NULL DEFAULT CURRENT_DATE,
     data_alvo DATE,

@@ -19,6 +19,7 @@ export class PasswordResetService {
     return code;
   }
 
+  // RN04 - Ao solicitar a recuperação de senha, o usuário receberá um código por email, após confirmação do código, o usuário poderá inserir uma nova senha.
   async requestPasswordReset(email: string): Promise<void> {
     const userResult = await this.databaseService.query(
       'SELECT id, nome FROM usuario WHERE email = $1',
@@ -71,6 +72,7 @@ export class PasswordResetService {
       throw new BadRequestException('Código expirado');
     }
 
+    // RN05 - O sistema dará 5 tentativas para a confirmação do código. Após isso será necessário solicitar um novo código.
     if (recovery.tentativas >= 5) {
       await this.databaseService.query('DELETE FROM recuperacao_senha WHERE id = $1', [recovery.id]);
       throw new BadRequestException('Muitas tentativas inválidas');

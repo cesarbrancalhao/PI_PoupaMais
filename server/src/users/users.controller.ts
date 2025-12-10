@@ -23,6 +23,7 @@ export class UsersController {
   @Put('profile')
   @ApiOperation({ summary: 'Atualizar perfil do usuário' })
   @ApiResponse({ status: 200, description: 'Perfil atualizado com sucesso' })
+  // RN01 - Somente o usuário pode definir e alterar seus dados.
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
     return this.usersService.updateProfile(
       req.user.userId,
@@ -36,6 +37,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Alterar senha do usuário' })
   @ApiResponse({ status: 200, description: 'Senha alterada com sucesso' })
   @ApiResponse({ status: 401, description: 'Senha atual incorreta' })
+  // RN01 - Somente o usuário pode definir e alterar seus dados.
   async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
     return this.usersService.changePassword(
       req.user.userId,

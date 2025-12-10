@@ -120,6 +120,7 @@ export default function MetasPage() {
     return sorted
   }, [filteredMetas, sortColumn, sortDirection])
 
+  // RN25 - O sistema deverá conter paginação dos registros nas telas de Metas, Receitas e Despesas.
   const totalPages = Math.ceil(sortedMetas.length / ITEMS_PER_PAGE)
   const paginatedMetas = sortedMetas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
@@ -142,6 +143,7 @@ export default function MetasPage() {
     }
   }
 
+  // RN18 - O sistema armazenará Despesas e Receitas recorrentes como um único registro no banco, e usará uma função de expansão para exibir os registros mensais.
   const expandirEntradasRecorrentes = <T extends Despesa | Receita>(
     itens: T[],
     mesSelecionado: string,

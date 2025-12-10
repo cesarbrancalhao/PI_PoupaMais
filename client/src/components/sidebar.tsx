@@ -41,6 +41,7 @@ export default function Sidebar() {
   return (
     <>
       {/* RF17 - O sistema deverá ter uma barra lateral que permite a navegação entre todas as telas. */}
+      {/* RN26 - A barra lateral de navegação será um componente React vertical fixado à esquerda na aplicação. */}
       <button
         className={`md:hidden fixed top-4 left-4 z-50 p-2 rounded-md shadow transition
           ${isDark ? "bg-[var(--bg-card)] text-[var(--text-main)]" : "bg-white text-gray-800"}
